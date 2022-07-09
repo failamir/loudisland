@@ -102,6 +102,11 @@
                                             {{ trans('cruds.pendaftar.title') }}
                                         </a>
                                     @endcan
+                                    @can('event_access')
+                                        <a class="dropdown-item" href="{{ route('frontend.events.index') }}">
+                                            {{ trans('cruds.event.title') }}
+                                        </a>
+                                    @endcan
 
                                     <a class="dropdown-item" href="{{ route('logout') }}" onclick="event.preventDefault();
                                                      document.getElementById('logout-form').submit();">

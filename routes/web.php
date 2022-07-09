@@ -28,6 +28,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // Audit Logs
     Route::resource('audit-logs', 'AuditLogsController', ['except' => ['create', 'store', 'edit', 'update', 'destroy']]);
 
+    // Event
+    Route::delete('events/destroy', 'EventController@massDestroy')->name('events.massDestroy');
+    Route::post('events/parse-csv-import', 'EventController@parseCsvImport')->name('events.parseCsvImport');
+    Route::post('events/process-csv-import', 'EventController@processCsvImport')->name('events.processCsvImport');
+    Route::resource('events', 'EventController');
+
     Route::get('global-search', 'GlobalSearchController@search')->name('globalSearch');
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
@@ -59,6 +65,10 @@ Route::group(['as' => 'frontend.', 'namespace' => 'Frontend', 'middleware' => ['
     Route::post('pendaftars/media', 'PendaftarController@storeMedia')->name('pendaftars.storeMedia');
     Route::post('pendaftars/ckmedia', 'PendaftarController@storeCKEditorImages')->name('pendaftars.storeCKEditorImages');
     Route::resource('pendaftars', 'PendaftarController');
+
+    // Event
+    Route::delete('events/destroy', 'EventController@massDestroy')->name('events.massDestroy');
+    Route::resource('events', 'EventController');
 
     Route::get('frontend/profile', 'ProfileController@index')->name('profile.index');
     Route::post('frontend/profile', 'ProfileController@update')->name('profile.update');
