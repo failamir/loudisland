@@ -54,6 +54,12 @@
                                         {{ trans('cruds.pendaftar.fields.status_payment') }}
                                     </th>
                                     <th>
+                                        {{ trans('cruds.pendaftar.fields.event') }}
+                                    </th>
+                                    <th>
+                                        {{ trans('cruds.event.fields.event_code') }}
+                                    </th>
+                                    <th>
                                         &nbsp;
                                     </th>
                                 </tr>
@@ -103,6 +109,16 @@
                                         </select>
                                     </td>
                                     <td>
+                                        <select class="search">
+                                            <option value>{{ trans('global.all') }}</option>
+                                            @foreach($events as $key => $item)
+                                                <option value="{{ $item->nama_event }}">{{ $item->nama_event }}</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td>
+                                    </td>
+                                    <td>
                                     </td>
                                 </tr>
                             </thead>
@@ -135,6 +151,12 @@
                                         </td>
                                         <td>
                                             {{ App\Models\Pendaftar::STATUS_PAYMENT_SELECT[$pendaftar->status_payment] ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ $pendaftar->event->nama_event ?? '' }}
+                                        </td>
+                                        <td>
+                                            {{ $pendaftar->event->event_code ?? '' }}
                                         </td>
                                         <td>
                                             @can('pendaftar_show')

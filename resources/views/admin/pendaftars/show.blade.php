@@ -95,6 +95,14 @@
                             {{ App\Models\Pendaftar::STATUS_PAYMENT_SELECT[$pendaftar->status_payment] ?? '' }}
                         </td>
                     </tr>
+                    <tr>
+                        <th>
+                            {{ trans('cruds.pendaftar.fields.event') }}
+                        </th>
+                        <td>
+                            {{ $pendaftar->event->nama_event ?? '' }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <div class="form-group">

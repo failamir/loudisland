@@ -20,7 +20,7 @@ class PendaftarApiController extends Controller
     {
         abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new PendaftarResource(Pendaftar::all());
+        return new PendaftarResource(Pendaftar::with(['event'])->get());
     }
 
     public function store(StorePendaftarRequest $request)
@@ -36,7 +36,7 @@ class PendaftarApiController extends Controller
     {
         abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new PendaftarResource($pendaftar);
+        return new PendaftarResource($pendaftar->load(['event']));
     }
 
     public function update(UpdatePendaftarRequest $request, Pendaftar $pendaftar)

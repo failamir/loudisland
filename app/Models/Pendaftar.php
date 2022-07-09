@@ -55,6 +55,7 @@ class Pendaftar extends Model implements HasMedia
         'payment',
         'notes',
         'status_payment',
+        'event_id',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -64,6 +65,11 @@ class Pendaftar extends Model implements HasMedia
     {
         $this->addMediaConversion('thumb')->fit('crop', 50, 50);
         $this->addMediaConversion('preview')->fit('crop', 120, 120);
+    }
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id');
     }
 
     protected function serializeDate(DateTimeInterface $date)

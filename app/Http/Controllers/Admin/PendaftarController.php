@@ -8,6 +8,7 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 use App\Http\Requests\MassDestroyPendaftarRequest;
 use App\Http\Requests\StorePendaftarRequest;
 use App\Http\Requests\UpdatePendaftarRequest;
+use App\Models\Event;
 use App\Models\Pendaftar;
 use Gate;
 use Illuminate\Http\Request;
@@ -23,16 +24,20 @@ class PendaftarController extends Controller
     {
         abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $pendaftars = Pendaftar::all();
+        $pendaftars = Pendaftar::with(['event'])->get();
 
-        return view('admin.pendaftars.index', compact('pendaftars'));
+        $events = Event::get();
+
+        return view('admin.pendaftars.index', compact('events', 'pendaftars'));
     }
 
     public function create()
     {
         abort_if(Gate::denies('pendaftar_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.pendaftars.create');
+        $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        return view('admin.pendaftars.create', compact('events'));
     }
 
     public function store(StorePendaftarRequest $request)
@@ -50,7 +55,11 @@ class PendaftarController extends Controller
     {
         abort_if(Gate::denies('pendaftar_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return view('admin.pendaftars.edit', compact('pendaftar'));
+        $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
+
+        $pendaftar->load('event');
+
+        return view('admin.pendaftars.edit', compact('events', 'pendaftar'));
     }
 
     public function update(UpdatePendaftarRequest $request, Pendaftar $pendaftar)
@@ -63,6 +72,8 @@ class PendaftarController extends Controller
     public function show(Pendaftar $pendaftar)
     {
         abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $pendaftar->load('event');
 
         return view('admin.pendaftars.show', compact('pendaftar'));
     }
