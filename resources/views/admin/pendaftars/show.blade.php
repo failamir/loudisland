@@ -73,14 +73,6 @@
                     </tr>
                     <tr>
                         <th>
-                            {{ trans('cruds.pendaftar.fields.payment') }}
-                        </th>
-                        <td>
-                            {{ App\Models\Pendaftar::PAYMENT_SELECT[$pendaftar->payment] ?? '' }}
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>
                             {{ trans('cruds.pendaftar.fields.notes') }}
                         </th>
                         <td>
@@ -109,6 +101,14 @@
                         </th>
                         <td>
                             {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>
+                            {{ trans('cruds.pendaftar.fields.total_bayar') }}
+                        </th>
+                        <td>
+                            {{ $pendaftar->total_bayar }}
                         </td>
                     </tr>
                 </tbody>

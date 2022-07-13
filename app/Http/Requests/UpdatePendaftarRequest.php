@@ -38,6 +38,10 @@ class UpdatePendaftarRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'total_bayar' => [
+                'string',
+                'nullable',
+            ],
         ];
     }
 }

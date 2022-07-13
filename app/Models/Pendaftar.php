@@ -29,13 +29,6 @@ class Pendaftar extends Model implements HasMedia
         'QRIS'     => 'QRIS',
     ];
 
-    public const PAYMENT_SELECT = [
-        'cash'          => 'cash',
-        'transfer bank' => 'transfer bank',
-        'VA'            => 'VA',
-        'Qris'          => 'Qris',
-    ];
-
     public const STATUS_PAYMENT_SELECT = [
         'Pending' => 'Pending',
         'Success' => 'Success',
@@ -58,11 +51,11 @@ class Pendaftar extends Model implements HasMedia
         'email',
         'no_hp',
         'checkin',
-        'payment',
         'notes',
         'status_payment',
         'event_id',
         'payment_type',
+        'total_bayar',
         'created_at',
         'updated_at',
         'deleted_at',
