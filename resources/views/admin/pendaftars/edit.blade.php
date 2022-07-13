@@ -130,6 +130,21 @@
                 <span class="help-block">{{ trans('cruds.pendaftar.fields.event_helper') }}</span>
             </div>
             <div class="form-group">
+                <label>{{ trans('cruds.pendaftar.fields.payment_type') }}</label>
+                <select class="form-control {{ $errors->has('payment_type') ? 'is-invalid' : '' }}" name="payment_type" id="payment_type">
+                    <option value disabled {{ old('payment_type', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
+                    @foreach(App\Models\Pendaftar::PAYMENT_TYPE_SELECT as $key => $label)
+                        <option value="{{ $key }}" {{ old('payment_type', $pendaftar->payment_type) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                @if($errors->has('payment_type'))
+                    <div class="invalid-feedback">
+                        {{ $errors->first('payment_type') }}
+                    </div>
+                @endif
+                <span class="help-block">{{ trans('cruds.pendaftar.fields.payment_type_helper') }}</span>
+            </div>
+            <div class="form-group">
                 <button class="btn btn-danger" type="submit">
                     {{ trans('global.save') }}
                 </button>

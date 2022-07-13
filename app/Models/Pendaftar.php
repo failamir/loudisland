@@ -23,6 +23,12 @@ class Pendaftar extends Model implements HasMedia
         'belum' => 'belum',
     ];
 
+    public const PAYMENT_TYPE_SELECT = [
+        'Cash'     => 'Cash',
+        'Transfer' => 'Transfer',
+        'QRIS'     => 'QRIS',
+    ];
+
     public const PAYMENT_SELECT = [
         'cash'          => 'cash',
         'transfer bank' => 'transfer bank',
@@ -31,10 +37,10 @@ class Pendaftar extends Model implements HasMedia
     ];
 
     public const STATUS_PAYMENT_SELECT = [
-        'pending' => 'pending',
-        'success' => 'success',
-        'failed'  => 'failed',
-        'refund'  => 'refund',
+        'Pending' => 'Pending',
+        'Success' => 'Success',
+        'Failed'  => 'Failed',
+        'Refund'  => 'Refund',
     ];
 
     public $table = 'pendaftars';
@@ -56,6 +62,7 @@ class Pendaftar extends Model implements HasMedia
         'notes',
         'status_payment',
         'event_id',
+        'payment_type',
         'created_at',
         'updated_at',
         'deleted_at',

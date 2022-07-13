@@ -103,6 +103,14 @@
                             {{ $pendaftar->event->nama_event ?? '' }}
                         </td>
                     </tr>
+                    <tr>
+                        <th>
+                            {{ trans('cruds.pendaftar.fields.payment_type') }}
+                        </th>
+                        <td>
+                            {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
+                        </td>
+                    </tr>
                 </tbody>
             </table>
             <div class="form-group">
