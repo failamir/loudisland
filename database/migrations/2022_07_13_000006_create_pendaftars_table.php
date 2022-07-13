@@ -12,7 +12,7 @@ class CreatePendaftarsTable extends Migration
             $table->bigIncrements('id');
             $table->string('no_tiket')->nullable();
             $table->string('nama');
-            $table->string('nik')->unique();
+            $table->string('nik');
             $table->string('email');
             $table->string('no_hp');
             $table->string('checkin')->nullable();
