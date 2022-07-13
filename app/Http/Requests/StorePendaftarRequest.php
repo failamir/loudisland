@@ -38,6 +38,10 @@ class StorePendaftarRequest extends FormRequest
                 'string',
                 'required',
             ],
+            'total_bayar' => [
+                'string',
+                'nullable',
+            ],
         ];
     }
 }

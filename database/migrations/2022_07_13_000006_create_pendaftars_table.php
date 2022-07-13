@@ -16,10 +16,10 @@ class CreatePendaftarsTable extends Migration
             $table->string('email');
             $table->string('no_hp');
             $table->string('checkin')->nullable();
-            $table->string('payment')->nullable();
             $table->longText('notes')->nullable();
             $table->string('status_payment')->nullable();
             $table->string('payment_type')->nullable();
+            $table->string('total_bayar')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

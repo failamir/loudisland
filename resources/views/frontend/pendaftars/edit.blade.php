@@ -79,21 +79,6 @@
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.checkin_helper') }}</span>
                         </div>
                         <div class="form-group">
-                            <label>{{ trans('cruds.pendaftar.fields.payment') }}</label>
-                            <select class="form-control" name="payment" id="payment">
-                                <option value disabled {{ old('payment', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
-                                @foreach(App\Models\Pendaftar::PAYMENT_SELECT as $key => $label)
-                                    <option value="{{ $key }}" {{ old('payment', $pendaftar->payment) === (string) $key ? 'selected' : '' }}>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                            @if($errors->has('payment'))
-                                <div class="invalid-feedback">
-                                    {{ $errors->first('payment') }}
-                                </div>
-                            @endif
-                            <span class="help-block">{{ trans('cruds.pendaftar.fields.payment_helper') }}</span>
-                        </div>
-                        <div class="form-group">
                             <label for="notes">{{ trans('cruds.pendaftar.fields.notes') }}</label>
                             <textarea class="form-control ckeditor" name="notes" id="notes">{!! old('notes', $pendaftar->notes) !!}</textarea>
                             @if($errors->has('notes'))
@@ -146,6 +131,16 @@
                                 </div>
                             @endif
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.payment_type_helper') }}</span>
+                        </div>
+                        <div class="form-group">
+                            <label for="total_bayar">{{ trans('cruds.pendaftar.fields.total_bayar') }}</label>
+                            <input class="form-control" type="text" name="total_bayar" id="total_bayar" value="{{ old('total_bayar', $pendaftar->total_bayar) }}">
+                            @if($errors->has('total_bayar'))
+                                <div class="invalid-feedback">
+                                    {{ $errors->first('total_bayar') }}
+                                </div>
+                            @endif
+                            <span class="help-block">{{ trans('cruds.pendaftar.fields.total_bayar_helper') }}</span>
                         </div>
                         <div class="form-group">
                             <button class="btn btn-danger" type="submit">

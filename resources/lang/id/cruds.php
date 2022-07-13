@@ -89,8 +89,6 @@ return [
             'no_tiket_helper'       => ' ',
             'checkin'               => 'Checkin',
             'checkin_helper'        => ' ',
-            'payment'               => 'Payment',
-            'payment_helper'        => ' ',
             'notes'                 => 'Notes',
             'notes_helper'          => ' ',
             'status_payment'        => 'Status Payment',
@@ -99,6 +97,8 @@ return [
             'event_helper'          => ' ',
             'payment_type'          => 'Payment Type',
             'payment_type_helper'   => ' ',
+            'total_bayar'           => 'Total Bayar',
+            'total_bayar_helper'    => ' ',
         ],
     ],
     'auditLog' => [

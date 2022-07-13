@@ -43,9 +43,6 @@
                             {{ trans('cruds.pendaftar.fields.checkin') }}
                         </th>
                         <th>
-                            {{ trans('cruds.pendaftar.fields.payment') }}
-                        </th>
-                        <th>
                             {{ trans('cruds.pendaftar.fields.status_payment') }}
                         </th>
                         <th>
@@ -56,6 +53,9 @@
                         </th>
                         <th>
                             {{ trans('cruds.pendaftar.fields.payment_type') }}
+                        </th>
+                        <th>
+                            {{ trans('cruds.pendaftar.fields.total_bayar') }}
                         </th>
                         <th>
                             &nbsp;
@@ -90,9 +90,6 @@
                                 {{ App\Models\Pendaftar::CHECKIN_SELECT[$pendaftar->checkin] ?? '' }}
                             </td>
                             <td>
-                                {{ App\Models\Pendaftar::PAYMENT_SELECT[$pendaftar->payment] ?? '' }}
-                            </td>
-                            <td>
                                 {{ App\Models\Pendaftar::STATUS_PAYMENT_SELECT[$pendaftar->status_payment] ?? '' }}
                             </td>
                             <td>
@@ -103,6 +100,9 @@
                             </td>
                             <td>
                                 {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
+                            </td>
+                            <td>
+                                {{ $pendaftar->total_bayar ?? '' }}
                             </td>
                             <td>
                                 @can('pendaftar_show')
