@@ -97,7 +97,7 @@ return [
             'event_helper'          => ' ',
             'payment_type'          => 'Payment Type',
             'payment_type_helper'   => ' ',
-            'total_bayar'           => 'Total Bayar',
+            'total_bayar'           => 'Jumlah Tiket',
             'total_bayar_helper'    => ' ',
         ],
     ],

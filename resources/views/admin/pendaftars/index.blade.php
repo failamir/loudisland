@@ -26,9 +26,9 @@
                         <th width="10">
 
                         </th>
-                        <th>
+                        {{-- <th>
                             {{ trans('cruds.pendaftar.fields.id') }}
-                        </th>
+                        </th> --}}
                         <th>
                             {{ trans('cruds.pendaftar.fields.no_tiket') }}
                         </th>
@@ -59,9 +59,9 @@
                         <th>
                             {{ trans('cruds.pendaftar.fields.payment_type') }}
                         </th>
-                        <th>
+                        {{-- <th>
                             {{ trans('cruds.pendaftar.fields.total_bayar') }}
-                        </th>
+                        </th> --}}
                         <th>
                             &nbsp;
                         </th>
@@ -69,6 +69,9 @@
                     <tr>
                         <td>
                         </td>
+                        {{-- <td>
+                            <input class="search" type="text" placeholder="{{ trans('global.search') }}">
+                        </td> --}}
                         <td>
                             <input class="search" type="text" placeholder="{{ trans('global.search') }}">
                         </td>
@@ -81,12 +84,9 @@
                         <td>
                             <input class="search" type="text" placeholder="{{ trans('global.search') }}">
                         </td>
-                        <td>
+                        {{-- <td>
                             <input class="search" type="text" placeholder="{{ trans('global.search') }}">
-                        </td>
-                        <td>
-                            <input class="search" type="text" placeholder="{{ trans('global.search') }}">
-                        </td>
+                        </td> --}}
                         <td>
                             <select class="search" strict="true">
                                 <option value>{{ trans('global.all') }}</option>
@@ -134,9 +134,9 @@
                             <td>
 
                             </td>
-                            <td>
+                            {{-- <td>
                                 {{ $pendaftar->id ?? '' }}
-                            </td>
+                            </td> --}}
                             <td>
                                 {{ $pendaftar->no_tiket ?? '' }}
                             </td>
@@ -167,9 +167,9 @@
                             <td>
                                 {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
                             </td>
-                            <td>
+                            {{-- <td>
                                 {{ $pendaftar->total_bayar ?? '' }}
-                            </td>
+                            </td> --}}
                             <td>
                                 @can('pendaftar_show')
                                     <a class="btn btn-xs btn-primary" href="{{ route('admin.pendaftars.show', $pendaftar->id) }}">

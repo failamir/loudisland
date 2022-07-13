@@ -11,7 +11,7 @@
             @csrf
             <div class="form-group">
                 <label for="no_tiket">{{ trans('cruds.pendaftar.fields.no_tiket') }}</label>
-                <input class="form-control {{ $errors->has('no_tiket') ? 'is-invalid' : '' }}" type="text" name="no_tiket" id="no_tiket" value="{{ old('no_tiket', '') }}">
+                <input class="form-control {{ $errors->has('no_tiket') ? 'is-invalid' : '' }}" type="text" name="no_tiket" id="no_tiket" value="{{ 0 . $no_t->no_tiket+1 }}" disabled>
                 @if($errors->has('no_tiket'))
                     <div class="invalid-feedback">
                         {{ $errors->first('no_tiket') }}
@@ -59,7 +59,7 @@
                 @endif
                 <span class="help-block">{{ trans('cruds.pendaftar.fields.no_hp_helper') }}</span>
             </div>
-            <div class="form-group">
+            {{-- <div class="form-group">
                 <label>{{ trans('cruds.pendaftar.fields.checkin') }}</label>
                 <select class="form-control {{ $errors->has('checkin') ? 'is-invalid' : '' }}" name="checkin" id="checkin">
                     <option value disabled {{ old('checkin', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
@@ -73,7 +73,7 @@
                     </div>
                 @endif
                 <span class="help-block">{{ trans('cruds.pendaftar.fields.checkin_helper') }}</span>
-            </div>
+            </div> --}}
             <div class="form-group">
                 <label for="notes">{{ trans('cruds.pendaftar.fields.notes') }}</label>
                 <textarea class="form-control ckeditor {{ $errors->has('notes') ? 'is-invalid' : '' }}" name="notes" id="notes">{!! old('notes') !!}</textarea>
