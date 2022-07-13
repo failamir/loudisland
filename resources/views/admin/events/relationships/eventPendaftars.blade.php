@@ -55,6 +55,9 @@
                             {{ trans('cruds.event.fields.event_code') }}
                         </th>
                         <th>
+                            {{ trans('cruds.pendaftar.fields.payment_type') }}
+                        </th>
+                        <th>
                             &nbsp;
                         </th>
                     </tr>
@@ -97,6 +100,9 @@
                             </td>
                             <td>
                                 {{ $pendaftar->event->event_code ?? '' }}
+                            </td>
+                            <td>
+                                {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
                             </td>
                             <td>
                                 @can('pendaftar_show')

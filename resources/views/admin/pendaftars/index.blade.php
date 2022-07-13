@@ -60,6 +60,9 @@
                             {{ trans('cruds.event.fields.event_code') }}
                         </th>
                         <th>
+                            {{ trans('cruds.pendaftar.fields.payment_type') }}
+                        </th>
+                        <th>
                             &nbsp;
                         </th>
                     </tr>
@@ -119,6 +122,14 @@
                         <td>
                         </td>
                         <td>
+                            <select class="search" strict="true">
+                                <option value>{{ trans('global.all') }}</option>
+                                @foreach(App\Models\Pendaftar::PAYMENT_TYPE_SELECT as $key => $item)
+                                    <option value="{{ $item }}">{{ $item }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        <td>
                         </td>
                     </tr>
                 </thead>
@@ -160,6 +171,9 @@
                             </td>
                             <td>
                                 {{ $pendaftar->event->event_code ?? '' }}
+                            </td>
+                            <td>
+                                {{ App\Models\Pendaftar::PAYMENT_TYPE_SELECT[$pendaftar->payment_type] ?? '' }}
                             </td>
                             <td>
                                 @can('pendaftar_show')

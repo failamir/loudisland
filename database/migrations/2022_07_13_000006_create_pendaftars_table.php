@@ -19,6 +19,7 @@ class CreatePendaftarsTable extends Migration
             $table->string('payment')->nullable();
             $table->longText('notes')->nullable();
             $table->string('status_payment')->nullable();
+            $table->string('payment_type')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
