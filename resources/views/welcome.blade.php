@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+{{-- <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
@@ -129,4 +129,87 @@
             </div>
         </div>
     </body>
+</html> --}}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./style/general.css">
+  <link rel="stylesheet" href="./style/style.css">
+  <title>Document</title>
+</head>
+<body>
+  <main class="container">
+    <div class="flex-row header">
+      <div>
+        <img src="./images/banner.jpg">
+      </div>
+      <div class="information">
+        <div class="date">
+          <p>Aug</p>
+          <p>12</p>
+        </div>
+        <div class="main-title">
+          <h1 class="title">Ubud Village Jazz Festival 2022</h1>
+          <p>by PT. UBUD VISTA  JAFESINDO</p>
+        </div>
+        <div>
+          <p>$40 - $65</p>
+        </div>
+      </div>
+    </div>
+    <div class="description">
+      <h1>
+        Ubud Village Jazz Festival 2022
+      </h1>
+      <p>
+        Fri, Aug 12, 2022 3:00 PM - Sat, Aug 13, 2022 11:00 PM WITA
+      </p>
+    </div>
+    <div class="content">
+      <div class="order">
+        <div class="flex-row">
+          <div>
+            <h1>
+              Day 1 - Friday, Agustus 2022
+              $40.00
+            </h1>
+            <p>
+              Sales end on Aug 12, 2022
+              This ticket is only valid for Friday, 12 August 2022.
+            </p>
+          </div>
+          <div>
+            <select name="day 1" id="day_1">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+              <option value="9">9</option>
+              <option value="10">10</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="summary">
+        <h1>Order Sumary</h1>
+        <div>
+          <p>1 x Day 1 - Friday, 12 Agustus 2022</p>
+          <p>$40.00</p>
+        </div>
+        <div>
+          <h1>Total</h1>
+          <h1>$40.00</h1>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
 </html>
