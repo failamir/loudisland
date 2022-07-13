@@ -28,7 +28,6 @@ class UpdatePendaftarRequest extends FormRequest
             'nik' => [
                 'string',
                 'required',
-                'unique:pendaftars,nik,' . request()->route('pendaftar')->id,
             ],
             'email' => [
                 'string',

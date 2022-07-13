@@ -28,7 +28,6 @@ class StorePendaftarRequest extends FormRequest
             'nik' => [
                 'string',
                 'required',
-                'unique:pendaftars',
             ],
             'email' => [
                 'string',
