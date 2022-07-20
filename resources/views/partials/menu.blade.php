@@ -111,6 +111,7 @@
                 {{ trans('global.logout') }}
             </a>
         </li>
+        
     </ul>
 
 </div>
