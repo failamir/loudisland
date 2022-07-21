@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="./css/output.css" rel="stylesheet">
-  <title>Document</title>
+  <title>Loud island</title>
 </head>
 <body class="h-screen w-screen">
   <div class="-z-20 h-1/2 bg-white w-screen absolute">
