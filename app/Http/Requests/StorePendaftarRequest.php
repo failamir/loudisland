@@ -12,6 +12,7 @@ class StorePendaftarRequest extends FormRequest
     public function authorize()
     {
         return Gate::allows('pendaftar_create');
+        // return true;
     }
 
     public function rules()

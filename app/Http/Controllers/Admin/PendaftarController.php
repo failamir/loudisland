@@ -37,6 +37,8 @@ class PendaftarController extends Controller {
         return view( 'admin.pendaftars.create', compact( 'events', 'no_t' ) );
     }
 
+    
+
     public function store( StorePendaftarRequest $request ) {
         $u = ( int )$request->input( 'total_bayar' );
 

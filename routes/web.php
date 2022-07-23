@@ -1,6 +1,9 @@
 <?php
 
 Route::view('/', 'welcome');
+Route::post('beli', 'PendaftarController@beli')->name('beli');
+Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
+Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
 Auth::routes();
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth', 'admin']], function () {

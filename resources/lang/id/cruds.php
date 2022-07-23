@@ -73,7 +73,7 @@ return [
             'id_helper'             => ' ',
             'nama'                  => 'Nama',
             'nama_helper'           => ' ',
-            'nik'                   => 'Nik',
+            'nik'                   => 'NIK',
             'nik_helper'            => ' ',
             'email'                 => 'Email',
             'email_helper'          => ' ',

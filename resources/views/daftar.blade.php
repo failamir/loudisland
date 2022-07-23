@@ -6,16 +6,16 @@
 
             <div class="card">
                 <div class="card-header">
-                    {{ trans('global.create') }} {{ trans('cruds.pendaftar.title_singular') }}
+                    Isi Data Diri
                 </div>
 
                 <div class="card-body">
-                    <form method="POST" action="{{ route("frontend.pendaftars.store") }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route("bayar") }}" enctype="multipart/form-data">
                         @method('POST')
                         @csrf
                         <div class="form-group">
                             <label for="no_tiket">{{ trans('cruds.pendaftar.fields.no_tiket') }}</label>
-                            <input class="form-control" type="text" name="no_tiket" id="no_tiket" value="{{ old('no_tiket', '') }}">
+                            <input class="form-control {{ $errors->has('no_tiket') ? 'is-invalid' : '' }}" type="text" name="no_tiket" id="no_tiket" value="{{ 0 . $no_t->no_tiket+1 }}" disabled>
                             @if($errors->has('no_tiket'))
                                 <div class="invalid-feedback">
                                     {{ $errors->first('no_tiket') }}
@@ -63,7 +63,7 @@
                             @endif
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.no_hp_helper') }}</span>
                         </div>
-                        <div class="form-group">
+                        {{-- <div class="form-group">
                             <label>{{ trans('cruds.pendaftar.fields.checkin') }}</label>
                             <select class="form-control" name="checkin" id="checkin">
                                 <option value disabled {{ old('checkin', null) === null ? 'selected' : '' }}>{{ trans('global.pleaseSelect') }}</option>
@@ -77,8 +77,8 @@
                                 </div>
                             @endif
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.checkin_helper') }}</span>
-                        </div>
-                        <div class="form-group">
+                        </div> --}}
+                        {{-- <div class="form-group">
                             <label for="notes">{{ trans('cruds.pendaftar.fields.notes') }}</label>
                             <textarea class="form-control ckeditor" name="notes" id="notes">{!! old('notes') !!}</textarea>
                             @if($errors->has('notes'))
@@ -131,10 +131,50 @@
                                 </div>
                             @endif
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.payment_type_helper') }}</span>
-                        </div>
+                        </div> --}}
                         <div class="form-group">
                             <label for="total_bayar">{{ trans('cruds.pendaftar.fields.total_bayar') }}</label>
-                            <input class="form-control" type="text" name="total_bayar" id="total_bayar" value="{{ old('total_bayar', '') }}">
+                            
+                            {{-- @dump($data) --}}
+                            <p>
+                                _________________________________________________
+                            </p>
+
+                            @if($data['day_1'] > 0)
+                            {{ $data['day_1'] }} Ticket Day 1  -->  Rp. {{ $data['price_1'] }}<br>
+                            <input type="hidden" name="day_1" value="{{ $data['day_1'] }}">
+                            <br>
+                            @endif
+
+                            @if($data['day_2'] > 0)
+                            {{ $data['day_2'] }} Ticket Day 2  -->  Rp. {{ $data['price_2'] }}<br>
+                            <input type="hidden" name="day_2" value="{{ $data['day_2'] }}">
+                            <br>
+                            @endif
+
+                            @if($data['day_3'] > 0)
+                            {{ $data['day_3'] }} Ticket Day 1 & 2  --> Rp. {{ $data['price_3'] }}<br>
+                            <input type="hidden" name="day_3" value="{{ $data['day_3'] }}">
+                            <br>
+                            @endif
+
+                            {{-- @for($i=0;$i<$data['day_1'];$i++)
+                            Tiket day_1
+                            <br>
+                            @endfor
+                        
+                            @for($i=0;$i<$data['day_2'];$i++)
+                            Tiket day_2
+                            <br>
+                            @endfor
+
+                            @for($i=0;$i<$data['day_3'];$i++)
+                            Tiket day_3
+                            <br>
+                            @endfor --}}
+
+
+                            <input class="form-control" type="hidden" name="total_bayar" id="total_bayar" value="{{ old('total_bayar', '') }}">
                             @if($errors->has('total_bayar'))
                                 <div class="invalid-feedback">
                                     {{ $errors->first('total_bayar') }}
@@ -142,9 +182,10 @@
                             @endif
                             <span class="help-block">{{ trans('cruds.pendaftar.fields.total_bayar_helper') }}</span>
                         </div>
-                        <div class="form-group">
+                        <div class="form-group text-center ">
                             <button class="btn btn-danger" type="submit">
-                                {{ trans('global.save') }}
+                                {{-- {{ trans('global.save') }} --}}
+                                Bayar Sekarang
                             </button>
                         </div>
                     </form>
