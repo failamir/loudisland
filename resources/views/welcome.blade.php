@@ -46,7 +46,7 @@
 </head>
 <body class="h-screen w-screen">
   <div class="-z-20 h-1/2 bg-white w-screen absolute">
-    <img class="w-full h-full blur-lg" src="./assets/images/banner.jpg">
+    <img class="w-full h-full blur-lg" src="./assets/images/banner.png">
   </div>
   <div class="flex justify-center z-30 relative">
     <main class="w-1/2 mt-12 drop-shadow-lg bg-white relative">
