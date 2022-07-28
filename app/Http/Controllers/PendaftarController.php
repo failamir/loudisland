@@ -17,6 +17,7 @@ use Gate;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class PendaftarController extends Controller {
     public function __construct() {
@@ -80,6 +81,54 @@ class PendaftarController extends Controller {
         // return redirect()->route( 'admin.pendaftars.index' );
         // var_dump( $request->all() );
         // echo '<pre> dev ';
+    }
+
+    public function generate( Request $request ) {
+        $data = $request->all();
+        // dd( $data );
+        $length = 10;
+        $random = '';
+        for ( $i = 0; $i < $length; $i++ ) {
+            $random .= rand( 0, 1 ) ? rand( 0, 9 ) : chr( rand( ord( 'a' ), ord( 'z' ) ) );
+        }
+
+        $no_invoice = 'TRX-'.Str::upper( $random );
+        // } else {
+
+        $tiket_id = array();
+        $amount = 0;
+
+        
+            $u1 = 12000;
+
+            for ( $u = 11857; $u<$u1; $u++ ) {
+                $no_tiket = $u;
+                $tiket_id[] = $no_tiket;
+                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+                // $total_bayar = Event::find( 1 )->harga;
+                // $amount += $total_bayar;
+                $code = uniqid() . uniqid();
+                $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                    'nama' => 'generate',
+                    'nik' => 'generate',
+                    'email' => $code,
+                    'no_hp' => 'generate',
+                    'no_tiket' => $no_tiket,
+                    // 'total_bayar' => $total_bayar,
+                    // 'token' => $request->input( '_token' ),
+                    'status_payment' => 'Pending',
+                ] ) );
+                // QrCode::format('png');  //Will return a png image
+                QrCode::format('png')->size(300)->generate($code,'../public/qrcodes/'.$u.'.png');
+
+            }
+        
+
+
+       echo " berhasil";
+        //  return view( 'bayar', compact( 'snap' ) );
+        // }
+        // return redirect()->route( 'admin.pendaftars.index' );
     }
 
     public function bayar( Request $request ) {

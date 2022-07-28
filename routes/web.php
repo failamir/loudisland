@@ -1,6 +1,7 @@
 <?php
 
 Route::view('/', 'welcome');
+Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
 Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
 Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
