@@ -4,6 +4,9 @@ Route::view('/', 'welcome');
 Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
 Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
+Route::get('finish', 'PendaftarController@finishHandler')->name('finishHandler');
+Route::get('unfinish', 'PendaftarController@unfinishHandler')->name('unfinishHandler');
+Route::get('error', 'PendaftarController@errorHandler')->name('errorHandler');
 Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
 Auth::routes();
 
