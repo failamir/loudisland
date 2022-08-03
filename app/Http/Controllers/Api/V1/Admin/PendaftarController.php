@@ -180,7 +180,7 @@ class PendaftarController extends Controller {
 
     public function beliApi( Request $request ) {
         
-        $data = json_decode($request->payload, true);
+        $data = json_decode($request->all(), true);
     $rules = [
         'nama' => 'required', //Must be a number and length of value is 8
         'email' => 'required',
