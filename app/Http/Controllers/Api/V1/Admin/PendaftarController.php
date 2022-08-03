@@ -177,7 +177,7 @@ class PendaftarController extends Controller {
     
 
     public function beliApi( Request $request ) {
-        dd($request->input('id'));
+        // dd($request->input('id'));
         $data = $request->all();
         // dd( $data );
         $length = 10;
@@ -201,9 +201,9 @@ class PendaftarController extends Controller {
         $tiket_id = array();
         $amount = 0;
 
-        if ( isset( $data[ 'day_1' ] ) ) {
+        if ( isset( $request->input('id')[1] ) ) {
 
-            $u1 = ( int )$request->input( 'day_1' );
+            $u1 = ( int )$request->input('id')[1];
 
             for ( $u = 0; $u<$u1; $u++ ) {
                 $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
@@ -214,6 +214,7 @@ class PendaftarController extends Controller {
                 $pendaftar = Pendaftar::create( array_merge( $request->all(), [
                     'no_tiket' => $no_tiket,
                     'total_bayar' => $total_bayar,
+                    'event_id' => 1,
                     'nik' => $no_tiket,
                     'status_payment' => 'Pending',
                 ] ) );
@@ -224,8 +225,8 @@ class PendaftarController extends Controller {
             }
         }
 
-        if ( isset( $data[ 'day_2' ] ) ) {
-            $u2 = ( int )$request->input( 'day_2' );
+        if ( isset( $request->input('id')[2] ) ) {
+            $u2 = ( int )$request->input('id')[2];
             for ( $u = 0; $u<$u2; $u++ ) {
                 $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
                 $tiket_id[] = $no_tiket;
@@ -234,6 +235,7 @@ class PendaftarController extends Controller {
                 $amount += $total_bayar;
                 $pendaftar = Pendaftar::create( array_merge( $request->all(), [
                     'no_tiket' => $no_tiket,
+                    'event_id' => 2,
                     'total_bayar' => $total_bayar,
                     'nik' => $no_tiket,
                     'status_payment' => 'Pending',
@@ -244,8 +246,8 @@ class PendaftarController extends Controller {
             }
         }
 
-        if ( isset( $data[ 'day_3' ] ) ) {
-            $u3 = ( int )$request->input( 'day_3' );
+        if ( isset( $request->input('id')[3] ) ) {
+            $u3 = ( int )$request->input('id')[3];
             for ( $u = 0; $u<$u3; $u++ ) {
                 $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
                 $tiket_id[] = $no_tiket;
@@ -254,6 +256,7 @@ class PendaftarController extends Controller {
                 $amount += $total_bayar;
                 $pendaftar = Pendaftar::create( array_merge( $request->all(), [
                     'no_tiket' => $no_tiket,
+                    'event_id' => 3,
                     'total_bayar' => $total_bayar,
                     'nik' => $no_tiket,
                     'status_payment' => 'Pending',
@@ -264,6 +267,69 @@ class PendaftarController extends Controller {
             }
         }
 
+        if ( isset( $request->input('id')[4] ) ) {
+            $u4 = ( int )$request->input('id')[4];
+            for ( $u = 0; $u<$u4; $u++ ) {
+                $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+                $tiket_id[] = $no_tiket;
+                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+                $total_bayar = Event::find( 4 )->harga;
+                $amount += $total_bayar;
+                $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                    'no_tiket' => $no_tiket,
+                    'event_id' => 4,
+                    'total_bayar' => $total_bayar,
+                    'nik' => $no_tiket,
+                    'status_payment' => 'Pending',
+                ] ) );
+                if ( $media = $request->input( 'ck-media', false ) ) {
+                    Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+                }
+            }
+        }
+
+        if ( isset( $request->input('id')[5] ) ) {
+            $u5 = ( int )$request->input('id')[5];
+            for ( $u = 0; $u<$u5; $u++ ) {
+                $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+                $tiket_id[] = $no_tiket;
+                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+                $total_bayar = Event::find( 5 )->harga;
+                $amount += $total_bayar;
+                $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                    'no_tiket' => $no_tiket,
+                    'event_id' => 5,
+                    'total_bayar' => $total_bayar,
+                    'nik' => $no_tiket,
+                    'status_payment' => 'Pending',
+                ] ) );
+                if ( $media = $request->input( 'ck-media', false ) ) {
+                    Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+                }
+            }
+        }
+
+        if ( isset( $request->input('id')[6] ) ) {
+            $u6 = ( int )$request->input('id')[6];
+            for ( $u = 0; $u<$u6; $u++ ) {
+                $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+                $tiket_id[] = $no_tiket;
+                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+                $total_bayar = Event::find( 6 )->harga;
+                $amount += $total_bayar;
+                $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                    'no_tiket' => $no_tiket,
+                    'event_id' => 6,
+                    'total_bayar' => $total_bayar,
+                    'nik' => $no_tiket,
+                    'status_payment' => 'Pending',
+                ] ) );
+                if ( $media = $request->input( 'ck-media', false ) ) {
+                    Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+                }
+            }
+        }
+        
         // $u2 = ( int )$request->input( 'day_2' );
         // for ( $u = 0; $u<$u2; $u++ ) {
         //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
