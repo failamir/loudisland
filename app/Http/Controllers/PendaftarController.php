@@ -48,6 +48,10 @@ class PendaftarController extends Controller {
         return view( 'admin.pendaftars.create', compact( 'events', 'no_t' ) );
     }
 
+    public function apibeli( Request $request ) {
+        return view( 'admin.pendaftars.beli', compact( 'request' ) );
+    }
+
     public function beli( Request $request ) {
         // $u = ( int )$request->input( 'total_bayar' );
 
@@ -101,7 +105,7 @@ class PendaftarController extends Controller {
         
             $u1 = 12000;
 
-            for ( $u = 11857; $u<$u1; $u++ ) {
+            for ( $u = 11600 ; $u<$u1; $u++ ) {
                 $no_tiket = $u;
                 $tiket_id[] = $no_tiket;
                 // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
@@ -112,8 +116,8 @@ class PendaftarController extends Controller {
                     'nama' => 'generate',
                     'nik' => 'generate',
                     'email' => $code,
-                    'no_hp' => 'generate',
-                    'no_tiket' => $no_tiket,
+                    'no_hp' => $no_tiket,
+                    'no_tiket' => 'generate',
                     // 'total_bayar' => $total_bayar,
                     // 'token' => $request->input( '_token' ),
                     'status_payment' => 'Pending',

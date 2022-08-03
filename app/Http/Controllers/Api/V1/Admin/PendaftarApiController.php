@@ -18,9 +18,9 @@ class PendaftarApiController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new PendaftarResource(Pendaftar::with(['event'])->get());
+        return new PendaftarResource(Pendaftar::with(['event'])->paginate(10));
     }
 
     public function store(StorePendaftarRequest $request)
