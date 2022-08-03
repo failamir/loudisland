@@ -20,6 +20,8 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use stdClass;
+use Validator;
+
 
 class PendaftarController extends Controller {
     public function __construct() {
@@ -177,8 +179,22 @@ class PendaftarController extends Controller {
     
 
     public function beliApi( Request $request ) {
+        
+        $data = json_decode($request->payload, true);
+    $rules = [
+        'nama' => 'required', //Must be a number and length of value is 8
+        'email' => 'required',
+        'no_hp' => 'required',
+    ];
+
+    $validator = Validator::make($data, $rules);
+    if ($validator->passes()) {
+        //TODO Handle your data
+    
+
         // dd($request->input('id'));
         $data = $request->all();
+
         // dd( $data );
         $length = 10;
         $random = '';
@@ -329,7 +345,7 @@ class PendaftarController extends Controller {
                 }
             }
         }
-        
+
         // $u2 = ( int )$request->input( 'day_2' );
         // for ( $u = 0; $u<$u2; $u++ ) {
         //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
@@ -411,6 +427,8 @@ class PendaftarController extends Controller {
         $snap = new stdClass();
         $snap->data = $paymentUrl;
         return response()->json( $snap );
+
+        
         // dd( $snap );
         // echo "       
         // <html>
@@ -446,6 +464,10 @@ class PendaftarController extends Controller {
         //  return view( 'bayar', compact( 'snap' ) );
         // }
         // return redirect()->route( 'admin.pendaftars.index' );
+    } else {
+        //TODO Handle your error
+        return response()->json($validator->errors()->all());
+    }
     }
 
     public function notificationHandler( Request $request ) {
