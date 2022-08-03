@@ -10,6 +10,7 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 use App\Http\Requests\MassDestroyPendaftarRequest;
 use App\Http\Requests\StorePendaftarRequest;
 use App\Http\Requests\UpdatePendaftarRequest;
+use App\Http\Resources\Admin\PendaftarResource;
 use App\Models\Event;
 use App\Models\Pendaftar;
 use App\Models\Transaksi;
@@ -39,6 +40,20 @@ class PendaftarController extends Controller {
         $events = Event::get();
 
         return view( 'admin.pendaftars.index', compact( 'events', 'pendaftars' ) );
+    }
+
+    public function list_checkin(){
+        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin','sudah')->paginate(10));
+    
+    }
+
+    public function list_checkout(){
+        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin','terpakai')->paginate(10));
+    
     }
 
     public function create() {
@@ -312,18 +327,22 @@ class PendaftarController extends Controller {
         ];
 
         //create snap token
-        $snapToken = Snap::getSnapToken( $payload );
-        $transaksi->snap_token = $snapToken;
-        $transaksi->save();
+        // $snapToken = Snap::getSnapToken( $payload );
+        // $transaksi->snap_token = $snapToken;
+        // $transaksi->save();
 
-        $snap = new stdClass();
-        $snap->data = $snapToken;
+        // $snap = new stdClass();
+        // $snap->data = $snapToken;
 
         // return ($snap)
         //     ->response()
         //     ->setStatusCode(Response::HTTP_ACCEPTED);
 
         // return json_encode($snap);
+
+        $paymentUrl = Snap::createTransaction($payload)->redirect_url;
+        $snap = new stdClass();
+        $snap->data = $paymentUrl;
         return response()->json( $snap );
         // dd( $snap );
         // echo "       

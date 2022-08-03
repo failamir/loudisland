@@ -13,6 +13,6 @@
 
     // Event
     Route::apiResource('events', 'EventApiController');
-    Route::get('list_checkin', 'EventApiController@list_checkin');
-    Route::get('list_checkout', 'EventApiController@list_checkout');
+    Route::get('list_checkin', 'PendaftarController@list_checkin');
+    Route::get('list_checkout', 'PendaftarController@list_checkout');
 });
