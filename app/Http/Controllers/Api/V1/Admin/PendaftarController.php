@@ -177,6 +177,7 @@ class PendaftarController extends Controller {
     
 
     public function beliApi( Request $request ) {
+        dd($request->input('id'));
         $data = $request->all();
         // dd( $data );
         $length = 10;
