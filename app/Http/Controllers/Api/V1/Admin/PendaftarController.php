@@ -21,7 +21,9 @@ use Symfony\Component\HttpFoundation\Response;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use stdClass;
 use Validator;
-
+use Illuminate\Foundation\Auth\RegistersUsers;
+use Illuminate\Support\Facades\Hash;
+use App\Models\User;
 
 class PendaftarController extends Controller {
     public function __construct() {
@@ -397,6 +399,12 @@ class PendaftarController extends Controller {
         // $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
 
         // $total_bayar = $data[ 'price_1' ] + $data[ 'price_2' ] + $data[ 'price_3' ];
+
+        User::create([
+            'name'     => $request->input( 'nama' ),
+            'email'    => $request->input( 'email' ),
+            'password' => $request->input( 'no_hp' ),
+        ]);
 
         $transaksi = Transaksi::create( [
             'invoice'       => $no_invoice,
