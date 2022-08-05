@@ -4,6 +4,7 @@
     Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\V1\Admin'], function () {
     // Pendaftar
     Route::post('beli', 'PendaftarController@beliApi')->name('beliApi');
+    Route::post('notification', 'PendaftarController@notification')->name('notification');
     Route::post('scan', 'PendaftarController@scan')->name('scan');
     Route::post('checkin', 'PendaftarController@checkin')->name('checkin');
     Route::post('checkin2', 'PendaftarController@checkin2')->name('checkin2');

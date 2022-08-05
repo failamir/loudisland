@@ -3,10 +3,12 @@
 Route::view('/', 'welcome');
 Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
-Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
+// Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
+
 Route::view('finish','finish');
 Route::view('unfinish', 'unfinish');
 Route::view('error', 'error');
+
 Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
 Auth::routes();
 
