@@ -15,7 +15,7 @@
                         </div>
                     @endif
 
-                    <div class="row">
+                    {{-- <div class="row">
                         <div class="{{ $chart1->options['column_class'] }}">
                             <h3>{!! $chart1->options['chart_title'] !!}</h3>
                             {!! $chart1->renderHtml() !!}
@@ -28,7 +28,7 @@
                             <h3>{!! $chart3->options['chart_title'] !!}</h3>
                             {!! $chart3->renderHtml() !!}
                         </div>
-                        {{-- Widget - latest entries --}}
+                        
                         <div class="{{ $settings4['column_class'] }}" style="overflow-x: auto;">
                             <h3>{{ $settings4['chart_title'] }}</h3>
                             <table class="table table-bordered table-striped">
@@ -67,7 +67,7 @@
                             </table>
                         </div>
 
-                    </div>
+                    </div> --}}
                 </div>
             </div>
         </div>
