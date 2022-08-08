@@ -15,7 +15,7 @@ class SettingApiController extends Controller
 {
     public function index()
     {
-        abort_if(Gate::denies('setting_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('setting_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new SettingResource(Setting::all());
     }
@@ -31,7 +31,7 @@ class SettingApiController extends Controller
 
     public function show(Setting $setting)
     {
-        abort_if(Gate::denies('setting_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('setting_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new SettingResource($setting);
     }

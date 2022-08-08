@@ -34,7 +34,7 @@ class PendaftarApiController extends Controller
 
     public function show(Pendaftar $pendaftar)
     {
-        abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new PendaftarResource($pendaftar->load(['event']));
     }

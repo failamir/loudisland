@@ -18,7 +18,7 @@ class EventApiController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('event_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('event_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new EventResource(Event::all());
     }
@@ -38,7 +38,7 @@ class EventApiController extends Controller
 
     public function show(Event $event)
     {
-        abort_if(Gate::denies('event_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('event_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new EventResource($event);
     }

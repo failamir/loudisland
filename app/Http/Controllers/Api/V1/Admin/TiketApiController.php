@@ -18,7 +18,7 @@ class TiketApiController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('tiket_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('tiket_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new TiketResource(Tiket::with(['peserta'])->get());
     }
@@ -38,7 +38,7 @@ class TiketApiController extends Controller
 
     public function show(Tiket $tiket)
     {
-        abort_if(Gate::denies('tiket_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('tiket_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new TiketResource($tiket->load(['peserta']));
     }

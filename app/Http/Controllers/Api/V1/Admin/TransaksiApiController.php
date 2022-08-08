@@ -18,7 +18,7 @@ class TransaksiApiController extends Controller
 
     public function index()
     {
-        abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new TransaksiResource(Transaksi::with(['event', 'tiket', 'peserta', 'created_by'])->get());
     }
@@ -34,7 +34,7 @@ class TransaksiApiController extends Controller
 
     public function show(Transaksi $transaksi)
     {
-        abort_if(Gate::denies('transaksi_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('transaksi_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         return new TransaksiResource($transaksi->load(['event', 'tiket', 'peserta', 'created_by']));
     }
