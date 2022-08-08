@@ -39,6 +39,7 @@ class User extends Authenticatable
         'email',
         'email_verified_at',
         'password',
+        'approved',
         'remember_token',
         'created_at',
         'updated_at',
@@ -59,6 +60,16 @@ class User extends Authenticatable
     public function getIsAdminAttribute()
     {
         return $this->roles()->where('id', 1)->exists();
+    }
+
+    public function pesertaTikets()
+    {
+        return $this->hasMany(Tiket::class, 'peserta_id', 'id');
+    }
+
+    public function userUserAlerts()
+    {
+        return $this->belongsToMany(UserAlert::class);
     }
 
     public function getEmailVerifiedAtAttribute($value)

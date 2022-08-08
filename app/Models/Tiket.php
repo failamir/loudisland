@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use \DateTimeInterface;
-use App\Traits\Auditable;
-use App\Traits\MultiTenantModelTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,43 +10,53 @@ use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
-class Transaksi extends Model implements HasMedia
+class Tiket extends Model implements HasMedia
 {
     use SoftDeletes;
-    use MultiTenantModelTrait;
     use InteractsWithMedia;
-    use Auditable;
     use HasFactory;
 
-    public const STATUS_SELECT = [
+    public const CHECKIN_SELECT = [
+        'sudah' => 'sudah',
+        'belum' => 'belum',
+    ];
+
+    public const PAYMENT_TYPE_SELECT = [
+        'Cash'     => 'Cash',
+        'Transfer' => 'Transfer',
+        'QRIS'     => 'QRIS',
+    ];
+
+    public const STATUS_PAYMENT_SELECT = [
         'Pending' => 'Pending',
         'Success' => 'Success',
-        'Expired' => 'Expired',
         'Failed'  => 'Failed',
         'Refund'  => 'Refund',
     ];
 
-    public $table = 'transaksis';
+    public $table = 'tikets';
+
+    protected $appends = [
+        'qr',
+    ];
 
     protected $dates = [
         'created_at',
-        'updated_at',   
+        'updated_at',
         'deleted_at',
     ];
 
     protected $fillable = [
-        'invoice',
-        'event_id',
-        'tiket_id',
+        'no_tiket',
         'peserta_id',
-        'amount',
-        'note',
-        'snap_token',
-        'status',
+        'checkin',
+        'notes',
+        'status_payment',
+        'payment_type',
+        'total_bayar',
         'created_at',
         'updated_at',
         'deleted_at',
-        'created_by_id',
     ];
 
     public function registerMediaConversions(Media $media = null): void
@@ -57,14 +65,9 @@ class Transaksi extends Model implements HasMedia
         $this->addMediaConversion('preview')->fit('crop', 120, 120);
     }
 
-    public function event()
+    public function tiketTransaksis()
     {
-        return $this->belongsTo(Event::class, 'event_id');
-    }
-
-    public function tiket()
-    {
-        return $this->belongsTo(Tiket::class, 'tiket_id');
+        return $this->hasMany(Transaksi::class, 'tiket_id', 'id');
     }
 
     public function peserta()
@@ -72,9 +75,16 @@ class Transaksi extends Model implements HasMedia
         return $this->belongsTo(User::class, 'peserta_id');
     }
 
-    public function created_by()
+    public function getQrAttribute()
     {
-        return $this->belongsTo(User::class, 'created_by_id');
+        $file = $this->getMedia('qr')->last();
+        if ($file) {
+            $file->url       = $file->getUrl();
+            $file->thumbnail = $file->getUrl('thumb');
+            $file->preview   = $file->getUrl('preview');
+        }
+
+        return $file;
     }
 
     protected function serializeDate(DateTimeInterface $date)
