@@ -7,11 +7,6 @@
     </div>
 
     <ul class="c-sidebar-nav">
-        <li>
-            <select class="searchable-field form-control">
-
-            </select>
-        </li>
         <li class="c-sidebar-nav-item">
             <a href="{{ route("admin.home") }}" class="c-sidebar-nav-link">
                 <i class="c-sidebar-nav-icon fas fa-fw fa-tachometer-alt">
@@ -72,13 +67,23 @@
                 </ul>
             </li>
         @endcan
-        @can('pendaftar_access')
+        @can('tiket_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.pendaftars.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/pendaftars") || request()->is("admin/pendaftars/*") ? "c-active" : "" }}">
+                <a href="{{ route("admin.tikets.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/tikets") || request()->is("admin/tikets/*") ? "c-active" : "" }}">
                     <i class="fa-fw fas fa-address-book c-sidebar-nav-icon">
 
                     </i>
-                    {{ trans('cruds.pendaftar.title') }}
+                    {{ trans('cruds.tiket.title') }}
+                </a>
+            </li>
+        @endcan
+        @can('transaksi_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.transaksis.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/transaksis") || request()->is("admin/transaksis/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fas fa-dollar-sign c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.transaksi.title') }}
                 </a>
             </li>
         @endcan
@@ -89,6 +94,78 @@
 
                     </i>
                     {{ trans('cruds.event.title') }}
+                </a>
+            </li>
+        @endcan
+        @can('banner_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.banners.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/banners") || request()->is("admin/banners/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fab fa-adn c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.banner.title') }}
+                </a>
+            </li>
+        @endcan
+        @can('sponsor_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.sponsors.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/sponsors") || request()->is("admin/sponsors/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fas fa-cogs c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.sponsor.title') }}
+                </a>
+            </li>
+        @endcan
+        @can('user_alert_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.user-alerts.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/user-alerts") || request()->is("admin/user-alerts/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fas fa-bell c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.userAlert.title') }}
+                </a>
+            </li>
+        @endcan
+        @can('faq_management_access')
+            <li class="c-sidebar-nav-dropdown {{ request()->is("admin/faq-categories*") ? "c-show" : "" }} {{ request()->is("admin/faq-questions*") ? "c-show" : "" }}">
+                <a class="c-sidebar-nav-dropdown-toggle" href="#">
+                    <i class="fa-fw fas fa-question c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.faqManagement.title') }}
+                </a>
+                <ul class="c-sidebar-nav-dropdown-items">
+                    @can('faq_category_access')
+                        <li class="c-sidebar-nav-item">
+                            <a href="{{ route("admin.faq-categories.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/faq-categories") || request()->is("admin/faq-categories/*") ? "c-active" : "" }}">
+                                <i class="fa-fw fas fa-briefcase c-sidebar-nav-icon">
+
+                                </i>
+                                {{ trans('cruds.faqCategory.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                    @can('faq_question_access')
+                        <li class="c-sidebar-nav-item">
+                            <a href="{{ route("admin.faq-questions.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/faq-questions") || request()->is("admin/faq-questions/*") ? "c-active" : "" }}">
+                                <i class="fa-fw fas fa-question c-sidebar-nav-icon">
+
+                                </i>
+                                {{ trans('cruds.faqQuestion.title') }}
+                            </a>
+                        </li>
+                    @endcan
+                </ul>
+            </li>
+        @endcan
+        @can('setting_access')
+            <li class="c-sidebar-nav-item">
+                <a href="{{ route("admin.settings.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/settings") || request()->is("admin/settings/*") ? "c-active" : "" }}">
+                    <i class="fa-fw fas fa-cogs c-sidebar-nav-icon">
+
+                    </i>
+                    {{ trans('cruds.setting.title') }}
                 </a>
             </li>
         @endcan
@@ -111,7 +188,6 @@
                 {{ trans('global.logout') }}
             </a>
         </li>
-        
     </ul>
 
 </div>
