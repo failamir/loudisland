@@ -180,24 +180,71 @@ class PendaftarController extends Controller {
     }
 
     public function daftar(Request $request ){
-        $user = User::create( [
-            'uid'     => $request->input( 'uid' ),
-            'email'    => $request->input( 'email' ),
+        $e_user = User::where(
+            'email'  ,  $request->input( 'email' )
             // 'password' => $request->input( 'no_hp' ),
-        ] );
-        // $user->assignRole( 'User' );
-        $user->roles()->sync(2);
+        )->first();
 
-        $snap = new stdClass();
-        $snap->data = 'success';
-        return response()->json( $snap );
+        if(!empty($e_user)){
+            
+            $snap = new stdClass();
+            $snap->data = 'email sudah terdaftar';
+            return response()->json( $snap );
+        } else {
+            $user = User::create( [
+                'uid'     => $request->input( 'uid' ),
+                'email'    => $request->input( 'email' ),
+                'name'    => $request->input( 'name' ),
+                'password' => $request->input( 'uid' ),
+                // 'password' => $request->input( 'no_hp' ),
+            ] );
+            // $user->assignRole( 'User' );
+            $user->roles()->sync(2);
+    
+            $snap = new stdClass();
+            $snap->data = 'success daftar';
+            return response()->json( $snap );
+        }
+        
     }
 
-    public function profile(Request $request ){
-        $user = User::find( [
-            'email'    => $request->input( 'email' ),
+    public function updateprofile(Request $request ){
+        $e_user = User::where(
+            'uid'  ,  $request->input( 'uid' )
             // 'password' => $request->input( 'no_hp' ),
-        ] );
+        )->first();
+
+        if(!empty($e_user)){
+            $e_user->update( [
+                // 'uid'     => $request->input( 'uid' ),
+                'email'    => $request->input( 'email' ),
+                'name'    => $request->input( 'name' ),
+                'nik' => $request->input( 'nik' ),
+                'no_hp' => $request->input( 'no_hp' ),
+            ] );
+            // $user->assignRole( 'User' );
+            // $user->roles()->sync(2);
+    
+            $snap = new stdClass();
+            $snap->data = 'success update';
+            return response()->json( $snap );
+            
+        } else {
+            
+
+            $snap = new stdClass();
+            $snap->data = 'email tidak terdaftar';
+            return response()->json( $snap );
+        }
+        
+    }
+
+    public function profile( ){
+        $request = $_GET['uid'];
+        $user = User::where( 
+            'uid'  ,  $request
+            // 'password' => $request->input( 'no_hp' ),
+        )->first();
         // $user->assignRole( 'User' );
         // $user->roles()->sync(2);
 
