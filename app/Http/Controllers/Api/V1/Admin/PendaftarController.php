@@ -24,6 +24,7 @@ use Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Models\Tiket;
 
 class PendaftarController extends Controller {
     public function __construct() {
@@ -46,18 +47,18 @@ class PendaftarController extends Controller {
         return view( 'admin.pendaftars.index', compact( 'events', 'pendaftars' ) );
     }
 
-    public function list_checkin(){
-        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+    public function list_checkin() {
+        // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
-        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin','sudah')->paginate(10));
-    
+        return new PendaftarResource( Pendaftar::with( [ 'event' ] )->where( 'checkin', 'sudah' )->paginate( 10 ) );
+
     }
 
-    public function list_checkout(){
-        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+    public function list_checkout() {
+        // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
-        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin','terpakai')->paginate(10));
-    
+        return new PendaftarResource( Pendaftar::with( [ 'event' ] )->where( 'checkin', 'terpakai' )->paginate( 10 ) );
+
     }
 
     public function create() {
@@ -122,116 +123,140 @@ class PendaftarController extends Controller {
         $tiket_id = array();
         $amount = 0;
 
-        
-            $u1 = 12000;
+        $u1 = 12000;
 
-            for ( $u = 11600 ; $u<$u1; $u++ ) {
-                $no_tiket = $u;
-                $tiket_id[] = $no_tiket;
-                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-                // $total_bayar = Event::find( 1 )->harga;
-                // $amount += $total_bayar;
-                $code = uniqid() . uniqid();
-                $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-                    'nama' => 'generate',
-                    'nik' => 'generate',
-                    'email' => $code,
-                    'no_hp' => $no_tiket,
-                    'no_tiket' => 'generate',
-                    // 'total_bayar' => $total_bayar,
-                    // 'token' => $request->input( '_token' ),
-                    'status_payment' => 'Pending',
-                ] ) );
-                // QrCode::format('png');  //Will return a png image
-                QrCode::format('png')->size(300)->generate($code,'../public/qrcodes/'.$u.'.png');
+        for ( $u = 11600 ; $u<$u1; $u++ ) {
+            $no_tiket = $u;
+            $tiket_id[] = $no_tiket;
+            // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            // $total_bayar = Event::find( 1 )->harga;
+            // $amount += $total_bayar;
+            $code = uniqid() . uniqid();
+            $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                'nama' => 'generate',
+                'nik' => 'generate',
+                'email' => $code,
+                'no_hp' => $no_tiket,
+                'no_tiket' => 'generate',
+                // 'total_bayar' => $total_bayar,
+                // 'token' => $request->input( '_token' ),
+                'status_payment' => 'Pending',
+            ] ) );
+            // QrCode::format( 'png' );
+            //Will return a png image
+            QrCode::format( 'png' )->size( 300 )->generate( $code, '../public/qrcodes/'.$u.'.png' );
 
-            }
-        
+        }
 
-
-       echo " berhasil";
+        echo ' berhasil';
         //  return view( 'bayar', compact( 'snap' ) );
         // }
         // return redirect()->route( 'admin.pendaftars.index' );
     }
 
     public function checkin( Request $request ) {
-        $pendaftar = Pendaftar::where( 'no_tiket' ,$request->input( 'no_tiket' ) )->first();
-        $pendaftar->update(['checkin' =>'sudah'] );
+        $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
+        $pendaftar->update( [ 'checkin' =>'sudah' ] );
         $snap = new stdClass();
         $snap->data = 'success';
         return response()->json( $snap );
     }
 
     public function checkout( Request $request ) {
-        $pendaftar = Pendaftar::where( 'no_tiket' ,$request->input( 'no_tiket' ) )->first();
-        $pendaftar->update(['checkin' =>'terpakai'] );
+        $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
+        $pendaftar->update( [ 'checkin' =>'terpakai' ] );
         $snap = new stdClass();
         $snap->data = 'success';
         return response()->json( $snap );
     }
 
     public function checkin2( Request $request ) {
-        $pendaftar = Pendaftar::where( 'no_tiket' ,$request->input( 'no_tiket' ) )->first();
-        $pendaftar->update(['checkin' =>'sudah-note'] );
+        $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
+        $pendaftar->update( [ 'checkin' =>'sudah-note' ] );
         $snap = new stdClass();
         $snap->data = 'success';
-        return response()->json( $snap );   
+        return response()->json( $snap );
+
     }
-    
+
+    public function daftar(Request $request ){
+        $user = User::create( [
+            'uid'     => $request->input( 'uid' ),
+            'email'    => $request->input( 'email' ),
+            // 'password' => $request->input( 'no_hp' ),
+        ] );
+        // $user->assignRole( 'User' );
+        $user->roles()->sync(2);
+
+        $snap = new stdClass();
+        $snap->data = 'success';
+        return response()->json( $snap );
+    }
+
+    public function profile(Request $request ){
+        $user = User::find( [
+            'email'    => $request->input( 'email' ),
+            // 'password' => $request->input( 'no_hp' ),
+        ] );
+        // $user->assignRole( 'User' );
+        // $user->roles()->sync(2);
+
+        $snap = new stdClass();
+        $snap->data = $user;
+        return response()->json( $snap );
+    }
 
     public function beliApi( Request $request ) {
-        
+
         $data = $request->all();
-    $rules = [
-        'nama' => 'required', //Must be a number and length of value is 8
-        'email' => 'required',
-        'no_hp' => 'required',
-    ];
+        $rules = [
+            'nama' => 'required', //Must be a number and length of value is 8
+            'email' => 'required',
+            'no_hp' => 'required',
+        ];
 
-    $validator = Validator::make($data, $rules);
-    if ($validator->passes()) {
-        //TODO Handle your data
-    
+        $validator = Validator::make( $data, $rules );
+        if ( $validator->passes() ) {
+            //TODO Handle your data
 
-        // dd($request->input('id'));
-        $data = $request->all();
+            // dd( $request->input( 'id' ) );
+            $data = $request->all();
 
-        // dd( $data );
-        $length = 10;
-        $random = '';
-        for ( $i = 0; $i < $length; $i++ ) {
-            $random .= rand( 0, 1 ) ? rand( 0, 9 ) : chr( rand( ord( 'a' ), ord( 'z' ) ) );
-        }
+            // dd( $data );
+            $length = 10;
+            $random = '';
+            for ( $i = 0; $i < $length; $i++ ) {
+                $random .= rand( 0, 1 ) ? rand( 0, 9 ) : chr( rand( ord( 'a' ), ord( 'z' ) ) );
+            }
 
-        $no_invoice = 'TRX-'.Str::upper( $random );
+            $no_invoice = 'TRX-'.Str::upper( $random );
 
-        // if ( $request->input( 'nama' ) == '' || $request->input( 'email' ) == '' || $request->input( 'no_hp' ) == '' || $request->input( 'nik' ) ) {
-        //     $events = Event::pluck( 'nama_event', 'id' )->prepend( trans( 'global.pleaseSelect' ), '' );
-        //     $no_t = Pendaftar::orderBy( 'no_tiket', 'DESC' )->first();
-        //     $data = $request->all();
-        //     $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
-        //     $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
-        //     $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
-        //     return view( 'daftar', compact( 'events', 'no_t', 'data' ) );
-        // } else {
+            // if ( $request->input( 'nama' ) == '' || $request->input( 'email' ) == '' || $request->input( 'no_hp' ) == '' || $request->input( 'nik' ) ) {
+            //     $events = Event::pluck( 'nama_event', 'id' )->prepend( trans( 'global.pleaseSelect' ), '' );
+            //     $no_t = Pendaftar::orderBy( 'no_tiket', 'DESC' )->first();
+            //     $data = $request->all();
+            //     $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
+            //     $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
+            //     $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
+            //     return view( 'daftar', compact( 'events', 'no_t', 'data' ) );
+            // } else {
 
-        $tiket_id = array();
-        $amount = 0;
+            $tiket_id = array();
+            $amount = 0;
 
-        // if ( isset( $request->input('id')[1] ) ) {
-            foreach($request->input('id') as $d){
+            // if ( isset( $request->input( 'id' )[ 1 ] ) ) {
+            foreach ( $request->input( 'id' ) as $d ) {
 
-            // $u1 = ( int )$request->input('id')[1];
-                
-            // for ( $u = 0; $u<$u1; $u++ ) {
-                $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+                // $u1 = ( int )$request->input( 'id' )[ 1 ];
+
+                // for ( $u = 0; $u<$u1; $u++ ) {
+                $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
                 $tiket_id[] = $no_tiket;
                 // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
                 $total_bayar = Event::find( $d )->harga;
                 $amount += $total_bayar;
-                if(null !== $request->input('nik')) {
-                    $nik = $request->input('nik');
+                if ( null !== $request->input( 'nik' ) ) {
+                    $nik = $request->input( 'nik' );
                 } else {
                     $nik = 'generate';
                 }
@@ -242,214 +267,216 @@ class PendaftarController extends Controller {
                     'nik' => $nik,
                     'status_payment' => 'Pending',
                 ] ) );
+
+                $pendaftar = Tiket::create( array_merge( $request->all(), [
+                    'no_tiket' => $no_tiket,
+                    'total_bayar' => $total_bayar,
+                    'event_id' => $d,
+                    'nik' => $nik,
+                    'status_payment' => 'Pending',
+                ] ) );
+
                 if ( $media = $request->input( 'ck-media', false ) ) {
                     Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
                 }
 
                 // echo $d;
 
+                // }
+            }
+
+            // die;
+            // if ( isset( $request->input( 'id' )[ 2 ] ) ) {
+            //     $u2 = ( int )$request->input( 'id' )[ 2 ];
+            //     for ( $u = 0; $u<$u2; $u++ ) {
+            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //         $tiket_id[] = $no_tiket;
+            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //         $total_bayar = Event::find( 2 )->harga;
+            //         $amount += $total_bayar;
+            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //             'no_tiket' => $no_tiket,
+            //             'event_id' => 2,
+            //             'total_bayar' => $total_bayar,
+            //             'nik' => $no_tiket,
+            //             'status_payment' => 'Pending',
+            // ] ) );
+            //         if ( $media = $request->input( 'ck-media', false ) ) {
+            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //         }
+            //     }
             // }
-        }
 
-        // die;
-        // if ( isset( $request->input('id')[2] ) ) {
-        //     $u2 = ( int )$request->input('id')[2];
-        //     for ( $u = 0; $u<$u2; $u++ ) {
-        //         $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //         $tiket_id[] = $no_tiket;
-        //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //         $total_bayar = Event::find( 2 )->harga;
-        //         $amount += $total_bayar;
-        //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //             'no_tiket' => $no_tiket,
-        //             'event_id' => 2,
-        //             'total_bayar' => $total_bayar,
-        //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
-        //         ] ) );
-        //         if ( $media = $request->input( 'ck-media', false ) ) {
-        //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //         }
-        //     }
-        // }
+            // if ( isset( $request->input( 'id' )[ 3 ] ) ) {
+            //     $u3 = ( int )$request->input( 'id' )[ 3 ];
+            //     for ( $u = 0; $u<$u3; $u++ ) {
+            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //         $tiket_id[] = $no_tiket;
+            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //         $total_bayar = Event::find( 3 )->harga;
+            //         $amount += $total_bayar;
+            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //             'no_tiket' => $no_tiket,
+            //             'event_id' => 3,
+            //             'total_bayar' => $total_bayar,
+            //             'nik' => $no_tiket,
+            //             'status_payment' => 'Pending',
+            // ] ) );
+            //         if ( $media = $request->input( 'ck-media', false ) ) {
+            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //         }
+            //     }
+            // }
 
-        // if ( isset( $request->input('id')[3] ) ) {
-        //     $u3 = ( int )$request->input('id')[3];
-        //     for ( $u = 0; $u<$u3; $u++ ) {
-        //         $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //         $tiket_id[] = $no_tiket;
-        //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //         $total_bayar = Event::find( 3 )->harga;
-        //         $amount += $total_bayar;
-        //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //             'no_tiket' => $no_tiket,
-        //             'event_id' => 3,
-        //             'total_bayar' => $total_bayar,
-        //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
-        //         ] ) );
-        //         if ( $media = $request->input( 'ck-media', false ) ) {
-        //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //         }
-        //     }
-        // }
+            // if ( isset( $request->input( 'id' )[ 4 ] ) ) {
+            //     $u4 = ( int )$request->input( 'id' )[ 4 ];
+            //     for ( $u = 0; $u<$u4; $u++ ) {
+            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //         $tiket_id[] = $no_tiket;
+            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //         $total_bayar = Event::find( 4 )->harga;
+            //         $amount += $total_bayar;
+            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //             'no_tiket' => $no_tiket,
+            //             'event_id' => 4,
+            //             'total_bayar' => $total_bayar,
+            //             'nik' => $no_tiket,
+            //             'status_payment' => 'Pending',
+            // ] ) );
+            //         if ( $media = $request->input( 'ck-media', false ) ) {
+            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //         }
+            //     }
+            // }
 
-        // if ( isset( $request->input('id')[4] ) ) {
-        //     $u4 = ( int )$request->input('id')[4];
-        //     for ( $u = 0; $u<$u4; $u++ ) {
-        //         $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //         $tiket_id[] = $no_tiket;
-        //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //         $total_bayar = Event::find( 4 )->harga;
-        //         $amount += $total_bayar;
-        //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //             'no_tiket' => $no_tiket,
-        //             'event_id' => 4,
-        //             'total_bayar' => $total_bayar,
-        //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
-        //         ] ) );
-        //         if ( $media = $request->input( 'ck-media', false ) ) {
-        //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //         }
-        //     }
-        // }
+            // if ( isset( $request->input( 'id' )[ 5 ] ) ) {
+            //     $u5 = ( int )$request->input( 'id' )[ 5 ];
+            //     for ( $u = 0; $u<$u5; $u++ ) {
+            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //         $tiket_id[] = $no_tiket;
+            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //         $total_bayar = Event::find( 5 )->harga;
+            //         $amount += $total_bayar;
+            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //             'no_tiket' => $no_tiket,
+            //             'event_id' => 5,
+            //             'total_bayar' => $total_bayar,
+            //             'nik' => $no_tiket,
+            //             'status_payment' => 'Pending',
+            // ] ) );
+            //         if ( $media = $request->input( 'ck-media', false ) ) {
+            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //         }
+            //     }
+            // }
 
-        // if ( isset( $request->input('id')[5] ) ) {
-        //     $u5 = ( int )$request->input('id')[5];
-        //     for ( $u = 0; $u<$u5; $u++ ) {
-        //         $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //         $tiket_id[] = $no_tiket;
-        //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //         $total_bayar = Event::find( 5 )->harga;
-        //         $amount += $total_bayar;
-        //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //             'no_tiket' => $no_tiket,
-        //             'event_id' => 5,
-        //             'total_bayar' => $total_bayar,
-        //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
-        //         ] ) );
-        //         if ( $media = $request->input( 'ck-media', false ) ) {
-        //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //         }
-        //     }
-        // }
+            // if ( isset( $request->input( 'id' )[ 6 ] ) ) {
+            //     $u6 = ( int )$request->input( 'id' )[ 6 ];
+            //     for ( $u = 0; $u<$u6; $u++ ) {
+            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //         $tiket_id[] = $no_tiket;
+            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //         $total_bayar = Event::find( 6 )->harga;
+            //         $amount += $total_bayar;
+            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //             'no_tiket' => $no_tiket,
+            //             'event_id' => 6,
+            //             'total_bayar' => $total_bayar,
+            //             'nik' => $no_tiket,
+            //             'status_payment' => 'Pending',
+            // ] ) );
+            //         if ( $media = $request->input( 'ck-media', false ) ) {
+            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //         }
+            //     }
+            // }
 
-        // if ( isset( $request->input('id')[6] ) ) {
-        //     $u6 = ( int )$request->input('id')[6];
-        //     for ( $u = 0; $u<$u6; $u++ ) {
-        //         $no_tiket = '0' . (int)Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //         $tiket_id[] = $no_tiket;
-        //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //         $total_bayar = Event::find( 6 )->harga;
-        //         $amount += $total_bayar;
-        //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //             'no_tiket' => $no_tiket,
-        //             'event_id' => 6,
-        //             'total_bayar' => $total_bayar,
-        //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
-        //         ] ) );
-        //         if ( $media = $request->input( 'ck-media', false ) ) {
-        //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //         }
-        //     }
-        // }
+            // $u2 = ( int )$request->input( 'day_2' );
+            // for ( $u = 0; $u<$u2; $u++ ) {
+            //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //     $tiket_id[] = $no_tiket;
+            //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //     $total_bayar = Event::find( 2 )->harga;
+            //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //         'no_tiket' => $no_tiket,
+            //         'total_bayar' => $total_bayar,
+            //         // 'token' => $request->input( '_token' ),
+            //         'status_payment' => 'Pending',
+            // ] ) );
+            //     if ( $media = $request->input( 'ck-media', false ) ) {
+            //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //     }
 
-        // $u2 = ( int )$request->input( 'day_2' );
-        // for ( $u = 0; $u<$u2; $u++ ) {
-        //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //     $tiket_id[] = $no_tiket;
-        //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //     $total_bayar = Event::find( 2 )->harga;
-        //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //         'no_tiket' => $no_tiket,
-        //         'total_bayar' => $total_bayar,
-        //         // 'token' => $request->input( '_token' ),
-        //         'status_payment' => 'Pending',
-        // ] ) );
-        //     if ( $media = $request->input( 'ck-media', false ) ) {
-        //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //     }
+            // }
 
-        // }
+            // $u3 = ( int )$request->input( 'day_3' );
+            // for ( $u = 0; $u<$u3; $u++ ) {
+            //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
+            //     $tiket_id[] = $no_tiket;
+            //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            //     $total_bayar = Event::find( 3 )->harga;
+            //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+            //         'no_tiket' => $no_tiket,
+            //         'total_bayar' => $total_bayar,
+            //         // 'token' => $request->input( '_token' ),
+            //         'status_payment' => 'Pending',
+            // ] ) );
+            //     if ( $media = $request->input( 'ck-media', false ) ) {
+            //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
+            //     }
 
-        // $u3 = ( int )$request->input( 'day_3' );
-        // for ( $u = 0; $u<$u3; $u++ ) {
-        //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //     $tiket_id[] = $no_tiket;
-        //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //     $total_bayar = Event::find( 3 )->harga;
-        //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //         'no_tiket' => $no_tiket,
-        //         'total_bayar' => $total_bayar,
-        //         // 'token' => $request->input( '_token' ),
-        //         'status_payment' => 'Pending',
-        // ] ) );
-        //     if ( $media = $request->input( 'ck-media', false ) ) {
-        //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //     }
+            // }
 
-        // }
+            // $data = $request->all();
+            // $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
+            // $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
+            // $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
 
-        // $data = $request->all();
-        // $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
-        // $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
-        // $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
+            // $total_bayar = $data[ 'price_1' ] + $data[ 'price_2' ] + $data[ 'price_3' ];
 
-        // $total_bayar = $data[ 'price_1' ] + $data[ 'price_2' ] + $data[ 'price_3' ];
+            $transaksi = Transaksi::create( [
+                'invoice'       => $no_invoice,
+                'event_id'   => serialize( $no_tiket ),
+                'pendaftar_id'    => $request->input( 'no_hp' ),
+                'amount'        => $amount,
+                'note'          => $request->input( 'nama' ),
+                'status'        => 'Pending',
+            ] );
 
-        User::create([
-            'name'     => $request->input( 'nama' ),
-            'email'    => $request->input( 'email' ),
-            'password' => $request->input( 'no_hp' ),
-        ]);
+            $payload = [
+                'transaction_details' => [
+                    'order_id'      => $transaksi->invoice,
+                    'gross_amount'  => $transaksi->amount,
+                ],
+                'customer_details' => [
+                    'first_name'       => $request->input( 'nama' ),
+                    'email'            => $request->input( 'email' ),
+                ]
+            ];
 
-        $transaksi = Transaksi::create( [
-            'invoice'       => $no_invoice,
-            'event_id'   => serialize( $no_tiket ),
-            'pendaftar_id'    => $request->input( 'no_hp' ),
-            'amount'        => $amount,
-            'note'          => $request->input( 'nama' ),
-            'status'        => 'Pending',
-        ] );
+            //create snap token
+            // $snapToken = Snap::getSnapToken( $payload );
+            // $transaksi->snap_token = $snapToken;
+            // $transaksi->save();
 
-        $payload = [
-            'transaction_details' => [
-                'order_id'      => $transaksi->invoice,
-                'gross_amount'  => $transaksi->amount,
-            ],
-            'customer_details' => [
-                'first_name'       => $request->input( 'nama' ),
-                'email'            => $request->input( 'email' ),
-            ]
-        ];
+            // $snap = new stdClass();
+            // $snap->data = $snapToken;
 
-        //create snap token
-        // $snapToken = Snap::getSnapToken( $payload );
-        // $transaksi->snap_token = $snapToken;
-        // $transaksi->save();
+            // return ( $snap )
+            //     ->response()
+            //     ->setStatusCode( Response::HTTP_ACCEPTED );
 
-        // $snap = new stdClass();
-        // $snap->data = $snapToken;
+            // return json_encode( $snap );
 
-        // return ($snap)
-        //     ->response()
-        //     ->setStatusCode(Response::HTTP_ACCEPTED);
+            $paymentUrl = Snap::createTransaction( $payload )->redirect_url;
+            $snap = new stdClass();
+            $snap->data = $paymentUrl;
+            // $snap->status = 'success';
+            // $snap->message = $transaksi->amount;
+            return response()->json( $snap );
 
-        // return json_encode($snap);
-
-        $paymentUrl = Snap::createTransaction($payload)->redirect_url;
-        $snap = new stdClass();
-        $snap->data = $paymentUrl;
-        // $snap->status = 'success';
-        // $snap->message = $transaksi->amount;
-        return response()->json( $snap );
-
-        
-        // dd( $snap );
-        // echo "       
+            // dd( $snap );
+            // echo "       
         // <html>
         // <head>
         // <meta name='viewport' content='width=device-width, initial-scale=1'>
@@ -480,13 +507,13 @@ class PendaftarController extends Controller {
         // </script>
         // </body>
         // </html>";
-        //  return view( 'bayar', compact( 'snap' ) );
-        // }
-        // return redirect()->route( 'admin.pendaftars.index' );
-    } else {
-        //TODO Handle your error
-        return response()->json($validator->errors()->all());
-    }
+            //  return view( 'bayar', compact( 'snap' ) );
+            // }
+            // return redirect()->route( 'admin.pendaftars.index' );
+        } else {
+            //TODO Handle your error
+            return response()->json( $validator->errors()->all() );
+        }
     }
 
     public function notificationHandler( Request $request ) {

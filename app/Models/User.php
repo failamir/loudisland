@@ -44,6 +44,7 @@ class User extends Authenticatable
         'created_at',
         'updated_at',
         'deleted_at',
+        'uid',
     ];
 
     public function __construct(array $attributes = [])
