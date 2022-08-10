@@ -377,7 +377,7 @@ class PendaftarController extends Controller {
                     // }
                 }
 
-                var_dump(serialize( $no_tiket ));
+                // var_dump(serialize( $no_tiket ));
                 $transaksi = Transaksi::create( [
                     'invoice'       => $no_invoice,
                     'events'   => serialize( $no_tiket ),
