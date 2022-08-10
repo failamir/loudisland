@@ -38,6 +38,7 @@ class Transaksi extends Model implements HasMedia
     ];
 
     protected $fillable = [
+        'events',
         'invoice',
         'event_id',
         'tiket_id',
