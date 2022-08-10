@@ -9,7 +9,7 @@
     Route::post('updateprofile', 'PendaftarController@updateprofile')->name('updateprofile');
     Route::get('transaksi', 'PendaftarController@transaksi')->name('transaksi');
     Route::get('tiket', 'PendaftarController@tiket')->name('tiket');
-    Route::post('notification', 'PendaftarController@notification')->name('notification');
+    Route::post('notification', 'PendaftarController@notificationHandler')->name('notification');
     Route::post('scan', 'PendaftarController@scan')->name('scan');
     Route::post('checkin', 'PendaftarController@checkin')->name('checkin');
     Route::post('checkin2', 'PendaftarController@checkin2')->name('checkin2');
