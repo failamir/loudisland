@@ -7,6 +7,8 @@
     Route::post('daftar', 'PendaftarController@daftar')->name('daftar');
     Route::get('profile', 'PendaftarController@profile')->name('profile');
     Route::post('updateprofile', 'PendaftarController@updateprofile')->name('updateprofile');
+    Route::get('transaksi', 'PendaftarController@transaksi')->name('transaksi');
+    Route::get('tiket', 'PendaftarController@tiket')->name('tiket');
     Route::post('notification', 'PendaftarController@notification')->name('notification');
     Route::post('scan', 'PendaftarController@scan')->name('scan');
     Route::post('checkin', 'PendaftarController@checkin')->name('checkin');

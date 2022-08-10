@@ -29,6 +29,7 @@ class Transaksi extends Model implements HasMedia
     ];
 
     public $table = 'transaksis';
+    // public $table = 'transaksi';
 
     protected $dates = [
         'created_at',

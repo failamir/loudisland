@@ -17,7 +17,7 @@ return new class extends Migration
             $table->id();
             $table->string('invoice');
             $table->string('event_id');
-            $table->string('pendaftar_id');
+            $table->string('peserta_id');
             $table->bigInteger('amount');
             $table->text('note')->nullable();
             $table->string('snap_token')->nullable();

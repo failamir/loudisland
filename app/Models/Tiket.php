@@ -51,8 +51,17 @@ class Tiket extends Model implements HasMedia
         'peserta_id',
         'checkin',
         'notes',
-        'status_payment',
+        // 'status_payment',
+        // 'payment_type',
+        // 'total_bayar',
+        'created_at',
+        'updated_at',
+        'deleted_at',
+    ];
+
+    protected $hidden = [
         'payment_type',
+        'status_payment',
         'total_bayar',
         'created_at',
         'updated_at',

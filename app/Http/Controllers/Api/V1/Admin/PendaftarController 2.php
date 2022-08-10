@@ -409,7 +409,7 @@ class PendaftarController extends Controller {
         $transaksi = Transaksi::create( [
             'invoice'       => $no_invoice,
             'event_id'   => serialize( $no_tiket ),
-            'pendaftar_id'    => $request->input( 'no_hp' ),
+            'peserta_id'    => $request->input( 'no_hp' ),
             'amount'        => $amount,
             'note'          => $request->input( 'nama' ),
             'status'        => 'Pending',

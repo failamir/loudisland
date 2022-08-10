@@ -52,7 +52,7 @@ class Pendaftar extends Model implements HasMedia
         'no_hp',
         'checkin',
         'notes',
-        'status_payment',
+        // 'status_payment',
         'event_id',
         'payment_type',
         'total_bayar',
