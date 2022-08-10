@@ -257,9 +257,9 @@ class PendaftarController extends Controller {
 
         $data = $request->all();
         $rules = [
-            'nama' => 'required', //Must be a number and length of value is 8
-            'email' => 'required',
-            'no_hp' => 'required',
+            'uid' => 'required', //Must be a number and length of value is 8
+            // 'email' => 'required',
+            // 'no_hp' => 'required',
         ];
 
         $validator = Validator::make( $data, $rules );
@@ -302,12 +302,18 @@ class PendaftarController extends Controller {
                 // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
                 $total_bayar = Event::find( $d )->harga;
                 $amount += $total_bayar;
-                if ( null !== $request->input( 'nik' ) ) {
-                    $nik = $request->input( 'nik' );
+
+                $userdata = User::where( 'uid', $request->input( 'uid' ) )->first();
+
+                if ( null !== $userdata->nik ) {
+                    $nik = $userdata->nik;
                 } else {
                     $nik = 'generate';
                 }
                 $pendaftar = Pendaftar::create( array_merge( $request->all(), [
+                    'nama' => $userdata->name,
+                    'email' => $userdata->email,
+                    'no_hp' => $userdata->no_hp,
                     'no_tiket' => $no_tiket,
                     'total_bayar' => $total_bayar,
                     'event_id' => $d,
@@ -316,6 +322,9 @@ class PendaftarController extends Controller {
                 ] ) );
 
                 $pendaftar = Tiket::create( array_merge( $request->all(), [
+                    'nama' => $userdata->name,
+                    'email' => $userdata->email,
+                    'no_hp' => $userdata->no_hp,
                     'no_tiket' => $no_tiket,
                     'total_bayar' => $total_bayar,
                     'event_id' => $d,
@@ -484,11 +493,11 @@ class PendaftarController extends Controller {
             $transaksi = Transaksi::create( [
                 'invoice'       => $no_invoice,
                 'events'   => serialize( $no_tiket ),
-                'pendaftar_id'    => $request->input( 'no_hp' ),
+                'pendaftar_id'    => $userdata->id,
                 'amount'        => $amount,
-                'note'          => $request->input( 'nama' ),
+                'note'          => $userdata->name,
                 'status'        => 'Pending',
-                'uid'        => $request->input( 'uid' ),
+                'uid'        => $userdata->uid,
             ] );
 
             $payload = [
@@ -497,8 +506,8 @@ class PendaftarController extends Controller {
                     'gross_amount'  => $transaksi->amount,
                 ],
                 'customer_details' => [
-                    'first_name'       => $request->input( 'nama' ),
-                    'email'            => $request->input( 'email' ),
+                    'first_name'       => $userdata->name,
+                    'email'            => $userdata->email,
                 ]
             ];
 
@@ -560,7 +569,7 @@ class PendaftarController extends Controller {
             // return redirect()->route( 'admin.pendaftars.index' );
         } else {
             //TODO Handle your error
-            return response()->json( $validator->errors()->all() );
+            return response()->json( ['data' => $validator->errors()->all()] );
         }
     }
 
