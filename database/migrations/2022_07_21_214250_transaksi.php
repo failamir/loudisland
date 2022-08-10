@@ -21,7 +21,7 @@ return new class extends Migration
             $table->bigInteger('amount');
             $table->text('note')->nullable();
             $table->string('snap_token')->nullable();
-            $table->enum('status', array('Pending', 'Success', 'Expired', 'Failed','Refund'));
+            $table->enum('status', array('pending', 'success', 'Expired', 'failed','Refund'));
             $table->timestamps();
         });
     }

@@ -30,9 +30,9 @@ class Pendaftar extends Model implements HasMedia
     ];
 
     public const STATUS_PAYMENT_SELECT = [
-        'Pending' => 'Pending',
-        'Success' => 'Success',
-        'Failed'  => 'Failed',
+        'pending' => 'pending',
+        'success' => 'success',
+        'failed'  => 'failed',
         'Refund'  => 'Refund',
     ];
 

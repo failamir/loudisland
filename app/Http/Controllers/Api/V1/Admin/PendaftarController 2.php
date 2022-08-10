@@ -140,7 +140,7 @@ class PendaftarController extends Controller {
                     'no_tiket' => 'generate',
                     // 'total_bayar' => $total_bayar,
                     // 'token' => $request->input( '_token' ),
-                    'status_payment' => 'Pending',
+                    'status_payment' => 'pending',
                 ] ) );
                 // QrCode::format('png');  //Will return a png image
                 QrCode::format('png')->size(300)->generate($code,'../public/qrcodes/'.$u.'.png');
@@ -240,7 +240,7 @@ class PendaftarController extends Controller {
                     'total_bayar' => $total_bayar,
                     'event_id' => $d,
                     'nik' => $nik,
-                    'status_payment' => 'Pending',
+                    'status_payment' => 'pending',
                 ] ) );
                 if ( $media = $request->input( 'ck-media', false ) ) {
                     Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -265,7 +265,7 @@ class PendaftarController extends Controller {
         //             'event_id' => 2,
         //             'total_bayar' => $total_bayar,
         //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
+        //             'status_payment' => 'pending',
         //         ] ) );
         //         if ( $media = $request->input( 'ck-media', false ) ) {
         //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -286,7 +286,7 @@ class PendaftarController extends Controller {
         //             'event_id' => 3,
         //             'total_bayar' => $total_bayar,
         //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
+        //             'status_payment' => 'pending',
         //         ] ) );
         //         if ( $media = $request->input( 'ck-media', false ) ) {
         //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -307,7 +307,7 @@ class PendaftarController extends Controller {
         //             'event_id' => 4,
         //             'total_bayar' => $total_bayar,
         //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
+        //             'status_payment' => 'pending',
         //         ] ) );
         //         if ( $media = $request->input( 'ck-media', false ) ) {
         //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -328,7 +328,7 @@ class PendaftarController extends Controller {
         //             'event_id' => 5,
         //             'total_bayar' => $total_bayar,
         //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
+        //             'status_payment' => 'pending',
         //         ] ) );
         //         if ( $media = $request->input( 'ck-media', false ) ) {
         //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -349,7 +349,7 @@ class PendaftarController extends Controller {
         //             'event_id' => 6,
         //             'total_bayar' => $total_bayar,
         //             'nik' => $no_tiket,
-        //             'status_payment' => 'Pending',
+        //             'status_payment' => 'pending',
         //         ] ) );
         //         if ( $media = $request->input( 'ck-media', false ) ) {
         //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -367,7 +367,7 @@ class PendaftarController extends Controller {
         //         'no_tiket' => $no_tiket,
         //         'total_bayar' => $total_bayar,
         //         // 'token' => $request->input( '_token' ),
-        //         'status_payment' => 'Pending',
+        //         'status_payment' => 'pending',
         // ] ) );
         //     if ( $media = $request->input( 'ck-media', false ) ) {
         //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -385,7 +385,7 @@ class PendaftarController extends Controller {
         //         'no_tiket' => $no_tiket,
         //         'total_bayar' => $total_bayar,
         //         // 'token' => $request->input( '_token' ),
-        //         'status_payment' => 'Pending',
+        //         'status_payment' => 'pending',
         // ] ) );
         //     if ( $media = $request->input( 'ck-media', false ) ) {
         //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
@@ -412,7 +412,7 @@ class PendaftarController extends Controller {
             'peserta_id'    => $request->input( 'no_hp' ),
             'amount'        => $amount,
             'note'          => $request->input( 'nama' ),
-            'status'        => 'Pending',
+            'status'        => 'pending',
         ] );
 
         $payload = [

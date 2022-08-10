@@ -60,8 +60,8 @@
         <div class="w-2/5 p-4 flex flex-col justify-between">
           <div>
             <div class="font-medium">
-              <h5>Sept</h5>
-              <h5>2-3</h5>
+              {{-- <h5>Sept</h5>
+              <h5>2-3</h5> --}}
             </div>
             <div class="mt-6">
               <h1 class="text-2xl font-medium">Vierratale Andika Mahesa Fiersa Besari 2022</h1>
@@ -78,7 +78,7 @@
       <!-- TITLE: START -->
       <div class="py-6 flex items-center flex-col border-x-2 border-b-2">
         <h1 class="text-2xl font-medium mb-2">
-         Selamat, Pembayaran Anda Berhasil
+         Terimakasih, Pembayaran Order {{ $_GET['order_id'] }}Anda @if($_GET['transaction_status'] == 'settlement') Berhasil @elseif($_GET['transaction_status'] == 'pending') Sedang Di Proses @elseif($_GET['transaction_status'] == 'expire')Eexpire @endif
         </h1>
         {{-- <p>
           Fri, Sept 2, 2022 3:00 PM - Sat, Sept 3, 2022 6:00 PM WITA

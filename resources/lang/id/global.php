@@ -13,7 +13,7 @@ return [
     'clear'                          => 'Clear',
     'downloadFile'                   => 'Unduh berkas',
     'edit'                           => 'Ubah',
-    'emailVerificationSuccess'       => 'Email pengguna berhasil diverifikasi',
+    'emailVerificationsuccess'       => 'Email pengguna berhasil diverifikasi',
     'entries'                        => 'Entri',
     'filterDate'                     => 'Filter berdasarkan bulan',
     'forgot_password'                => 'Lupa Kata Sandi ?',

@@ -28,9 +28,9 @@ class Tiket extends Model implements HasMedia
     ];
 
     public const STATUS_PAYMENT_SELECT = [
-        'Pending' => 'Pending',
-        'Success' => 'Success',
-        'Failed'  => 'Failed',
+        'pending' => 'pending',
+        'success' => 'success',
+        'failed'  => 'failed',
         'Refund'  => 'Refund',
     ];
 
@@ -51,6 +51,7 @@ class Tiket extends Model implements HasMedia
         'peserta_id',
         'checkin',
         'notes',
+        'event_id',
         // 'status_payment',
         // 'payment_type',
         // 'total_bayar',

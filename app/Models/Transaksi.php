@@ -21,10 +21,10 @@ class Transaksi extends Model implements HasMedia
     use HasFactory;
 
     public const STATUS_SELECT = [
-        'Pending' => 'Pending',
-        'Success' => 'Success',
+        'pending' => 'pending',
+        'success' => 'success',
         'Expired' => 'Expired',
-        'Failed'  => 'Failed',
+        'failed'  => 'failed',
         'Refund'  => 'Refund',
     ];
 
