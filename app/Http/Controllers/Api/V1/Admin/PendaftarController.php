@@ -14,17 +14,18 @@ use App\Http\Resources\Admin\PendaftarResource;
 use App\Models\Event;
 use App\Models\Pendaftar;
 use App\Models\Transaksi;
-use Gate;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use stdClass;
-use Validator;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Tiket;
+use OpenApi\Annotations as OA;
 
 class PendaftarController extends Controller {
     public function __construct() {
@@ -47,6 +48,14 @@ class PendaftarController extends Controller {
         return view( 'admin.pendaftars.index', compact( 'events', 'pendaftars' ) );
     }
 
+    /**
+     * @OA\Get(
+     *   path="/api/v1/list_checkin",
+     *   tags={"Pendaftar"},
+     *   summary="List pendaftar who have checked in",
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function list_checkin() {
         // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
@@ -54,6 +63,14 @@ class PendaftarController extends Controller {
 
     }
 
+    /**
+     * @OA\Get(
+     *   path="/api/v1/list_checkout",
+     *   tags={"Pendaftar"},
+     *   summary="List pendaftar who have checked out",
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function list_checkout() {
         // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
@@ -154,6 +171,21 @@ class PendaftarController extends Controller {
         // return redirect()->route( 'admin.pendaftars.index' );
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/checkin",
+     *   tags={"Pendaftar"},
+     *   summary="Mark pendaftar check-in",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"no_tiket"},
+     *       @OA\Property(property="no_tiket", type="string", example="012345")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function checkin( Request $request ) {
         $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
         $pendaftar->update( [ 'checkin' =>'sudah' ] );
@@ -162,6 +194,21 @@ class PendaftarController extends Controller {
         return response()->json( $snap );
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/checkout",
+     *   tags={"Pendaftar"},
+     *   summary="Mark pendaftar check-out",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"no_tiket"},
+     *       @OA\Property(property="no_tiket", type="string", example="012345")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function checkout( Request $request ) {
         $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
         $pendaftar->update( [ 'checkin' =>'terpakai' ] );
@@ -170,6 +217,21 @@ class PendaftarController extends Controller {
         return response()->json( $snap );
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/checkin2",
+     *   tags={"Pendaftar"},
+     *   summary="Mark pendaftar check-in with note",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"no_tiket"},
+     *       @OA\Property(property="no_tiket", type="string", example="012345")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function checkin2( Request $request ) {
         $pendaftar = Pendaftar::where( 'no_tiket', $request->input( 'no_tiket' ) )->first();
         $pendaftar->update( [ 'checkin' =>'sudah-note' ] );
@@ -179,6 +241,23 @@ class PendaftarController extends Controller {
 
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/daftar",
+     *   tags={"Auth"},
+     *   summary="Register new user (mobile)",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"uid","email","name"},
+     *       @OA\Property(property="uid", type="string", example="U123"),
+     *       @OA\Property(property="email", type="string", format="email"),
+     *       @OA\Property(property="name", type="string")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function daftar( Request $request ) {
         $e_user = User::where(
             'email',  $request->input( 'email' )
@@ -208,6 +287,25 @@ class PendaftarController extends Controller {
 
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/updateprofile",
+     *   tags={"Auth"},
+     *   summary="Update user profile",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"uid"},
+     *       @OA\Property(property="uid", type="string"),
+     *       @OA\Property(property="email", type="string", format="email"),
+     *       @OA\Property(property="name", type="string"),
+     *       @OA\Property(property="nik", type="string"),
+     *       @OA\Property(property="no_hp", type="string")
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function updateprofile( Request $request ) {
         $e_user = User::where(
             'uid',  $request->input( 'uid' )
@@ -238,6 +336,16 @@ class PendaftarController extends Controller {
 
     }
 
+    /**
+     * @OA\Get(
+     *   path="/api/v1/profile",
+     *   tags={"Auth"},
+     *   summary="Get user profile by uid",
+     *   @OA\Parameter(name="uid", in="query", required=true, @OA\Schema(type="string")),
+     *   @OA\Response(response=200, description="OK"),
+     *   @OA\Response(response=404, description="Not found")
+     * )
+     */
     public function profile() {
         $request = $_GET[ 'uid' ];
         $user = User::where(
@@ -252,6 +360,15 @@ class PendaftarController extends Controller {
         return response()->json( $snap );
     }
 
+    /**
+     * @OA\Get(
+     *   path="/api/v1/transaksi",
+     *   tags={"Transaksi"},
+     *   summary="List transaksi by uid",
+     *   @OA\Parameter(name="uid", in="query", required=true, @OA\Schema(type="string")),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function transaksi() {
         $request = $_GET[ 'uid' ];
         $user = User::where(
@@ -270,6 +387,15 @@ class PendaftarController extends Controller {
         return response()->json( $snap );
     }
 
+    /**
+     * @OA\Get(
+     *   path="/api/v1/tiket",
+     *   tags={"Tiket"},
+     *   summary="List tiket by uid",
+     *   @OA\Parameter(name="uid", in="query", required=true, @OA\Schema(type="string")),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function tiket() {
         $request = $_GET[ 'uid' ];
         $user = User::where(
@@ -289,6 +415,22 @@ class PendaftarController extends Controller {
         return response()->json( $snap );
     }
 
+    /**
+     * @OA\Post(
+     *   path="/api/v1/beli",
+     *   tags={"Transaksi"},
+     *   summary="Create purchase and get payment URL",
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\JsonContent(
+     *       required={"uid","id"},
+     *       @OA\Property(property="uid", type="string", example="U123"),
+     *       @OA\Property(property="id", type="array", @OA\Items(type="integer", example=1))
+     *     )
+     *   ),
+     *   @OA\Response(response=200, description="OK")
+     * )
+     */
     public function beliApi( Request $request ) {
 
         $data = $request->all();
@@ -613,6 +755,16 @@ class PendaftarController extends Controller {
             }
         }
 
+        /**
+         * @OA\Post(
+         *   path="/api/v1/notification",
+         *   tags={"Transaksi"},
+         *   summary="Midtrans notification callback",
+         *   @OA\RequestBody(required=true),
+         *   @OA\Response(response=200, description="OK"),
+         *   @OA\Response(response=403, description="Invalid signature")
+         * )
+         */
         public function notificationHandler( Request $request ) {
             $payload      = $request->getContent();
             $notification = json_decode( $payload );
