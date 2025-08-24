@@ -1,11 +1,15 @@
 <?php
 
-Route::view('/', 'welcome');
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
+
+Route::view('/', 'giner/index');
+Route::view('welcome', 'wizard');
 Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
 // Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
 
-Route::view('finish','finish');
+Route::view('finish', 'finish');
 Route::view('unfinish', 'unfinish');
 Route::view('error', 'error');
 
@@ -45,57 +49,57 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
 
     Route::get('global-search', 'GlobalSearchController@search')->name('globalSearch');
 
-     // Tiket
-     Route::delete('tikets/destroy', 'TiketController@massDestroy')->name('tikets.massDestroy');
-     Route::post('tikets/media', 'TiketController@storeMedia')->name('tikets.storeMedia');
-     Route::post('tikets/ckmedia', 'TiketController@storeCKEditorImages')->name('tikets.storeCKEditorImages');
-     Route::resource('tikets', 'TiketController');
- 
-     // Event
-     Route::delete('events/destroy', 'EventController@massDestroy')->name('events.massDestroy');
-     Route::post('events/media', 'EventController@storeMedia')->name('events.storeMedia');
-     Route::post('events/ckmedia', 'EventController@storeCKEditorImages')->name('events.storeCKEditorImages');
-     Route::resource('events', 'EventController');
- 
-     // Banner
-     Route::delete('banners/destroy', 'BannerController@massDestroy')->name('banners.massDestroy');
-     Route::post('banners/media', 'BannerController@storeMedia')->name('banners.storeMedia');
-     Route::post('banners/ckmedia', 'BannerController@storeCKEditorImages')->name('banners.storeCKEditorImages');
-     Route::resource('banners', 'BannerController');
- 
-     // Audit Logs
-     Route::resource('audit-logs', 'AuditLogsController', ['except' => ['create', 'store', 'edit', 'update', 'destroy']]);
- 
-     // User Alerts
-     Route::delete('user-alerts/destroy', 'UserAlertsController@massDestroy')->name('user-alerts.massDestroy');
-     Route::get('user-alerts/read', 'UserAlertsController@read');
-     Route::resource('user-alerts', 'UserAlertsController', ['except' => ['edit', 'update']]);
- 
-     // Faq Category
-     Route::delete('faq-categories/destroy', 'FaqCategoryController@massDestroy')->name('faq-categories.massDestroy');
-     Route::resource('faq-categories', 'FaqCategoryController');
- 
-     // Faq Question
-     Route::delete('faq-questions/destroy', 'FaqQuestionController@massDestroy')->name('faq-questions.massDestroy');
-     Route::resource('faq-questions', 'FaqQuestionController');
- 
-     // Transaksi
-     Route::delete('transaksis/destroy', 'TransaksiController@massDestroy')->name('transaksis.massDestroy');
-     Route::post('transaksis/media', 'TransaksiController@storeMedia')->name('transaksis.storeMedia');
-     Route::post('transaksis/ckmedia', 'TransaksiController@storeCKEditorImages')->name('transaksis.storeCKEditorImages');
-     Route::post('transaksis/parse-csv-import', 'TransaksiController@parseCsvImport')->name('transaksis.parseCsvImport');
-     Route::post('transaksis/process-csv-import', 'TransaksiController@processCsvImport')->name('transaksis.processCsvImport');
-     Route::resource('transaksis', 'TransaksiController');
- 
-     // Sponsor
-     Route::delete('sponsors/destroy', 'SponsorController@massDestroy')->name('sponsors.massDestroy');
-     Route::post('sponsors/media', 'SponsorController@storeMedia')->name('sponsors.storeMedia');
-     Route::post('sponsors/ckmedia', 'SponsorController@storeCKEditorImages')->name('sponsors.storeCKEditorImages');
-     Route::resource('sponsors', 'SponsorController');
- 
-     // Setting
-     Route::delete('settings/destroy', 'SettingController@massDestroy')->name('settings.massDestroy');
-     Route::resource('settings', 'SettingController');
+    // Tiket
+    Route::delete('tikets/destroy', 'TiketController@massDestroy')->name('tikets.massDestroy');
+    Route::post('tikets/media', 'TiketController@storeMedia')->name('tikets.storeMedia');
+    Route::post('tikets/ckmedia', 'TiketController@storeCKEditorImages')->name('tikets.storeCKEditorImages');
+    Route::resource('tikets', 'TiketController');
+
+    // Event
+    Route::delete('events/destroy', 'EventController@massDestroy')->name('events.massDestroy');
+    Route::post('events/media', 'EventController@storeMedia')->name('events.storeMedia');
+    Route::post('events/ckmedia', 'EventController@storeCKEditorImages')->name('events.storeCKEditorImages');
+    Route::resource('events', 'EventController');
+
+    // Banner
+    Route::delete('banners/destroy', 'BannerController@massDestroy')->name('banners.massDestroy');
+    Route::post('banners/media', 'BannerController@storeMedia')->name('banners.storeMedia');
+    Route::post('banners/ckmedia', 'BannerController@storeCKEditorImages')->name('banners.storeCKEditorImages');
+    Route::resource('banners', 'BannerController');
+
+    // Audit Logs
+    Route::resource('audit-logs', 'AuditLogsController', ['except' => ['create', 'store', 'edit', 'update', 'destroy']]);
+
+    // User Alerts
+    Route::delete('user-alerts/destroy', 'UserAlertsController@massDestroy')->name('user-alerts.massDestroy');
+    Route::get('user-alerts/read', 'UserAlertsController@read');
+    Route::resource('user-alerts', 'UserAlertsController', ['except' => ['edit', 'update']]);
+
+    // Faq Category
+    Route::delete('faq-categories/destroy', 'FaqCategoryController@massDestroy')->name('faq-categories.massDestroy');
+    Route::resource('faq-categories', 'FaqCategoryController');
+
+    // Faq Question
+    Route::delete('faq-questions/destroy', 'FaqQuestionController@massDestroy')->name('faq-questions.massDestroy');
+    Route::resource('faq-questions', 'FaqQuestionController');
+
+    // Transaksi
+    Route::delete('transaksis/destroy', 'TransaksiController@massDestroy')->name('transaksis.massDestroy');
+    Route::post('transaksis/media', 'TransaksiController@storeMedia')->name('transaksis.storeMedia');
+    Route::post('transaksis/ckmedia', 'TransaksiController@storeCKEditorImages')->name('transaksis.storeCKEditorImages');
+    Route::post('transaksis/parse-csv-import', 'TransaksiController@parseCsvImport')->name('transaksis.parseCsvImport');
+    Route::post('transaksis/process-csv-import', 'TransaksiController@processCsvImport')->name('transaksis.processCsvImport');
+    Route::resource('transaksis', 'TransaksiController');
+
+    // Sponsor
+    Route::delete('sponsors/destroy', 'SponsorController@massDestroy')->name('sponsors.massDestroy');
+    Route::post('sponsors/media', 'SponsorController@storeMedia')->name('sponsors.storeMedia');
+    Route::post('sponsors/ckmedia', 'SponsorController@storeCKEditorImages')->name('sponsors.storeCKEditorImages');
+    Route::resource('sponsors', 'SponsorController');
+
+    // Setting
+    Route::delete('settings/destroy', 'SettingController@massDestroy')->name('settings.massDestroy');
+    Route::resource('settings', 'SettingController');
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
     // Change password
