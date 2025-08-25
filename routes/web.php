@@ -47,7 +47,7 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::post('events/process-csv-import', 'EventController@processCsvImport')->name('events.processCsvImport');
     Route::resource('events', 'EventController');
 
-    Route::get('global-search', 'GlobalSearchController@search')->name('globalSearch');
+    // Route::get('global-search', 'GlobalSearchController@search')->name('globalSearch');
 
     // Tiket
     Route::delete('tikets/destroy', 'TiketController@massDestroy')->name('tikets.massDestroy');
