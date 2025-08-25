@@ -28,12 +28,11 @@ class Transaksi extends Model implements HasMedia
         'Refund'  => 'Refund',
     ];
 
-    public $table = 'transaksis';
-    // public $table = 'transaksi';
+    public $table = 'transactions';
 
     protected $dates = [
         'created_at',
-        'updated_at',   
+        'updated_at',
         'deleted_at',
     ];
 

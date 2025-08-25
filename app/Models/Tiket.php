@@ -34,7 +34,7 @@ class Tiket extends Model implements HasMedia
         'Refund'  => 'Refund',
     ];
 
-    public $table = 'tikets';
+    public $table = 'tickets';
 
     protected $appends = [
         'qr',
