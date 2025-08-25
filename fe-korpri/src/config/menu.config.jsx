@@ -7,7 +7,20 @@ export const MENU_SIDEBAR = [{
   }, {
     title: 'Dark Sidebar',
     path: '/dark-sidebar'
-  }]
+  }, {
+    title: 'Order Tiket',
+    path: '/order'
+  }, {
+    title: 'List Users',
+    path: '/users'
+  }, {
+    title: 'List Tiket',
+    path: '/ticket'
+  }, {
+    title: 'List Transactions',
+    path: '/transactions'
+  }
+  ]
 }, {
   heading: 'User'
 }, {

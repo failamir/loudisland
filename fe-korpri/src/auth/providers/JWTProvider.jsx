@@ -2,12 +2,16 @@
 import axios from 'axios';
 import { createContext, useState } from 'react';
 import * as authHelper from '../_helpers';
-const API_URL = import.meta.env.VITE_APP_API_URL;
+// Base API URL for Laravel backend
+// Prefer VITE_APP_API_URL if provided; otherwise default to local Laravel API v1
+// Example expected value: http://localhost:8000/api/v1
+const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 export const LOGIN_URL = `${API_URL}/login`;
 export const REGISTER_URL = `${API_URL}/register`;
 export const FORGOT_PASSWORD_URL = `${API_URL}/forgot-password`;
 export const RESET_PASSWORD_URL = `${API_URL}/reset-password`;
-export const GET_USER_URL = `${API_URL}/user`;
+// Laravel provides a `me` endpoint in `AuthController@me`
+export const GET_USER_URL = `${API_URL}/me`;
 const AuthContext = createContext(null);
 const AuthProvider = ({
   children
@@ -38,36 +42,35 @@ const AuthProvider = ({
   };
   const login = async (email, password) => {
     try {
-      const {
-        data: auth
-      } = await axios.post(LOGIN_URL, {
-        email,
-        password
-      });
+      const { data } = await axios.post(LOGIN_URL, { email, password });
+      // Laravel returns: { message, token, user }
+      const auth = { access_token: data?.token };
       saveAuth(auth);
-      const {
-        data: user
-      } = await getUser();
-      setCurrentUser(user);
+      // Prefer user from login response to avoid extra round-trip
+      if (data?.user) {
+        setCurrentUser(data.user);
+      } else {
+        const { data: user } = await getUser();
+        setCurrentUser(user);
+      }
     } catch (error) {
       saveAuth(undefined);
       throw new Error(`Error ${error}`);
     }
   };
-  const register = async (email, password, password_confirmation) => {
+  const register = async (payload) => {
     try {
-      const {
-        data: auth
-      } = await axios.post(REGISTER_URL, {
-        email,
-        password,
-        password_confirmation
-      });
+      // Payload should match Laravel: { name, email, password, uid, nik?, no_hp?, device_name? }
+      const { data } = await axios.post(REGISTER_URL, payload);
+      // Laravel returns: { message, token, data }
+      const auth = { access_token: data?.token };
       saveAuth(auth);
-      const {
-        data: user
-      } = await getUser();
-      setCurrentUser(user);
+      if (data?.data) {
+        setCurrentUser(data.data);
+      } else {
+        const { data: user } = await getUser();
+        setCurrentUser(user);
+      }
     } catch (error) {
       saveAuth(undefined);
       throw new Error(`Error ${error}`);

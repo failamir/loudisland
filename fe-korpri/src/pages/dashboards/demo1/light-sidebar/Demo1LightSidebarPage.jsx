@@ -7,6 +7,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { addDays, format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { KeenIcon } from '@/components/keenicons';
+import { Link } from 'react-router-dom';
 const Demo1LightSidebarPage = () => {
   const [date, setDate] = useState({
     from: new Date(2025, 0, 20),
@@ -17,6 +18,10 @@ const Demo1LightSidebarPage = () => {
         <Toolbar>
           <ToolbarHeading title="Dashboard" description="Central Hub for Personal Customization" />
           <ToolbarActions>
+            <Link to="/order" className="btn btn-sm btn-primary">
+              <KeenIcon icon="shopping-cart" className="me-1" />
+              Order Tiket
+            </Link>
             <Popover>
               <PopoverTrigger asChild>
                 <button id="date" className={cn('btn btn-sm btn-light data-[state=open]:bg-light-active', !date && 'text-gray-400')}>

@@ -7,16 +7,24 @@ import { useAuthContext } from '../../useAuthContext';
 import { toAbsoluteUrl } from '@/utils';
 import { Alert, KeenIcon } from '@/components';
 import { useLayout } from '@/providers';
+import { faker } from '@faker-js/faker';
 const initialValues = {
+  name: '',
   email: '',
   password: '',
-  changepassword: '',
+  uid: faker.string.uuid(),
+  nik: '',
+  no_hp: '',
+  device_name: 'web',
   acceptTerms: false
 };
 const signupSchema = Yup.object().shape({
+  name: Yup.string().min(2, 'Minimum 2 symbols').max(100, 'Maximum 100 symbols'),
   email: Yup.string().email('Wrong email format').min(3, 'Minimum 3 symbols').max(50, 'Maximum 50 symbols').required('Email is required'),
-  password: Yup.string().min(3, 'Minimum 3 symbols').max(50, 'Maximum 50 symbols').required('Password is required'),
-  changepassword: Yup.string().min(3, 'Minimum 3 symbols').max(50, 'Maximum 50 symbols').required('Password confirmation is required').oneOf([Yup.ref('password')], "Password and Confirm Password didn't match"),
+  password: Yup.string().min(6, 'Minimum 6 symbols').max(50, 'Maximum 50 symbols').required('Password is required'),
+  uid: Yup.string().required('UID is required'),
+  nik: Yup.string().max(50).nullable(),
+  no_hp: Yup.string().max(50).nullable(),
   acceptTerms: Yup.bool().required('You must accept the terms and conditions')
 });
 const Signup = () => {
@@ -28,7 +36,6 @@ const Signup = () => {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
     currentLayout
   } = useLayout();
@@ -44,7 +51,17 @@ const Signup = () => {
         if (!register) {
           throw new Error('JWTProvider is required for this form.');
         }
-        await register(values.email, values.password, values.changepassword);
+        const emailLocal = (values.email || '').split('@')[0] || '';
+        const payload = {
+          name: values.name || emailLocal,
+          email: values.email,
+          password: values.password,
+          uid: values.uid || faker.string.uuid(),
+          nik: values.nik || undefined,
+          no_hp: values.no_hp || undefined,
+          device_name: values.device_name || 'web'
+        };
+        await register(payload);
         navigate(from, {
           replace: true
         });
@@ -59,10 +76,6 @@ const Signup = () => {
   const togglePassword = event => {
     event.preventDefault();
     setShowPassword(!showPassword);
-  };
-  const toggleConfirmPassword = event => {
-    event.preventDefault();
-    setShowConfirmPassword(!showConfirmPassword);
   };
   return <div className="card max-w-[370px] w-full">
       <form className="card-body flex flex-col gap-5 p-10" noValidate onSubmit={formik.handleSubmit}>
@@ -96,6 +109,20 @@ const Signup = () => {
         </div>
 
         {formik.status && <Alert variant="danger">{formik.status}</Alert>}
+
+        <div className="flex flex-col gap-1">
+          <label className="form-label text-gray-900">Name</label>
+          <label className="input">
+            <input placeholder="Your name" type="text" autoComplete="off" {...formik.getFieldProps('name')} className={clsx('form-control bg-transparent', {
+            'is-invalid': formik.touched.name && formik.errors.name
+          }, {
+            'is-valid': formik.touched.name && !formik.errors.name
+          })} />
+          </label>
+          {formik.touched.name && formik.errors.name && <span role="alert" className="text-danger text-xs mt-1">
+              {formik.errors.name}
+            </span>}
+        </div>
 
         <div className="flex flex-col gap-1">
           <label className="form-label text-gray-900">Email</label>
@@ -134,25 +161,31 @@ const Signup = () => {
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="form-label text-gray-900">Confirm Password</label>
+          <label className="form-label text-gray-900">UID</label>
           <label className="input">
-            <input type={showConfirmPassword ? 'text' : 'password'} placeholder="Re-enter Password" autoComplete="off" {...formik.getFieldProps('changepassword')} className={clsx('form-control bg-transparent', {
-            'is-invalid': formik.touched.changepassword && formik.errors.changepassword
+            <input placeholder="Auto-generated if empty" type="text" autoComplete="off" {...formik.getFieldProps('uid')} className={clsx('form-control bg-transparent', {
+            'is-invalid': formik.touched.uid && formik.errors.uid
           }, {
-            'is-valid': formik.touched.changepassword && !formik.errors.changepassword
+            'is-valid': formik.touched.uid && !formik.errors.uid
           })} />
-            <button className="btn btn-icon" onClick={toggleConfirmPassword}>
-              <KeenIcon icon="eye" className={clsx('text-gray-500', {
-              hidden: showConfirmPassword
-            })} />
-              <KeenIcon icon="eye-slash" className={clsx('text-gray-500', {
-              hidden: !showConfirmPassword
-            })} />
-            </button>
           </label>
-          {formik.touched.changepassword && formik.errors.changepassword && <span role="alert" className="text-danger text-xs mt-1">
-              {formik.errors.changepassword}
+          {formik.touched.uid && formik.errors.uid && <span role="alert" className="text-danger text-xs mt-1">
+              {formik.errors.uid}
             </span>}
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="form-label text-gray-900">NIK (optional)</label>
+          <label className="input">
+            <input placeholder="NIK" type="text" autoComplete="off" {...formik.getFieldProps('nik')} className={clsx('form-control bg-transparent')} />
+          </label>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="form-label text-gray-900">No HP (optional)</label>
+          <label className="input">
+            <input placeholder="08xxxxxxxxxx" type="text" autoComplete="off" {...formik.getFieldProps('no_hp')} className={clsx('form-control bg-transparent')} />
+          </label>
         </div>
 
         <label className="checkbox-group">

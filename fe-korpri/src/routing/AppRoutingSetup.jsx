@@ -1,19 +1,27 @@
+import React from 'react';
 import { Navigate, Route, Routes } from 'react-router';
 import { DefaultPage, Demo1DarkSidebarPage } from '@/pages/dashboards';
 import { ProfileActivityPage, ProfileBloggerPage, CampaignsCardPage, CampaignsListPage, ProjectColumn2Page, ProjectColumn3Page, ProfileCompanyPage, ProfileCreatorPage, ProfileCRMPage, ProfileDefaultPage, ProfileEmptyPage, ProfileFeedsPage, ProfileGamerPage, ProfileModalPage, ProfileNetworkPage, ProfileNFTPage, ProfilePlainPage, ProfileTeamsPage, ProfileWorksPage } from '@/pages/public-profile';
 import { AccountActivityPage, AccountAllowedIPAddressesPage, AccountApiKeysPage, AccountAppearancePage, AccountBackupAndRecoveryPage, AccountBasicPage, AccountCompanyProfilePage, AccountCurrentSessionsPage, AccountDeviceManagementPage, AccountEnterprisePage, AccountGetStartedPage, AccountHistoryPage, AccountImportMembersPage, AccountIntegrationsPage, AccountInviteAFriendPage, AccountMembersStarterPage, AccountNotificationsPage, AccountOverviewPage, AccountPermissionsCheckPage, AccountPermissionsTogglePage, AccountPlansPage, AccountPrivacySettingsPage, AccountRolesPage, AccountSecurityGetStartedPage, AccountSecurityLogPage, AccountSettingsEnterprisePage, AccountSettingsModalPage, AccountSettingsPlainPage, AccountSettingsSidebarPage, AccountTeamInfoPage, AccountTeamMembersPage, AccountTeamsPage, AccountTeamsStarterPage, AccountUserProfilePage } from '@/pages/account';
 import { NetworkAppRosterPage, NetworkMarketAuthorsPage, NetworkAuthorPage, NetworkGetStartedPage, NetworkMiniCardsPage, NetworkNFTPage, NetworkSocialPage, NetworkUserCardsTeamCrewPage, NetworkSaasUsersPage, NetworkStoreClientsPage, NetworkUserTableTeamCrewPage, NetworkVisitorsPage } from '@/pages/network';
+import UsersListPage from '@/pages/users/UsersListPage';
+import TicketListPage from '@/pages/TicketListPage';
 import { AuthPage } from '@/auth';
 import { RequireAuth } from '@/auth/RequireAuth';
 import { Demo1Layout } from '@/layouts/demo1';
 import { ErrorsRouting } from '@/errors';
 import { AuthenticationWelcomeMessagePage, AuthenticationAccountDeactivatedPage, AuthenticationGetStartedPage } from '@/pages/authentication';
+import OrderWizardModal from '@/pages/order/OrderWizardModal';
+import TransactionsListPage from '@/pages/transactions/TransactionsListPage';
+
 const AppRoutingSetup = () => {
-  return <Routes>
+  return (
+    <Routes>
       <Route element={<RequireAuth />}>
         <Route element={<Demo1Layout />}>
           <Route path="/" element={<DefaultPage />} />
           <Route path="/dark-sidebar" element={<Demo1DarkSidebarPage />} />
+          <Route path="/order" element={<OrderWizardModal />} />
           <Route path="/public-profile/profiles/default" element={<ProfileDefaultPage />} />
           <Route path="/public-profile/profiles/creator" element={<ProfileCreatorPage />} />
           <Route path="/public-profile/profiles/company" element={<ProfileCompanyPage />} />
@@ -79,6 +87,9 @@ const AppRoutingSetup = () => {
           <Route path="/network/user-table/saas-users" element={<NetworkSaasUsersPage />} />
           <Route path="/network/user-table/store-clients" element={<NetworkStoreClientsPage />} />
           <Route path="/network/user-table/visitors" element={<NetworkVisitorsPage />} />
+          <Route path="/users" element={<UsersListPage />} />
+          <Route path="/ticket" element={<TicketListPage />} />
+          <Route path="/transactions" element={<TransactionsListPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
           <Route path="/authentication/get-started" element={<AuthenticationGetStartedPage />} />
@@ -87,6 +98,8 @@ const AppRoutingSetup = () => {
       <Route path="error/*" element={<ErrorsRouting />} />
       <Route path="auth/*" element={<AuthPage />} />
       <Route path="*" element={<Navigate to="/error/404" />} />
-    </Routes>;
+    </Routes>
+  );
 };
+
 export { AppRoutingSetup };
