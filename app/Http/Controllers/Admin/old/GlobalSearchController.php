@@ -8,8 +8,7 @@ use Illuminate\Support\Str;
 
 class GlobalSearchController extends Controller
 {
-    private $models = [
-    ];
+    private $models = [];
 
     public function search(Request $request)
     {
