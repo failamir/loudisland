@@ -14,6 +14,8 @@ Route::view('unfinish', 'unfinish');
 Route::view('error', 'error');
 
 Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
+// Payment finish callback page (Midtrans)
+Route::get('payment/success/{invoice}', 'PendaftarController@paymentSuccess')->name('payment.success');
 Auth::routes();
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth', 'admin']], function () {
@@ -100,6 +102,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // Setting
     Route::delete('settings/destroy', 'SettingController@massDestroy')->name('settings.massDestroy');
     Route::resource('settings', 'SettingController');
+
+    // QR Codes listing and bulk download
+    Route::get('qrcodes', 'QrController@index')->name('qrcodes.index');
+    Route::get('qrcodes/download-all', 'QrController@downloadAll')->name('qrcodes.downloadAll');
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
     // Change password
