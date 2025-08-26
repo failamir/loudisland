@@ -77,7 +77,7 @@ class EventController extends Controller
     {
         abort_if(Gate::denies('event_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $event->load('eventTransaksis');
+        $event->load('eventtransactions');
 
         return view('admin.events.show', compact('event'));
     }

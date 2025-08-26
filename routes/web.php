@@ -86,12 +86,12 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     Route::resource('faq-questions', 'FaqQuestionController');
 
     // Transaksi
-    Route::delete('transaksis/destroy', 'TransaksiController@massDestroy')->name('transaksis.massDestroy');
-    Route::post('transaksis/media', 'TransaksiController@storeMedia')->name('transaksis.storeMedia');
-    Route::post('transaksis/ckmedia', 'TransaksiController@storeCKEditorImages')->name('transaksis.storeCKEditorImages');
-    Route::post('transaksis/parse-csv-import', 'TransaksiController@parseCsvImport')->name('transaksis.parseCsvImport');
-    Route::post('transaksis/process-csv-import', 'TransaksiController@processCsvImport')->name('transaksis.processCsvImport');
-    Route::resource('transaksis', 'TransaksiController');
+    Route::delete('transactions/destroy', 'TransaksiController@massDestroy')->name('transactions.massDestroy');
+    Route::post('transactions/media', 'TransaksiController@storeMedia')->name('transactions.storeMedia');
+    Route::post('transactions/ckmedia', 'TransaksiController@storeCKEditorImages')->name('transactions.storeCKEditorImages');
+    Route::post('transactions/parse-csv-import', 'TransaksiController@parseCsvImport')->name('transactions.parseCsvImport');
+    Route::post('transactions/process-csv-import', 'TransaksiController@processCsvImport')->name('transactions.processCsvImport');
+    Route::resource('transactions', 'TransaksiController');
 
     // Sponsor
     Route::delete('sponsors/destroy', 'SponsorController@massDestroy')->name('sponsors.massDestroy');

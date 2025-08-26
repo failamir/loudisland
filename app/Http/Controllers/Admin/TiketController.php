@@ -86,7 +86,7 @@ class TiketController extends Controller
     {
         abort_if(Gate::denies('tiket_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $tiket->load('peserta', 'tiketTransaksis');
+        $tiket->load('peserta', 'tikettransactions');
 
         return view('admin.tikets.show', compact('tiket'));
     }

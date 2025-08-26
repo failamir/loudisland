@@ -4,11 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-class AddRelationshipFieldsToTransaksisTable extends Migration
+class AddRelationshipFieldsTotransactionsTable extends Migration
 {
     public function up()
     {
-        Schema::table('transaksis', function (Blueprint $table) {
+        Schema::table('transactions', function (Blueprint $table) {
             // $table->unsignedBigInteger('event_id')->nullable();
             // $table->foreign('event_id', 'event_fk_7114420')->references('id')->on('events');
             // $table->unsignedBigInteger('tiket_id')->nullable();

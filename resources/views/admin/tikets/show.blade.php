@@ -108,14 +108,14 @@
     </div>
     <ul class="nav nav-tabs" role="tablist" id="relationship-tabs">
         <li class="nav-item">
-            <a class="nav-link" href="#tiket_transaksis" role="tab" data-toggle="tab">
+            <a class="nav-link" href="#tiket_transactions" role="tab" data-toggle="tab">
                 {{ trans('cruds.transaksi.title') }}
             </a>
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane" role="tabpanel" id="tiket_transaksis">
-            @includeIf('admin.tikets.relationships.tiketTransaksis', ['transaksis' => $tiket->tiketTransaksis])
+        <div class="tab-pane" role="tabpanel" id="tiket_transactions">
+            @includeIf('admin.tikets.relationships.tikettransactions', ['transactions' => $tiket->tikettransactions])
         </div>
     </div>
 </div>

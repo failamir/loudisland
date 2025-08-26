@@ -79,7 +79,7 @@
         @endcan
         @can('transaksi_access')
             <li class="c-sidebar-nav-item">
-                <a href="{{ route("admin.transaksis.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/transaksis") || request()->is("admin/transaksis/*") ? "c-active" : "" }}">
+                <a href="{{ route("admin.transactions.index") }}" class="c-sidebar-nav-link {{ request()->is("admin/transactions") || request()->is("admin/transactions/*") ? "c-active" : "" }}">
                     <i class="fa-fw fas fa-dollar-sign c-sidebar-nav-icon">
 
                     </i>

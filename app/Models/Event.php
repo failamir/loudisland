@@ -49,7 +49,7 @@ class Event extends Model implements HasMedia
         $this->addMediaConversion('preview')->fit('crop', 120, 120);
     }
 
-    public function eventTransaksis()
+    public function eventtransactions()
     {
         return $this->hasMany(Transaksi::class, 'event_id', 'id');
     }

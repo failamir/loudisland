@@ -76,8 +76,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::apiResource('banners', 'BannerApiController');
 
     // Transaksi
-    Route::post('transaksis/media', 'TransaksiApiController@storeMedia')->name('transaksis.storeMedia');
-    Route::apiResource('transaksis', 'TransaksiApiController');
+    Route::post('transactions/media', 'TransaksiApiController@storeMedia')->name('transactions.storeMedia');
+    Route::apiResource('transactions', 'TransaksiApiController');
 
     // Sponsor
     Route::post('sponsors/media', 'SponsorApiController@storeMedia')->name('sponsors.storeMedia');

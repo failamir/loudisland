@@ -26,9 +26,9 @@ class TransaksiController extends Controller
     {
         abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $transaksis = Transaksi::with(['event', 'tiket', 'peserta', 'created_by'])->get();
+        $transactions = Transaksi::with(['event', 'tiket', 'peserta', 'created_by'])->get();
 
-        return view('admin.transaksis.index', compact('transaksis'));
+        return view('admin.transactions.index', compact('transactions'));
     }
 
     public function create()
@@ -41,7 +41,7 @@ class TransaksiController extends Controller
 
         $pesertas = User::pluck('name', 'id')->prepend(trans('global.pleaseSelect'), '');
 
-        return view('admin.transaksis.create', compact('events', 'pesertas', 'tikets'));
+        return view('admin.transactions.create', compact('events', 'pesertas', 'tikets'));
     }
 
     public function store(StoreTransaksiRequest $request)
@@ -52,7 +52,7 @@ class TransaksiController extends Controller
             Media::whereIn('id', $media)->update(['model_id' => $transaksi->id]);
         }
 
-        return redirect()->route('admin.transaksis.index');
+        return redirect()->route('admin.transactions.index');
     }
 
     public function edit(Transaksi $transaksi)
@@ -67,14 +67,14 @@ class TransaksiController extends Controller
 
         $transaksi->load('event', 'tiket', 'peserta', 'created_by');
 
-        return view('admin.transaksis.edit', compact('events', 'pesertas', 'tikets', 'transaksi'));
+        return view('admin.transactions.edit', compact('events', 'pesertas', 'tikets', 'transaksi'));
     }
 
     public function update(UpdateTransaksiRequest $request, Transaksi $transaksi)
     {
         $transaksi->update($request->all());
 
-        return redirect()->route('admin.transaksis.index');
+        return redirect()->route('admin.transactions.index');
     }
 
     public function show(Transaksi $transaksi)
@@ -83,7 +83,7 @@ class TransaksiController extends Controller
 
         $transaksi->load('event', 'tiket', 'peserta', 'created_by');
 
-        return view('admin.transaksis.show', compact('transaksi'));
+        return view('admin.transactions.show', compact('transaksi'));
     }
 
     public function destroy(Transaksi $transaksi)

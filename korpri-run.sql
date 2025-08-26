@@ -299,7 +299,7 @@ CREATE TABLE `transaksi` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-CREATE TABLE `transaksis` (
+CREATE TABLE `transactions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `invoice` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `event_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -434,13 +434,13 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (16, '2022_08_07_000009_create_user_alerts_table', 1),
 (17, '2022_08_07_000010_create_faq_categories_table', 1),
 (18, '2022_08_07_000011_create_faq_questions_table', 1),
-(19, '2022_08_07_000012_create_transaksis_table', 1),
+(19, '2022_08_07_000012_create_transactions_table', 1),
 (20, '2022_08_07_000013_create_sponsors_table', 1),
 (21, '2022_08_07_000014_create_settings_table', 1),
 (22, '2022_08_07_000017_create_user_user_alert_pivot_table', 1),
 (23, '2022_08_07_000018_add_relationship_fields_to_tikets_table', 1),
 (24, '2022_08_07_000019_add_relationship_fields_to_faq_questions_table', 1),
-(25, '2022_08_07_000020_add_relationship_fields_to_transaksis_table', 1),
+(25, '2022_08_07_000020_add_relationship_fields_to_transactions_table', 1),
 (26, '2022_08_07_000021_add_approval_fields', 1),
 (27, '2025_08_25_175500_create_refresh_tokens_table', 2),
 (28, '2025_08_26_000001_add_fields_to_pendaftars_table', 3);
@@ -614,7 +614,7 @@ INSERT INTO `transactions` (`id`, `invoice`, `event_id`, `tiket_id`, `amount`, `
 (10, 'TRX-PGYXDZTHN5', '1', NULL, '200000', 'Test Runner', NULL, 'pending', '2025-08-26 14:07:34', '2025-08-26 14:07:34', NULL, NULL, NULL, 's:2:\"15\";'),
 (11, 'TRX-P09YOWTAAT', '1', NULL, '200000', 'LT Runner', NULL, 'pending', '2025-08-26 15:03:41', '2025-08-26 15:03:41', NULL, NULL, NULL, 's:2:\"16\";');
 
-INSERT INTO `transaksis` (`id`, `invoice`, `event_id`, `tiket_id`, `amount`, `note`, `snap_token`, `status`, `created_at`, `updated_at`, `deleted_at`, `peserta_id`, `created_by_id`) VALUES
+INSERT INTO `transactions` (`id`, `invoice`, `event_id`, `tiket_id`, `amount`, `note`, `snap_token`, `status`, `created_at`, `updated_at`, `deleted_at`, `peserta_id`, `created_by_id`) VALUES
 (3, 'TRX-1N5Q0QS038', NULL, NULL, '200000', 'failamir abdullah', '4b0a1920-6fe7-4a4e-91a4-805d86f008b3', 'pending', '2025-08-24 09:08:35', '2025-08-24 09:08:36', NULL, NULL, NULL),
 (4, 'TRX-78Y3Q8Z2ID', NULL, NULL, '200000', 'failamir abdullah', 'd1143135-c756-43bd-8fed-bbb320e362b8', 'pending', '2025-08-24 10:38:22', '2025-08-24 10:38:24', NULL, NULL, NULL),
 (5, 'TRX-H540UR6444', NULL, NULL, '200000', 'failamir abdullah', 'ea937d4b-1dcf-4fcf-863c-4dd9c8b1f18f', 'pending', '2025-08-24 10:54:58', '2025-08-24 10:54:59', NULL, NULL, NULL),

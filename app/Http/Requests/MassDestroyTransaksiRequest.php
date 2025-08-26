@@ -20,7 +20,7 @@ class MassDestroyTransaksiRequest extends FormRequest
     {
         return [
             'ids'   => 'required|array',
-            'ids.*' => 'exists:transaksis,id',
+            'ids.*' => 'exists:transactions,id',
         ];
     }
 }

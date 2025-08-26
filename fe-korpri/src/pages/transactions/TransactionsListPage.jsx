@@ -6,8 +6,9 @@ const TransactionsListPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
   useEffect(() => {
-    axios.get('http://localhost:8000/api/v1/transaksis')
+    axios.get(`${API_URL}/transactions`)
       .then(response => {
         const data = Array.isArray(response.data) ? response.data : response.data.data;
         setTransactions(data);
