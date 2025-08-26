@@ -447,6 +447,40 @@ class PendaftarController extends Controller
         }
     }
 
+    public function paymentSuccess($invoice)
+    {
+        // Find transaction
+        $trx = Transaksi::where('invoice', $invoice)->first();
+        if (!$trx) {
+            return redirect('error')->with('error', 'Transaksi tidak ditemukan');
+        }
+        // Extract no_tiket stored in events (serialized or plain)
+        $noTiket = @unserialize($trx->events);
+        if ($noTiket === false) {
+            $noTiket = $trx->events;
+        }
+        $pendaftar = $noTiket ? Pendaftar::where('no_tiket', $noTiket)->first() : null;
+
+        // Ensure QR exists for ticket
+        if ($noTiket) {
+            $qrPath = public_path("qrcodes/{$noTiket}.png");
+            if (!file_exists(dirname($qrPath))) {
+                @mkdir(dirname($qrPath), 0775, true);
+            }
+            if (!file_exists($qrPath)) {
+                QrCode::format('png')->size(300)->generate($noTiket, $qrPath);
+            }
+        }
+
+        $qrUrl = $noTiket ? url("/qrcodes/{$noTiket}.png") : null;
+        return view('payment.success', [
+            'trx' => $trx,
+            'pendaftar' => $pendaftar,
+            'no_tiket' => $noTiket,
+            'qr_url' => $qrUrl,
+        ]);
+    }
+
     public function store(StorePendaftarRequest $request)
     {
         $u = (int)$request->input('total_bayar');
