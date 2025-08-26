@@ -5,7 +5,7 @@ import { useAuthContext } from '@/auth';
 
 const API_URL = import.meta.env.VITE_APP_API_URL;
 const EVENTS_URL = `${API_URL}/events`;
-const BELI_URL = `${API_URL}/beli`;
+const BELI_URL = `${API_URL}/buy`;
 const GET_USER_URL = `${API_URL}/me`;
 const PROVINCES_URL = `${API_URL}/wilayah/provinces`;
 const REGENCIES_URL = (provinceCode) => `${API_URL}/wilayah/regencies/${provinceCode}`;
