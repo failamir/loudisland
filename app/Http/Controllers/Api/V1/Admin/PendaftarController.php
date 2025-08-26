@@ -170,10 +170,14 @@ class PendaftarController extends Controller
             QrCode::format('png')->size(300)->generate($code, '../public/qrcodes/' . $u . '.png');
         }
 
-        echo ' berhasil';
+        // echo ' berhasil';
         //  return view( 'bayar', compact( 'snap' ) );
         // }
         // return redirect()->route( 'admin.pendaftars.index' );
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pendaftar berhasil dibuat',
+        ]);
     }
 
     /**

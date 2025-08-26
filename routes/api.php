@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
 Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin'], function () {
@@ -11,6 +12,10 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', 'AuthController@me')->name('auth.me');
         Route::get('users', 'UserApiController@index');
+
+        // Nomor Punggung QR API
+        Route::get('nomor-punggung', [NomorPunggungApiController::class, 'index']);
+        Route::post('nomor-punggung/pair', [NomorPunggungApiController::class, 'pair']);
         Route::post('logout', 'AuthController@logout')->name('auth.logout');
     });
     // Pendaftar

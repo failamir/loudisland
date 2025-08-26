@@ -13,6 +13,7 @@ import { ErrorsRouting } from '@/errors';
 import { AuthenticationWelcomeMessagePage, AuthenticationAccountDeactivatedPage, AuthenticationGetStartedPage } from '@/pages/authentication';
 import OrderWizardModal from '@/pages/order/OrderWizardModal';
 import TransactionsListPage from '@/pages/transactions/TransactionsListPage';
+import NomorPunggungListPage from '@/pages/NomorPunggungListPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -90,6 +91,7 @@ const AppRoutingSetup = () => {
           <Route path="/users" element={<UsersListPage />} />
           <Route path="/ticket" element={<TicketListPage />} />
           <Route path="/transactions" element={<TransactionsListPage />} />
+          <Route path="/nomor-punggung" element={<NomorPunggungListPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
           <Route path="/authentication/get-started" element={<AuthenticationGetStartedPage />} />
