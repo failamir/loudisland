@@ -26,6 +26,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Tiket;
 use OpenApi\Annotations as OA;
+use Carbon\Carbon;
 
 class PendaftarController extends Controller
 {
@@ -297,6 +298,232 @@ class PendaftarController extends Controller
             $snap->data = 'success daftar';
             return response()->json($snap);
         }
+
+        // Update related pendaftar based on stored no_tiket and generate QR on success
+        if ($data_donation) {
+            $noTiket = @unserialize($data_donation->events);
+            if ($noTiket === false) {
+                $noTiket = $data_donation->events; // fallback if plain string
+            }
+            if ($noTiket) {
+                $p = Pendaftar::where('no_tiket', $noTiket)->first();
+                if ($p) {
+                    if ($data_donation->status === 'success') {
+                        $p->status_payment = 'success';
+                        // ensure QR exists
+                        $qrPath = public_path("qrcodes/{$noTiket}.png");
+                        if (!file_exists(dirname($qrPath))) {
+                            @mkdir(dirname($qrPath), 0775, true);
+                        }
+                        if (!file_exists($qrPath)) {
+                            QrCode::format('png')->size(300)->generate($noTiket, $qrPath);
+                        }
+                    } else if ($data_donation->status === 'pending') {
+                        $p->status_payment = 'pending';
+                    } else {
+                        $p->status_payment = 'failed';
+                    }
+                    $p->save();
+                }
+            }
+        }
+    }
+
+    /**
+     * Return payment status and ticket details for FE by invoice
+     * GET /api/v1/payment/{invoice}
+     */
+    public function paymentStatus($invoice)
+    {
+        $trx = Transaksi::where('invoice', $invoice)->first();
+        if (!$trx) {
+            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+        $noTiket = @unserialize($trx->events);
+        if ($noTiket === false) {
+            $noTiket = $trx->events;
+        }
+        $pendaftar = $noTiket ? Pendaftar::where('no_tiket', $noTiket)->first() : null;
+
+        // Build QR URL if exists; do not generate here (generation happens on webhook or register)
+        $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
+        $qrUrl = ($qrPath && file_exists($qrPath)) ? url("/qrcodes/{$noTiket}.png") : null;
+
+        return response()->json([
+            'invoice' => $trx->invoice,
+            'status' => $trx->status,
+            'amount' => $trx->amount,
+            'no_tiket' => $noTiket,
+            'qr_url' => $qrUrl,
+            'pendaftar' => $pendaftar ? [
+                'id' => $pendaftar->id,
+                'nama' => $pendaftar->nama,
+                'email' => $pendaftar->email,
+                'no_hp' => $pendaftar->no_hp,
+                'status_payment' => $pendaftar->status_payment,
+                'event_id' => $pendaftar->event_id,
+                'nomor_punggung' => $pendaftar->nomor_punggung,
+                'start_at' => $pendaftar->start_at,
+                'finish_at' => $pendaftar->finish_at,
+            ] : null,
+        ]);
+    }
+
+    /**
+     * Register a single ticket then return Midtrans redirect URL
+     */
+    public function registerTicket(Request $request)
+    {
+        $request->validate([
+            'event_id' => 'required|integer',
+            'nik' => 'required|string',
+            'nama' => 'required|string',
+            'no_hp' => 'required|string',
+            'email' => 'required|email',
+            'address' => 'required|string',
+            'province' => 'required|string',
+            'city' => 'required|string',
+        ]);
+
+        // determine next no_tiket
+        $last = Pendaftar::orderBy('no_tiket', 'DESC')->first();
+        $next = $last && is_numeric($last->no_tiket) ? ((int)$last->no_tiket + 1) : 1;
+        $no_tiket = (string)$next;
+
+        $event = Event::findOrFail($request->input('event_id'));
+
+        $pendaftar = Pendaftar::create([
+            'no_tiket' => $no_tiket,
+            'nama' => $request->input('nama'),
+            'nik' => $request->input('nik'),
+            'email' => $request->input('email'),
+            'no_hp' => $request->input('no_hp'),
+            'province' => $request->input('province'),
+            'city' => $request->input('city'),
+            'address' => $request->input('address'),
+            'event_id' => $event->id,
+            'total_bayar' => $event->harga,
+            'status_payment' => 'pending',
+        ]);
+
+        // Create invoice
+        $random = Str::upper(Str::random(10));
+        $invoice = 'TRX-' . $random;
+
+        $transaksi = Transaksi::create([
+            'invoice' => $invoice,
+            'events' => serialize($no_tiket),
+            'event_id' => $event->id,
+            'amount' => $event->harga,
+            'note' => $pendaftar->nama,
+            'status' => 'pending',
+        ]);
+
+        $payload = [
+            'transaction_details' => [
+                'order_id' => $transaksi->invoice,
+                'gross_amount' => $transaksi->amount,
+            ],
+            'customer_details' => [
+                'first_name' => $pendaftar->nama,
+                'email' => $pendaftar->email,
+            ],
+            'callbacks' => [
+                'finish' => url('/payment/success/' . $invoice),
+            ],
+        ];
+
+        $paymentUrl = Snap::createTransaction($payload)->redirect_url;
+        return response()->json(['url' => $paymentUrl, 'invoice' => $invoice, 'no_tiket' => $no_tiket]);
+    }
+
+    /** Start scan: pair nomor punggung and mark start */
+    public function scanStart(Request $request)
+    {
+        $request->validate([
+            'no_tiket' => 'required|string',
+            'nomor_punggung' => 'required|string',
+        ]);
+        $p = Pendaftar::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
+        $p->nomor_punggung = $request->input('nomor_punggung');
+        $p->checkin = 'sudah';
+        $p->start_at = Carbon::now();
+        $p->save();
+        return response()->json(['success' => true]);
+    }
+
+    /** Finish scan: mark finish time */
+    public function scanFinish(Request $request)
+    {
+        $request->validate([
+            'no_tiket' => 'required|string',
+        ]);
+        $p = Pendaftar::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
+        $p->finish_at = Carbon::now();
+        $p->checkin = 'terpakai';
+        $p->save();
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Scan QR to fetch order/participant data.
+     * Accepts either no_tiket or nomor_punggung.
+     */
+    public function scan(Request $request)
+    {
+        $request->validate([
+            'no_tiket' => 'nullable|string',
+            'nomor_punggung' => 'nullable|string',
+        ]);
+
+        if (!$request->filled('no_tiket') && !$request->filled('nomor_punggung')) {
+            return response()->json(['message' => 'no_tiket atau nomor_punggung wajib diisi'], 422);
+        }
+
+        $query = Pendaftar::with('event');
+        if ($request->filled('no_tiket')) {
+            $query->where('no_tiket', $request->input('no_tiket'));
+        } else {
+            $query->where('nomor_punggung', $request->input('nomor_punggung'));
+        }
+        $p = $query->first();
+        if (!$p) {
+            return response()->json(['message' => 'Data tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'id' => $p->id,
+            'no_tiket' => $p->no_tiket,
+            'nama' => $p->nama,
+            'email' => $p->email,
+            'no_hp' => $p->no_hp,
+            'status_payment' => $p->status_payment,
+            'checkin' => $p->checkin,
+            'nomor_punggung' => $p->nomor_punggung,
+            'event' => $p->event ? [
+                'id' => $p->event->id,
+                'nama_event' => $p->event->nama_event,
+                'tanggal' => $p->event->tanggal ?? null,
+            ] : null,
+        ]);
+    }
+
+    /**
+     * List pairing nomor punggung yang sudah terisi.
+     */
+    public function listPairing(Request $request)
+    {
+        $q = Pendaftar::query()->whereNotNull('nomor_punggung');
+        if ($request->filled('search')) {
+            $term = '%' . $request->input('search') . '%';
+            $q->where(function ($w) use ($term) {
+                $w->where('no_tiket', 'like', $term)
+                  ->orWhere('nama', 'like', $term)
+                  ->orWhere('nomor_punggung', 'like', $term);
+            });
+        }
+        $items = $q->orderBy('nomor_punggung')->limit(200)->get(['id','no_tiket','nama','nomor_punggung']);
+        return response()->json($items);
     }
 
     /**
@@ -824,7 +1051,7 @@ class PendaftarController extends Controller
         $orderId      = $notification->order_id;
         $fraud        = $notification->fraud_status;
 
-        //data donation
+        // find transaction by invoice
         $data_donation = Transaksi::where('invoice', $orderId)->first();
 
         if ($transaction == 'capture') {
