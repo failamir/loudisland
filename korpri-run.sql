@@ -4,7 +4,7 @@
 -- https://tableplus.com/
 --
 -- Database: korpri-run
--- Generation Time: 2025-08-26 19:40:29.9980
+-- Generation Time: 2025-08-26 22:45:34.0430
 -- -------------------------------------------------------------
 
 
@@ -18,7 +18,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 
-DROP TABLE IF EXISTS `audit_logs`;
 CREATE TABLE `audit_logs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `description` text COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -30,9 +29,8 @@ CREATE TABLE `audit_logs` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=45 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=49 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `banners`;
 CREATE TABLE `banners` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -45,7 +43,6 @@ CREATE TABLE `banners` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `events`;
 CREATE TABLE `events` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nama_event` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -59,7 +56,6 @@ CREATE TABLE `events` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `faq_categories`;
 CREATE TABLE `faq_categories` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `category` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -69,7 +65,6 @@ CREATE TABLE `faq_categories` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `faq_questions`;
 CREATE TABLE `faq_questions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `question` longtext COLLATE utf8mb4_unicode_ci,
@@ -83,7 +78,6 @@ CREATE TABLE `faq_questions` (
   CONSTRAINT `category_fk_7114374` FOREIGN KEY (`category_id`) REFERENCES `faq_categories` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `media`;
 CREATE TABLE `media` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `model_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -109,15 +103,13 @@ CREATE TABLE `media` (
   KEY `media_order_column_index` (`order_column`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `migrations`;
 CREATE TABLE `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `password_resets`;
 CREATE TABLE `password_resets` (
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `token` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -125,15 +117,20 @@ CREATE TABLE `password_resets` (
   KEY `password_resets_email_index` (`email`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `pendaftars`;
 CREATE TABLE `pendaftars` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `no_tiket` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `nomor_punggung` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `nama` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `nik` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `no_hp` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `province` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `city` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `address` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `checkin` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_at` datetime DEFAULT NULL,
+  `finish_at` datetime DEFAULT NULL,
   `notes` longtext COLLATE utf8mb4_unicode_ci,
   `status_payment` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `payment_type` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -145,9 +142,8 @@ CREATE TABLE `pendaftars` (
   PRIMARY KEY (`id`),
   KEY `event_fk_6953391` (`event_id`),
   CONSTRAINT `event_fk_6953391` FOREIGN KEY (`event_id`) REFERENCES `events` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=34 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `permission_role`;
 CREATE TABLE `permission_role` (
   `role_id` bigint(20) unsigned NOT NULL,
   `permission_id` bigint(20) unsigned NOT NULL,
@@ -157,7 +153,6 @@ CREATE TABLE `permission_role` (
   CONSTRAINT `role_id_fk_6952520` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `permissions`;
 CREATE TABLE `permissions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -167,7 +162,6 @@ CREATE TABLE `permissions` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `personal_access_tokens`;
 CREATE TABLE `personal_access_tokens` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `tokenable_type` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -181,9 +175,8 @@ CREATE TABLE `personal_access_tokens` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `personal_access_tokens_token_unique` (`token`),
   KEY `personal_access_tokens_tokenable_type_tokenable_id_index` (`tokenable_type`,`tokenable_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `refresh_tokens`;
 CREATE TABLE `refresh_tokens` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` bigint(20) unsigned NOT NULL,
@@ -197,9 +190,8 @@ CREATE TABLE `refresh_tokens` (
   UNIQUE KEY `refresh_tokens_token_unique` (`token`),
   KEY `refresh_tokens_user_id_foreign` (`user_id`),
   CONSTRAINT `refresh_tokens_user_id_foreign` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `role_user`;
 CREATE TABLE `role_user` (
   `user_id` bigint(20) unsigned NOT NULL,
   `role_id` bigint(20) unsigned NOT NULL,
@@ -209,7 +201,6 @@ CREATE TABLE `role_user` (
   CONSTRAINT `user_id_fk_6952529` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `roles`;
 CREATE TABLE `roles` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -219,7 +210,6 @@ CREATE TABLE `roles` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `settings`;
 CREATE TABLE `settings` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -230,7 +220,6 @@ CREATE TABLE `settings` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `sponsors`;
 CREATE TABLE `sponsors` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `nama` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -241,7 +230,6 @@ CREATE TABLE `sponsors` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `tickets`;
 CREATE TABLE `tickets` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `no_tiket` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -259,7 +247,6 @@ CREATE TABLE `tickets` (
   KEY `peserta_fk_7114415` (`peserta_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `tikets`;
 CREATE TABLE `tikets` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `no_tiket` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -278,7 +265,6 @@ CREATE TABLE `tikets` (
   CONSTRAINT `peserta_fk_7114415` FOREIGN KEY (`peserta_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `transactions`;
 CREATE TABLE `transactions` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `invoice` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -297,9 +283,8 @@ CREATE TABLE `transactions` (
   PRIMARY KEY (`id`),
   KEY `peserta_fk_7114422` (`peserta_id`),
   KEY `created_by_fk_7114430` (`created_by_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `transaksi`;
 CREATE TABLE `transaksi` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `invoice` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -314,7 +299,6 @@ CREATE TABLE `transaksi` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `transaksis`;
 CREATE TABLE `transaksis` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `invoice` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -336,7 +320,6 @@ CREATE TABLE `transaksis` (
   CONSTRAINT `peserta_fk_7114422` FOREIGN KEY (`peserta_id`) REFERENCES `users` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `user_alerts`;
 CREATE TABLE `user_alerts` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `alert_text` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -346,7 +329,6 @@ CREATE TABLE `user_alerts` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `user_user_alert`;
 CREATE TABLE `user_user_alert` (
   `user_alert_id` bigint(20) unsigned NOT NULL,
   `user_id` bigint(20) unsigned NOT NULL,
@@ -357,7 +339,6 @@ CREATE TABLE `user_user_alert` (
   CONSTRAINT `user_id_fk_7114365` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;;
 
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -424,7 +405,11 @@ INSERT INTO `audit_logs` (`id`, `description`, `subject_id`, `subject_type`, `us
 (41, 'audit:created', 32, 'App\\Models\\Pendaftar#32', NULL, '{\"nama\":\"Admin\",\"email\":\"admin@admin.com\",\"no_hp\":null,\"no_tiket\":\"015\",\"total_bayar\":\"200000\",\"event_id\":1,\"nik\":\"1121212121\",\"updated_at\":\"2025-08-25 18:32:55\",\"created_at\":\"2025-08-25 18:32:55\",\"id\":32}', '127.0.0.1', '2025-08-25 18:32:55', '2025-08-25 18:32:55'),
 (42, 'audit:created', 8, 'App\\Models\\Transaksi#8', NULL, '{\"invoice\":\"TRX-H2B29F86YW\",\"events\":\"s:3:\\\"015\\\";\",\"peserta_id\":1,\"amount\":200000,\"note\":\"Admin\",\"status\":\"pending\",\"updated_at\":\"2025-08-25 18:32:55\",\"created_at\":\"2025-08-25 18:32:55\",\"id\":8}', '127.0.0.1', '2025-08-25 18:32:55', '2025-08-25 18:32:55'),
 (43, 'audit:created', 33, 'App\\Models\\Pendaftar#33', NULL, '{\"email\":\"lombok2@cantik.com\",\"nama\":\"lombok\",\"nik\":\"123871293871238912312\",\"no_hp\":\"08213123123213\",\"event_id\":\"1\",\"no_tiket\":\"015\",\"total_bayar\":\"200000\",\"status_payment\":\"pending\",\"updated_at\":\"2025-08-25 20:26:24\",\"created_at\":\"2025-08-25 20:26:24\",\"id\":33}', '127.0.0.1', '2025-08-25 20:26:24', '2025-08-25 20:26:24'),
-(44, 'audit:created', 9, 'App\\Models\\Transaksi#9', NULL, '{\"invoice\":\"TRX-YMRIYUJ61K\",\"events\":\"s:3:\\\"015\\\";\",\"peserta_id\":6,\"amount\":200000,\"note\":\"lombok\",\"status\":\"pending\",\"updated_at\":\"2025-08-25 20:26:24\",\"created_at\":\"2025-08-25 20:26:24\",\"id\":9}', '127.0.0.1', '2025-08-25 20:26:24', '2025-08-25 20:26:24');
+(44, 'audit:created', 9, 'App\\Models\\Transaksi#9', NULL, '{\"invoice\":\"TRX-YMRIYUJ61K\",\"events\":\"s:3:\\\"015\\\";\",\"peserta_id\":6,\"amount\":200000,\"note\":\"lombok\",\"status\":\"pending\",\"updated_at\":\"2025-08-25 20:26:24\",\"created_at\":\"2025-08-25 20:26:24\",\"id\":9}', '127.0.0.1', '2025-08-25 20:26:24', '2025-08-25 20:26:24'),
+(45, 'audit:created', 34, 'App\\Models\\Pendaftar#34', NULL, '{\"no_tiket\":\"15\",\"nama\":\"Test Runner\",\"nik\":\"1234567890123456\",\"email\":\"testrunner@example.com\",\"no_hp\":\"08123456789\",\"province\":\"NTB\",\"city\":\"Lombok Tengah\",\"address\":\"Jl. Contoh 123\",\"event_id\":1,\"total_bayar\":\"200000\",\"status_payment\":\"pending\",\"updated_at\":\"2025-08-26 14:07:34\",\"created_at\":\"2025-08-26 14:07:34\",\"id\":34}', '127.0.0.1', '2025-08-26 14:07:34', '2025-08-26 14:07:34'),
+(46, 'audit:created', 10, 'App\\Models\\Transaksi#10', NULL, '{\"invoice\":\"TRX-PGYXDZTHN5\",\"events\":\"s:2:\\\"15\\\";\",\"event_id\":1,\"amount\":\"200000\",\"note\":\"Test Runner\",\"status\":\"pending\",\"updated_at\":\"2025-08-26 14:07:34\",\"created_at\":\"2025-08-26 14:07:34\",\"id\":10}', '127.0.0.1', '2025-08-26 14:07:34', '2025-08-26 14:07:34'),
+(47, 'audit:created', 35, 'App\\Models\\Pendaftar#35', NULL, '{\"no_tiket\":\"16\",\"nama\":\"LT Runner\",\"nik\":\"9876543210987654\",\"email\":\"ltrunner@example.com\",\"no_hp\":\"081200000000\",\"province\":\"NTB\",\"city\":\"Mataram\",\"address\":\"Jl. Tunnel 1\",\"event_id\":1,\"total_bayar\":\"200000\",\"status_payment\":\"pending\",\"updated_at\":\"2025-08-26 15:03:41\",\"created_at\":\"2025-08-26 15:03:41\",\"id\":35}', '127.0.0.1', '2025-08-26 15:03:41', '2025-08-26 15:03:41'),
+(48, 'audit:created', 11, 'App\\Models\\Transaksi#11', NULL, '{\"invoice\":\"TRX-P09YOWTAAT\",\"events\":\"s:2:\\\"16\\\";\",\"event_id\":1,\"amount\":\"200000\",\"note\":\"LT Runner\",\"status\":\"pending\",\"updated_at\":\"2025-08-26 15:03:41\",\"created_at\":\"2025-08-26 15:03:41\",\"id\":11}', '127.0.0.1', '2025-08-26 15:03:41', '2025-08-26 15:03:41');
 
 INSERT INTO `events` (`id`, `nama_event`, `event_code`, `harga`, `tanggal_mulai`, `tanggal_selesai`, `created_at`, `updated_at`, `deleted_at`) VALUES
 (1, 'Tiket Untuk ASN', 'KORPRI_ASN', '200000', '2025-08-31 02:45:06', NULL, '2025-08-24 14:45:19', NULL, NULL),
@@ -457,42 +442,45 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 (24, '2022_08_07_000019_add_relationship_fields_to_faq_questions_table', 1),
 (25, '2022_08_07_000020_add_relationship_fields_to_transaksis_table', 1),
 (26, '2022_08_07_000021_add_approval_fields', 1),
-(27, '2025_08_25_175500_create_refresh_tokens_table', 2);
+(27, '2025_08_25_175500_create_refresh_tokens_table', 2),
+(28, '2025_08_26_000001_add_fields_to_pendaftars_table', 3);
 
-INSERT INTO `pendaftars` (`id`, `no_tiket`, `nama`, `nik`, `email`, `no_hp`, `checkin`, `notes`, `status_payment`, `payment_type`, `total_bayar`, `created_at`, `updated_at`, `deleted_at`, `event_id`) VALUES
-(1, '0001', 'Runner-0001', '1111', 'Runner-0001@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:53:06', '2025-08-24 07:53:06', NULL, NULL),
-(2, '02', 'Runner-02', '1111', 'Runner-02@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:54:38', '2025-08-24 07:54:38', NULL, NULL),
-(3, '03', 'Runner-03', '1111', 'Runner-03@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:55:54', '2025-08-24 07:55:54', NULL, NULL),
-(4, '04', 'Runner-04', '1111', 'Runner-04@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:57:48', '2025-08-24 07:57:48', NULL, NULL),
-(5, '05', 'Runner-05', '1111', 'Runner-05@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:58:20', '2025-08-24 07:58:20', NULL, NULL),
-(6, '06', 'Runner-06', '1111', 'Runner-06@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:58:56', '2025-08-24 07:58:56', NULL, NULL),
-(7, '07', 'failamir abdullah', '1234567890', 'ifailamir@gmail.com', '0812312312312', NULL, NULL, 'pending', NULL, '200000', '2025-08-24 07:59:11', '2025-08-24 07:59:11', NULL, NULL),
-(8, '08', 'Runner-08', '1111', 'Runner-08@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 08:04:03', '2025-08-24 08:04:03', NULL, NULL),
-(9, '09', 'Runner-09', '1111', 'Runner-09@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 09:08:25', '2025-08-24 09:08:25', NULL, NULL),
-(10, '010', 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:37:49', '2025-08-24 10:37:49', NULL, NULL),
-(11, '010', 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:45:38', '2025-08-24 10:45:38', NULL, NULL),
-(12, '010', 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:51:40', '2025-08-24 10:51:40', NULL, NULL),
-(13, '10', 'Runner-10', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:21:52', '2025-08-25 13:21:52', NULL, NULL),
-(14, '11', 'Runner-11', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:27:30', '2025-08-25 13:27:30', NULL, NULL),
-(15, '12', 'Runner-12', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:28:07', '2025-08-25 13:28:07', NULL, NULL),
-(16, '13', 'Runner-13', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:32:37', '2025-08-25 13:32:37', NULL, NULL),
-(17, '14', 'Runner-14', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:34:49', '2025-08-25 13:34:49', NULL, NULL),
-(18, '00015', 'Runner-00015', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:41:37', '2025-08-25 13:41:37', NULL, NULL),
-(19, '00016', 'Runner-00016', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:46:24', '2025-08-25 13:46:24', NULL, NULL),
-(20, '00017', 'Runner-00017', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:46:43', '2025-08-25 13:46:43', NULL, NULL),
-(21, '00018', 'Runner-00018', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:02', '2025-08-25 13:47:02', NULL, NULL),
-(22, '00019', 'Runner-00019', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:13', '2025-08-25 13:47:13', NULL, NULL),
-(23, '00020', 'Runner-00020', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:21', '2025-08-25 13:47:21', NULL, NULL),
-(24, '00021', 'Runner-00021', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:39', '2025-08-25 13:47:39', NULL, NULL),
-(25, '00022', 'Runner-00022', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 14:02:01', '2025-08-25 14:02:01', NULL, NULL),
-(26, '015', 'lombok', 'u67ty3tw34w535433q432c54353453', 'lombok2@cantik.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 17:37:46', '2025-08-25 17:37:46', NULL, 1),
-(27, '015', 'lombok', 'u67ty3tw34w535433q432c54353453', 'lombok2@cantik.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 17:41:57', '2025-08-25 17:41:57', NULL, 1),
-(28, '015', 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:03:47', '2025-08-25 18:03:47', NULL, 1),
-(29, '015', 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:04:40', '2025-08-25 18:04:40', NULL, 1),
-(30, '015', 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:05:13', '2025-08-25 18:05:13', NULL, 1),
-(31, '015', 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:05:54', '2025-08-25 18:05:54', NULL, 1),
-(32, '015', 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:32:55', '2025-08-25 18:32:55', NULL, 1),
-(33, '015', 'lombok', '123871293871238912312', 'lombok2@cantik.com', '08213123123213', NULL, NULL, 'pending', NULL, '200000', '2025-08-25 20:26:24', '2025-08-25 20:26:24', NULL, 1);
+INSERT INTO `pendaftars` (`id`, `no_tiket`, `nomor_punggung`, `nama`, `nik`, `email`, `no_hp`, `province`, `city`, `address`, `checkin`, `start_at`, `finish_at`, `notes`, `status_payment`, `payment_type`, `total_bayar`, `created_at`, `updated_at`, `deleted_at`, `event_id`) VALUES
+(1, '0001', NULL, 'Runner-0001', '1111', 'Runner-0001@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:53:06', '2025-08-24 07:53:06', NULL, NULL),
+(2, '02', NULL, 'Runner-02', '1111', 'Runner-02@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:54:38', '2025-08-24 07:54:38', NULL, NULL),
+(3, '03', NULL, 'Runner-03', '1111', 'Runner-03@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:55:54', '2025-08-24 07:55:54', NULL, NULL),
+(4, '04', NULL, 'Runner-04', '1111', 'Runner-04@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:57:48', '2025-08-24 07:57:48', NULL, NULL),
+(5, '05', NULL, 'Runner-05', '1111', 'Runner-05@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:58:20', '2025-08-24 07:58:20', NULL, NULL),
+(6, '06', NULL, 'Runner-06', '1111', 'Runner-06@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 07:58:56', '2025-08-24 07:58:56', NULL, NULL),
+(7, '07', NULL, 'failamir abdullah', '1234567890', 'ifailamir@gmail.com', '0812312312312', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'pending', NULL, '200000', '2025-08-24 07:59:11', '2025-08-24 07:59:11', NULL, NULL),
+(8, '08', NULL, 'Runner-08', '1111', 'Runner-08@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 08:04:03', '2025-08-24 08:04:03', NULL, NULL),
+(9, '09', NULL, 'Runner-09', '1111', 'Runner-09@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 09:08:25', '2025-08-24 09:08:25', NULL, NULL),
+(10, '010', NULL, 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:37:49', '2025-08-24 10:37:49', NULL, NULL),
+(11, '010', NULL, 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:45:38', '2025-08-24 10:45:38', NULL, NULL),
+(12, '010', NULL, 'Runner-010', '1111', 'Runner-010@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-24 10:51:40', '2025-08-24 10:51:40', NULL, NULL),
+(13, '10', NULL, 'Runner-10', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:21:52', '2025-08-25 13:21:52', NULL, NULL),
+(14, '11', NULL, 'Runner-11', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:27:30', '2025-08-25 13:27:30', NULL, NULL),
+(15, '12', NULL, 'Runner-12', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:28:07', '2025-08-25 13:28:07', NULL, NULL),
+(16, '13', NULL, 'Runner-13', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:32:37', '2025-08-25 13:32:37', NULL, NULL),
+(17, '14', NULL, 'Runner-14', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:34:49', '2025-08-25 13:34:49', NULL, NULL),
+(18, '00015', NULL, 'Runner-00015', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:41:37', '2025-08-25 13:41:37', NULL, NULL),
+(19, '00016', NULL, 'Runner-00016', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:46:24', '2025-08-25 13:46:24', NULL, NULL),
+(20, '00017', NULL, 'Runner-00017', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:46:43', '2025-08-25 13:46:43', NULL, NULL),
+(21, '00018', NULL, 'Runner-00018', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:02', '2025-08-25 13:47:02', NULL, NULL),
+(22, '00019', NULL, 'Runner-00019', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:13', '2025-08-25 13:47:13', NULL, NULL),
+(23, '00020', NULL, 'Runner-00020', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:21', '2025-08-25 13:47:21', NULL, NULL),
+(24, '00021', NULL, 'Runner-00021', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 13:47:39', '2025-08-25 13:47:39', NULL, NULL),
+(25, '00022', NULL, 'Runner-00022', '1111', 'ifailamir@gmail.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 14:02:01', '2025-08-25 14:02:01', NULL, NULL),
+(26, '015', NULL, 'lombok', 'u67ty3tw34w535433q432c54353453', 'lombok2@cantik.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 17:37:46', '2025-08-25 17:37:46', NULL, 1),
+(27, '015', NULL, 'lombok', 'u67ty3tw34w535433q432c54353453', 'lombok2@cantik.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 17:41:57', '2025-08-25 17:41:57', NULL, 1),
+(28, '015', NULL, 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:03:47', '2025-08-25 18:03:47', NULL, 1),
+(29, '015', NULL, 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:04:40', '2025-08-25 18:04:40', NULL, 1),
+(30, '015', NULL, 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:05:13', '2025-08-25 18:05:13', NULL, 1),
+(31, '015', NULL, 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:05:54', '2025-08-25 18:05:54', NULL, 1),
+(32, '015', NULL, 'Admin', '1121212121', 'admin@admin.com', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, '200000', '2025-08-25 18:32:55', '2025-08-25 18:32:55', NULL, 1),
+(33, '015', NULL, 'lombok', '123871293871238912312', 'lombok2@cantik.com', '08213123123213', NULL, NULL, NULL, NULL, NULL, NULL, NULL, 'pending', NULL, '200000', '2025-08-25 20:26:24', '2025-08-25 20:26:24', NULL, 1),
+(34, '15', NULL, 'Test Runner', '1234567890123456', 'testrunner@example.com', '08123456789', 'NTB', 'Lombok Tengah', 'Jl. Contoh 123', NULL, NULL, NULL, NULL, 'pending', NULL, '200000', '2025-08-26 14:07:34', '2025-08-26 14:07:34', NULL, 1),
+(35, '16', NULL, 'LT Runner', '9876543210987654', 'ltrunner@example.com', '081200000000', 'NTB', 'Mataram', 'Jl. Tunnel 1', NULL, NULL, NULL, NULL, 'pending', NULL, '200000', '2025-08-26 15:03:41', '2025-08-26 15:03:41', NULL, 1);
 
 INSERT INTO `permission_role` (`role_id`, `permission_id`) VALUES
 (1, 1),
@@ -576,13 +564,14 @@ INSERT INTO `personal_access_tokens` (`id`, `tokenable_type`, `tokenable_id`, `n
 (9, 'App\\Models\\User', 10, 'api-token', 'afb745ebcb0dd7b0dbde636d4a6a2efddbb87d5f62714677119041b00436c8d4', '[\"*\"]', NULL, '2025-08-25 18:31:31', '2025-08-25 18:31:31'),
 (10, 'App\\Models\\User', 11, 'api-token', 'a068be27acd93405fc95354c8e0a0601d5fa6e344d1c20dd2980d891dc91f260', '[\"*\"]', NULL, '2025-08-25 18:31:48', '2025-08-25 18:31:48'),
 (11, 'App\\Models\\User', 12, 'api-token', '6d8e77a17d5f686c0b3f7a5df9ed88a878ebef2ae8885597233ae602c09a65a7', '[\"*\"]', NULL, '2025-08-25 18:31:51', '2025-08-25 18:31:51'),
-(13, 'App\\Models\\User', 1, 'api-token', 'ec17e7147efc45eb99c380b6e95dc43251a45f9505f535cc16cb67d055cbb0c8', '[\"*\"]', '2025-08-25 20:12:15', '2025-08-25 19:41:46', '2025-08-25 20:12:15');
+(14, 'App\\Models\\User', 1, 'api-token', '7910cf490e064c395a7d1ec27aaf0bde23ee1c190d5f0dce4d6a9d2400b01d9c', '[\"*\"]', '2025-08-26 13:30:47', '2025-08-26 13:20:46', '2025-08-26 13:30:47');
 
 INSERT INTO `refresh_tokens` (`id`, `user_id`, `token`, `device_name`, `revoked`, `expires_at`, `created_at`, `updated_at`) VALUES
 (1, 9, '4860e2ebcb5786377b0059bb8560797dfe955861a59360bad9c3bab76f2c6c0e', 'api-token', 0, '2025-09-24 17:55:14', '2025-08-25 17:55:14', '2025-08-25 17:55:14'),
 (2, 1, '6782b30e5a0bb4aa8389f0d9a34cb04a5971c9ea54299416abd512c0a5d83b88', 'api-token', 0, '2025-09-24 17:58:31', '2025-08-25 17:58:31', '2025-08-25 17:58:31'),
 (3, 1, '23387e9902c3bdb3235f0002de3dd4b882bb0debd27081943d5aed74f07437c1', 'api-token', 0, '2025-09-24 19:17:03', '2025-08-25 19:17:03', '2025-08-25 19:17:03'),
-(4, 1, '5013ec67b405dd449a20251370792e8255d6d0992873f4902c847f8e70c92824', 'api-token', 0, '2025-09-24 19:41:46', '2025-08-25 19:41:46', '2025-08-25 19:41:46');
+(4, 1, '5013ec67b405dd449a20251370792e8255d6d0992873f4902c847f8e70c92824', 'api-token', 0, '2025-09-24 19:41:46', '2025-08-25 19:41:46', '2025-08-25 19:41:46'),
+(5, 1, '57481396c022201ff0a1bb0f5933b2a3a4c1fa9a2e9aaed0c8232321a0c981c4', 'api-token', 0, '2025-09-25 13:20:46', '2025-08-26 13:20:46', '2025-08-26 13:20:46');
 
 INSERT INTO `role_user` (`user_id`, `role_id`) VALUES
 (1, 1),
@@ -621,7 +610,9 @@ INSERT INTO `transactions` (`id`, `invoice`, `event_id`, `tiket_id`, `amount`, `
 (6, 'TRX-25DBPA44L7', NULL, NULL, '200000', 'failamir abdullah', '4950ed2d-a724-4709-9d73-57484f9f94fc', 'pending', '2025-08-25 14:05:28', '2025-08-25 14:05:29', NULL, NULL, 2, NULL),
 (7, 'TRX-O971CG3M49', NULL, NULL, '200000', 'Admin', NULL, 'pending', '2025-08-25 18:05:54', '2025-08-25 18:05:54', NULL, 1, NULL, 's:3:\"015\";'),
 (8, 'TRX-H2B29F86YW', NULL, NULL, '200000', 'Admin', NULL, 'pending', '2025-08-25 18:32:55', '2025-08-25 18:32:55', NULL, 1, NULL, 's:3:\"015\";'),
-(9, 'TRX-YMRIYUJ61K', NULL, NULL, '200000', 'lombok', NULL, 'pending', '2025-08-25 20:26:24', '2025-08-25 20:26:24', NULL, 6, NULL, 's:3:\"015\";');
+(9, 'TRX-YMRIYUJ61K', NULL, NULL, '200000', 'lombok', NULL, 'pending', '2025-08-25 20:26:24', '2025-08-25 20:26:24', NULL, 6, NULL, 's:3:\"015\";'),
+(10, 'TRX-PGYXDZTHN5', '1', NULL, '200000', 'Test Runner', NULL, 'pending', '2025-08-26 14:07:34', '2025-08-26 14:07:34', NULL, NULL, NULL, 's:2:\"15\";'),
+(11, 'TRX-P09YOWTAAT', '1', NULL, '200000', 'LT Runner', NULL, 'pending', '2025-08-26 15:03:41', '2025-08-26 15:03:41', NULL, NULL, NULL, 's:2:\"16\";');
 
 INSERT INTO `transaksis` (`id`, `invoice`, `event_id`, `tiket_id`, `amount`, `note`, `snap_token`, `status`, `created_at`, `updated_at`, `deleted_at`, `peserta_id`, `created_by_id`) VALUES
 (3, 'TRX-1N5Q0QS038', NULL, NULL, '200000', 'failamir abdullah', '4b0a1920-6fe7-4a4e-91a4-805d86f008b3', 'pending', '2025-08-24 09:08:35', '2025-08-24 09:08:36', NULL, NULL, NULL),

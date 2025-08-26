@@ -25,6 +25,14 @@ class AuthController extends Controller
             'device_name' => 'sometimes|string|max:100',
         ])->validate();
 
+        //if email already reistered
+        if (User::where('email', $data['email'])->exists()) {
+            return response()->json([
+                'message' => 'Email already registered',
+                'data' => null,
+            ], 400);
+        }
+        
         // Normalize email for consistency
         $email = strtolower($data['email']);
 
