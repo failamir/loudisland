@@ -3,7 +3,11 @@ export const MENU_SIDEBAR = [{
   icon: 'element-11',
   children: [{
     title: 'Light Sidebar',
-    path: '/'
+    path: '/'}, {
+    title: 'Nomor Punggung (QR)',
+    path: '/nomor-punggung',
+    icon: 'scan-barcode'
+  
   }, {
     title: 'Dark Sidebar',
     path: '/dark-sidebar'
