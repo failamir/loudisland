@@ -19,7 +19,9 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['*'],
+    // Set allowed origins via ENV, comma-separated. Example:
+    // CORS_ALLOWED_ORIGINS=http://localhost:5173,https://app.example.com
+    'allowed_origins' => array_filter(array_map('trim', explode(',', env('CORS_ALLOWED_ORIGINS', '*')))),
 
     'allowed_origins_patterns' => [],
 
