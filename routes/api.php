@@ -3,91 +3,105 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
-
+use App\Http\Controllers\Api\V1\Admin\AuthController;
+use App\Http\Controllers\Api\V1\Admin\UserApiController;
+use App\Http\Controllers\Api\V1\Admin\PendaftarApiController;
+use App\Http\Controllers\Api\V1\Admin\QrCodeApiController;
+use App\Http\Controllers\Api\V1\Admin\TransactionsListController;
+use App\Http\Controllers\Api\V1\Admin\SponsorApiController;
+use App\Http\Controllers\Api\V1\Admin\SettingApiController;
+use App\Http\Controllers\Api\V1\Admin\EventApiController;
+use App\Http\Controllers\Api\V1\Admin\BannerApiController;
+use App\Http\Controllers\Api\V1\Admin\TransaksiApiController;
+use App\Http\Controllers\Api\V1\Admin\TiketApiController;
+use App\Http\Controllers\Api\V1\Admin\PendaftarController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
 Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin'], function () {
     // Auth
-    Route::post('register', 'AuthController@register')->name('auth.register');
-    Route::post('login', 'AuthController@login')->name('auth.login');
-    Route::post('refresh', 'AuthController@refresh')->name('auth.refresh');
+    Route::post('register', [AuthController::class, 'register'])->name('auth.register');
+    Route::post('login', [AuthController::class, 'login'])->name('auth.login');
+    Route::post('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('me', 'AuthController@me')->name('auth.me');
-        Route::get('users', 'UserApiController@index');
+        Route::get('me', [AuthController::class, 'me'])->name('auth.me');
+        Route::get('users', [UserApiController::class, 'index']);
 
         // Nomor Punggung QR API
         Route::get('nomor-punggung', [NomorPunggungApiController::class, 'index']);
         Route::post('nomor-punggung/pair', [NomorPunggungApiController::class, 'pair']);
         Route::post('nomor-punggung/generate', [NomorPunggungApiController::class, 'generate']);
+        Route::post('nomor-punggung/unpair', [NomorPunggungApiController::class, 'unpair']);
 
         // Scanner endpoints for race day (protected)
-        Route::post('scan/start', 'PendaftarController@scanStart')->name('scan.start');
-        Route::post('scan/finish', 'PendaftarController@scanFinish')->name('scan.finish');
+        Route::post('scan/start', [PendaftarController::class, 'scanStart'])->name('scan.start');
+        Route::post('scan/finish', [PendaftarController::class, 'scanFinish'])->name('scan.finish');
 
         // Pairings listing (protected)
-        Route::get('pairings', 'PendaftarController@listPairing')->name('pairings');
+        Route::get('pairings', [PendaftarController::class, 'listPairing'])->name('pairings');
 
         // QR Codes API for FE consumption (protected)
-        Route::get('qrcodes', 'QrCodeApiController@index')->name('qrcodes.index');
-        Route::get('qrcodes/download-all', 'QrCodeApiController@downloadAll')->name('qrcodes.downloadAll');
+        Route::get('qrcodes', [QrCodeApiController::class, 'index'])->name('qrcodes.index');
+        Route::get('qrcodes/download-all', [QrCodeApiController::class, 'downloadAll'])->name('qrcodes.downloadAll');
 
         // Simple transactions list for FE
-        Route::get('transactions/simple', 'TransactionsListController@index')->name('transactions.simple');
+        Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
 
-        Route::post('logout', 'AuthController@logout')->name('auth.logout');
+        Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
+
     // Pendaftar
-    // Route::post('beli', 'PendaftarController@beliApi')->name('beliApi');
-    Route::post('buy', 'PendaftarController@beliApi')->name('buy');
-    Route::post('daftar', 'PendaftarController@daftar')->name('daftar');
-    Route::get('profile', 'PendaftarController@profile')->name('profile');
-    Route::post('updateprofile', 'PendaftarController@updateprofile')->name('updateprofile');
-    Route::get('transaksi', 'PendaftarController@transaksi')->name('transaksi');
-    Route::get('tiket', 'PendaftarController@tiket')->name('tiket');
-    Route::post('notification', 'PendaftarController@notificationHandler')->name('notification');
+    Route::post('buy', [PendaftarController::class, 'beliApi'])->name('buy');
+    Route::get('detailOrder', [PendaftarController::class, 'detailOrder'])->name('detailOrder');
+    Route::post('daftar', [PendaftarController::class, 'daftar'])->name('daftar');
+    Route::get('profile', [PendaftarController::class, 'profile'])->name('profile');
+    Route::post('updateprofile', [PendaftarController::class, 'updateprofile'])->name('updateprofile');
+    Route::get('transaksi', [PendaftarController::class, 'transaksi'])->name('transaksi');
+    Route::get('transactions', [PendaftarController::class, 'transaksi'])->name('transactions');
+    Route::get('tiket', [PendaftarController::class, 'tiket'])->name('tiket');
+    Route::post('notification', [PendaftarController::class, 'notificationHandler'])->name('notification');
     // New simplified registration that creates ticket and returns Midtrans URL
-    Route::post('register-ticket', 'PendaftarController@registerTicket')->name('register-ticket');
-    
-    Route::post('scan', 'PendaftarController@scan')->name('scan');
-    Route::post('checkin', 'PendaftarController@checkin')->name('checkin');
-    Route::post('checkin2', 'PendaftarController@checkin2')->name('checkin2');
-    Route::post('checkout', 'PendaftarController@checkout')->name('checkout');
-    Route::post('pendaftars/media', 'PendaftarApiController@storeMedia')->name('pendaftars.storeMedia');
-    Route::apiResource('pendaftars', 'PendaftarApiController');
+    Route::post('register-ticket', [PendaftarController::class, 'registerTicket'])->name('register-ticket');
+
+    Route::post('scan', [PendaftarController::class, 'scan'])->name('scan');
+    Route::post('checkin', [PendaftarController::class, 'checkin'])->name('checkin');
+    Route::post('checkin2', [PendaftarController::class, 'checkin2'])->name('checkin2');
+    Route::post('checkout', [PendaftarController::class, 'checkout'])->name('checkout');
+    Route::post('pendaftars/media', [PendaftarController::class, 'storeMedia'])->name('pendaftars.storeMedia');
+    Route::apiResource('pendaftars', PendaftarApiController::class);
 
     // Public QR endpoints removed; use protected versions above
 
     // Payment status for FE
-    Route::get('payment/{invoice}', 'PendaftarController@paymentStatus')->name('payment.status');
+    Route::get('payment/{invoice}', [PendaftarController::class, 'paymentStatus'])->name('payment.status');
 
-    Route::get('list_checkin', 'PendaftarController@list_checkin');
-    Route::get('list_checkout', 'PendaftarController@list_checkout');
+    Route::get('list_checkin', [PendaftarController::class, 'list_checkin']);
+    Route::get('list_checkout', [PendaftarController::class, 'list_checkout']);
     // Tiket
-    Route::post('tikets/media', 'TiketApiController@storeMedia')->name('tikets.storeMedia');
-    Route::apiResource('tikets', 'TiketApiController');
+    Route::post('tikets/media', [TiketApiController::class, 'storeMedia'])->name('tikets.storeMedia');
+    Route::apiResource('tikets', TiketApiController::class);
 
     // Event
-    Route::post('events/media', 'EventApiController@storeMedia')->name('events.storeMedia');
-    Route::apiResource('events', 'EventApiController');
+    Route::post('events/media', [EventApiController::class, 'storeMedia'])->name('events.storeMedia');
+    Route::apiResource('events', EventApiController::class);
 
     // Banner
-    Route::post('banners/media', 'BannerApiController@storeMedia')->name('banners.storeMedia');
-    Route::apiResource('banners', 'BannerApiController');
+    Route::post('banners/media', [BannerApiController::class, 'storeMedia'])->name('banners.storeMedia');
+    Route::apiResource('banners', BannerApiController::class);
 
     // Transaksi
-    Route::post('transactions/media', 'TransaksiApiController@storeMedia')->name('transactions.storeMedia');
-    Route::apiResource('transactions', 'TransaksiApiController');
+    Route::post('transactions/media', [TransaksiApiController::class, 'storeMedia'])->name('transactions.storeMedia');
+    Route::apiResource('transactions', TransaksiApiController::class);
 
     // Sponsor
-    Route::post('sponsors/media', 'SponsorApiController@storeMedia')->name('sponsors.storeMedia');
-    Route::apiResource('sponsors', 'SponsorApiController');
+    Route::post('sponsors/media', [SponsorApiController::class, 'storeMedia'])->name('sponsors.storeMedia');
+    Route::apiResource('sponsors', SponsorApiController::class);
 
     // Setting
-    Route::apiResource('settings', 'SettingApiController');
+    Route::apiResource('settings', SettingApiController::class);
 
     // Event
-    Route::apiResource('events', 'EventApiController');
+    Route::apiResource('events', EventApiController::class);
 
     Route::get('wilayah/provinces', function () {
         $response = Http::get('https://wilayah.id/api/provinces.json');
@@ -119,6 +133,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $sum = (int) \App\Models\Transaksi::where('status', 'success')->sum('amount');
         return response()->json(['total_income' => $sum]);
     });
+
     Route::post('withdrawals', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'amount' => 'required|integer|min:1',
@@ -132,4 +147,3 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ], 202);
     });
 });
-
