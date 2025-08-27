@@ -705,7 +705,7 @@ class PendaftarController extends Controller
             'no_hp' => 'required',
             'nik' => 'required',
             'email' => 'required',
-            'nama' => 'required',
+            'name' => 'required',
         ];
 
         $validator = Validator::make($data, $rules);
