@@ -76,7 +76,7 @@ class AuthController extends Controller
 
         // Select only columns we need
         $user = User::query()
-            ->select(['id', 'name', 'email', 'nik', 'password', 'no_hp'])
+            ->select(['id', 'name', 'email', 'nik', 'password', 'no_hp','uid'])
             ->where('email', $email)
             ->first();
 
