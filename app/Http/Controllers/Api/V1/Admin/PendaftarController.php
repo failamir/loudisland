@@ -697,7 +697,7 @@ class PendaftarController extends Controller
     {
         $data = $request->all();
         $rules = [
-            'uid' => 'required', //Must be a number and length of value is 8
+            'userId' => 'required', //Must be a number and length of value is 8
             'event_id' => 'required',
             'province' => 'nullable',
             'city' => 'nullable',
