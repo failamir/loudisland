@@ -698,7 +698,7 @@ class PendaftarController extends Controller
         $data = $request->all();
         $rules = [
             'userId' => 'required', //Must be a number and length of value is 8
-            'event_id' => 'required',
+            'ticketId' => 'required',
             'province' => 'nullable',
             'city' => 'nullable',
             'address' => 'required',
@@ -721,7 +721,7 @@ class PendaftarController extends Controller
 
             $no_invoice = 'TRX-' . Str::upper($random);
 
-            $amount = Event::find($data['event_id'])->harga;
+            $amount = Tiket::find($data['ticketId'])->harga;
 
             $user = User::where('uid', $data['uid'])->first();
 
@@ -743,7 +743,7 @@ class PendaftarController extends Controller
 
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
-                'events'   => $data['event_id'],
+                'events'   => $data['ticketId'],
                 'peserta_id'    => $user->id,
                 'amount'        => $amount,
                 'note'          => $user->name,
@@ -755,7 +755,7 @@ class PendaftarController extends Controller
                 'no_hp' => $data['no_hp'],
                 'nik' => $data['nik'],
                 'email' => $data['email'],
-                'nama' => $data['nama'],
+                'nama' => $data['name'],
             ]);
 
             $payload = [
