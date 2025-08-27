@@ -55,11 +55,22 @@ class PendaftarController extends Controller
 
     public function detailOrder()
     {
-        abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $pendaftar = Pendaftar::with(['event'])->get();
-
-        return view('admin.pendaftars.detailOrder', compact('pendaftar'));
+        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        if(!Auth::check()) {
+            return response()->json([
+                'message' => 'Unauthorized',
+                'status' => 401,
+            ]);
+        }
+        
+        $pendaftar = new stdClass();
+        $pendaftar->data = Pendaftar::with(['event'])->get();
+        $pendaftar->transaksi = Transaksi::where('peserta_id', Auth::user()->id)->get();
+        $pendaftar->message = 'success';
+        $pendaftar->status = 200;
+        $pendaftar->qr = QrCode::format('png')->size(300)->generate($pendaftar->data);
+        // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
+        return response()->json($pendaftar);
     }
 
     /**
