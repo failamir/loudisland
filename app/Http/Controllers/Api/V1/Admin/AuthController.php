@@ -93,7 +93,7 @@ class AuthController extends Controller
         // if ($revoke) {
         //     $user->tokens()->delete();
         // }
-        
+
         $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
         if ($revoke) {
             $user->tokens()->delete();
@@ -121,7 +121,7 @@ class AuthController extends Controller
         $accessTtlMinutes = config('sanctum.expiration'); // minutes or null
         return response()->json([
             'message' => 'Login successful',
-            // keep backward compatibility
+            'uid' => $user->uid,
             'token' => $accessToken,
             'access_token' => $accessToken,
             'access_token_expires_in' => $accessTtlMinutes ? $accessTtlMinutes * 60 : null,

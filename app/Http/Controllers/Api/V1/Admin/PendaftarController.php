@@ -63,8 +63,7 @@ class PendaftarController extends Controller
         //     ]);
         // }
 
-        $bearerToken = request()->bearerToken();
-        $user = Auth::user();
+        $user = User::where('uid', $_GET['uid'])->first();
 
         $pendaftar = new stdClass();
         $pendaftar->data = Pendaftar::with(['event'])->get();
