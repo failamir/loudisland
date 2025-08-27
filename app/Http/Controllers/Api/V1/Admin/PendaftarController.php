@@ -62,10 +62,15 @@ class PendaftarController extends Controller
                 'status' => 401,
             ]);
         }
-        
+
         $pendaftar = new stdClass();
         $pendaftar->data = Pendaftar::with(['event'])->get();
-        $pendaftar->transaksi = Transaksi::where('peserta_id', Auth::user()->id)->get();
+        $request = $_GET['uid'];
+        $user = User::where(
+            'uid',
+            $request    
+        )->first();
+        $pendaftar->transaksi = Transaksi::where('peserta_id', $user->id)->get();
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
         $pendaftar->qr = QrCode::format('png')->size(300)->generate($pendaftar->data);
@@ -747,6 +752,7 @@ class PendaftarController extends Controller
                     'address' => $data['address'],
                     'no_hp' => $data['phone'],
                     'nik' => $data['nik'],
+                    'password' => $data['phone'],
                 ]);
                 $data['peserta_id'] = $user->id;
             }
