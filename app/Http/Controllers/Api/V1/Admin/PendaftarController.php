@@ -63,7 +63,7 @@ class PendaftarController extends Controller
         //     ]);
         // }
 
-        $user = User::where('uid', $_GET['uid'])->first();
+        $user = User::where('uid', $_POST['uid'])->first();
 
         $pendaftar = new stdClass();
         $pendaftar->data = Pendaftar::with(['event'])->get();
