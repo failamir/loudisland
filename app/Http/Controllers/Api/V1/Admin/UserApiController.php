@@ -13,7 +13,7 @@ class UserApiController extends Controller
         $perPage = (int) $request->get('per_page', 10);
         $search = $request->get('search');
 
-        $query = User::with(['roles'])->select(['id','name','email','approved','created_at']);
+        $query = User::with(['roles'])->select(['id','name','email','approved','created_at','nik','no_hp','uid','device_name']);
 
         if ($search) {
             $query->where(function ($q) use ($search) {

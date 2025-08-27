@@ -27,6 +27,7 @@ use App\Models\User;
 use App\Models\Tiket;
 use OpenApi\Annotations as OA;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class PendaftarController extends Controller
 {
@@ -50,6 +51,15 @@ class PendaftarController extends Controller
         $events = Event::get();
 
         return view('admin.pendaftars.index', compact('events', 'pendaftars'));
+    }
+
+    public function detailOrder()
+    {
+        abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+
+        $pendaftar = Pendaftar::with(['event'])->get();
+
+        return view('admin.pendaftars.detailOrder', compact('pendaftar'));
     }
 
     /**
@@ -200,9 +210,10 @@ class PendaftarController extends Controller
     {
         $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'sudah']);
-        $snap = new stdClass();
-        $snap->data = 'success';
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $pendaftar;
+        return response()->json($data);
     }
 
     /**
@@ -224,9 +235,10 @@ class PendaftarController extends Controller
     {
         $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'terpakai']);
-        $snap = new stdClass();
-        $snap->data = 'success';
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $pendaftar;
+        return response()->json($data);
     }
 
     /**
@@ -248,9 +260,10 @@ class PendaftarController extends Controller
     {
         $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'sudah-note']);
-        $snap = new stdClass();
-        $snap->data = 'success';
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $pendaftar;
+        return response()->json($data);
     }
 
     /**
@@ -280,9 +293,9 @@ class PendaftarController extends Controller
 
         if (!empty($e_user)) {
 
-            $snap = new stdClass();
-            $snap->data = 'email sudah terdaftar';
-            return response()->json($snap);
+            $data = new stdClass();
+            $data->message = 'email sudah terdaftar';
+            return response()->json($data);
         } else {
             $user = User::create([
                 'uid'     => $request->input('uid'),
@@ -294,21 +307,22 @@ class PendaftarController extends Controller
             // $user->assignRole( 'User' );
             $user->roles()->sync(2);
 
-            $snap = new stdClass();
-            $snap->data = 'success daftar';
-            return response()->json($snap);
+            $data = new stdClass();
+            $data->message = 'success daftar';
+            $data->data = $user;
+            return response()->json($data);
         }
 
         // Update related pendaftar based on stored no_tiket and generate QR on success
-        if ($data_donation) {
-            $noTiket = @unserialize($data_donation->events);
+        if ($data_transaction) {
+            $noTiket = @unserialize($data_transaction->events);
             if ($noTiket === false) {
-                $noTiket = $data_donation->events; // fallback if plain string
+                $noTiket = $data_transaction->events; // fallback if plain string
             }
             if ($noTiket) {
                 $p = Pendaftar::where('no_tiket', $noTiket)->first();
                 if ($p) {
-                    if ($data_donation->status === 'success') {
+                    if ($data_transaction->status === 'success') {
                         $p->status_payment = 'success';
                         // ensure QR exists
                         $qrPath = public_path("qrcodes/{$noTiket}.png");
@@ -318,7 +332,7 @@ class PendaftarController extends Controller
                         if (!file_exists($qrPath)) {
                             QrCode::format('png')->size(300)->generate($noTiket, $qrPath);
                         }
-                    } else if ($data_donation->status === 'pending') {
+                    } else if ($data_transaction->status === 'pending') {
                         $p->status_payment = 'pending';
                     } else {
                         $p->status_payment = 'failed';
@@ -518,11 +532,11 @@ class PendaftarController extends Controller
             $term = '%' . $request->input('search') . '%';
             $q->where(function ($w) use ($term) {
                 $w->where('no_tiket', 'like', $term)
-                  ->orWhere('nama', 'like', $term)
-                  ->orWhere('nomor_punggung', 'like', $term);
+                    ->orWhere('nama', 'like', $term)
+                    ->orWhere('nomor_punggung', 'like', $term);
             });
         }
-        $items = $q->orderBy('nomor_punggung')->limit(200)->get(['id','no_tiket','nama','nomor_punggung']);
+        $items = $q->orderBy('nomor_punggung')->limit(200)->get(['id', 'no_tiket', 'nama', 'nomor_punggung']);
         return response()->json($items);
     }
 
@@ -596,9 +610,10 @@ class PendaftarController extends Controller
         // $user->assignRole( 'User' );
         // $user->roles()->sync( 2 );
 
-        $snap = new stdClass();
-        $snap->data = $user;
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $user;
+        return response()->json($data);
     }
 
     /**
@@ -626,9 +641,10 @@ class PendaftarController extends Controller
         // $user->assignRole( 'User' );
         // $user->roles()->sync( 2 );
 
-        $snap = new stdClass();
-        $snap->data = $user;
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $user;
+        return response()->json($data);
     }
 
     /**
@@ -655,12 +671,10 @@ class PendaftarController extends Controller
             'peserta_id',
             $user->id
         )->get();
-        // $user->assignRole( 'User' );
-        // $user->roles()->sync( 2 );
-
-        $snap = new stdClass();
-        $snap->data = $user;
-        return response()->json($snap);
+        $data = new stdClass();
+        $data->message = 'success';
+        $data->data = $user;
+        return response()->json($data);
     }
 
     /**
@@ -681,16 +695,12 @@ class PendaftarController extends Controller
      */
     public function beliApi(Request $request)
     {
-
         $data = $request->all();
         $rules = [
             'uid' => 'required', //Must be a number and length of value is 8
             'event_id' => 'required',
             'province' => 'nullable',
             'city' => 'nullable',
-            // 'district' => 'required',
-            // 'village' => 'required',
-            // 'postal_code' => 'required',
             'address' => 'required',
             'no_hp' => 'required',
             'nik' => 'required',
@@ -699,13 +709,10 @@ class PendaftarController extends Controller
         ];
 
         $validator = Validator::make($data, $rules);
-        if ($validator->passes()) {
+        if (!$validator->fails()) {
             //TODO Handle your data
-
-            // dd( $request->input( 'id' ) );
             $data = $request->all();
 
-            // dd( $data );
             $length = 10;
             $random = '';
             for ($i = 0; $i < $length; $i++) {
@@ -714,93 +721,23 @@ class PendaftarController extends Controller
 
             $no_invoice = 'TRX-' . Str::upper($random);
 
-            // if ( $request->input( 'nama' ) == '' || $request->input( 'email' ) == '' || $request->input( 'no_hp' ) == '' || $request->input( 'nik' ) ) {
-            //     $events = Event::pluck( 'nama_event', 'id' )->prepend( trans( 'global.pleaseSelect' ), '' );
-            //     $no_t = Pendaftar::orderBy( 'no_tiket', 'DESC' )->first();
-            //     $data = $request->all();
-            //     $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
-            //     $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
-            //     $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
-            //     return view( 'daftar', compact( 'events', 'no_t', 'data' ) );
-            // } else {
+            $amount = Event::find($data['event_id'])->harga;
 
-            $tiket_id = array();
-            $amount = 0;
-
-            // if ( isset( $request->input( 'id' )[ 1 ] ) ) {
-            foreach ($request->input('event_id') as $d) {
-
-                // $u1 = ( int )$request->input( 'id' )[ 1 ];
-
-                // for ( $u = 0; $u<$u1; $u++ ) {
-                $no_tiket = '0' . (int)Pendaftar::orderBy('no_tiket', 'DESC')->first()->no_tiket + 1;
-                $tiket_id[] = $no_tiket;
-                // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-                $total_bayar = Event::find($d)->harga;
-                $amount += $total_bayar;
-
-                $userdata = User::where('uid', $request->input('uid'))->first();
-
-                if (null !== $userdata->nik) {
-                    $nik = $userdata->nik;
-                } else {
-                    $nik = 'generate';
-                }
-                $pendaftar = Pendaftar::create(array_merge($request->all(), [
-                    'nama' => $request->input('nama'),
-                    'email' => $request->input('email'),
-                    'no_hp' => $request->input('no_hp'),
-                    'nik' => $request->input('nik'),
-                    'province' => $request->input('province'),
-                    'city' => $request->input('city'),
-                    'address' => $request->input('address'),
-                    'no_tiket' => $no_tiket,
-                    'total_bayar' => $total_bayar,
-                    'event_id' => $d,
-                    'status_payment' => 'pending',
-                ]));
-
-                // $pendaftar = Pendaftar::create(array_merge($request->all(), [
-                //     'nama' => $userdata->name,
-                //     'email' => $userdata->email,
-                //     'no_hp' => $userdata->no_hp,
-                //     'no_tiket' => $no_tiket,
-                //     'total_bayar' => $total_bayar,
-                //     'event_id' => $d,
-                //     'nik' => $request->input('uid'),
-                //     // 'status_payment' => 'pending',
-                // ]));
-
-                $userdata = User::where(
-                    'uid',
-                    $request->input('uid')
-                )->first();
-
-                $pendaftar = Tiket::create(array_merge($request->all(), [
-                    'nama' => $userdata->name,
-                    'email' => $userdata->email,
-                    'no_hp' => $userdata->no_hp,
-                    'no_tiket' => $no_tiket,
-                    'total_bayar' => $total_bayar,
-                    'event_id' => $d,
-                    'peserta_id' => $userdata->id,
-                    // 'status_payment' => 'pending',
-                ]));
-
-                // if ($media = $request->input('ck-media', false)) {
-                //     Media::whereIn('id', $media)->update(['model_id' => $pendaftar->id]);
-                // }
-            }
-
-            // var_dump(serialize( $no_tiket ));
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
-                'events'   => serialize($no_tiket),
-                'peserta_id'    => $userdata->id,
+                'events'   => $data['event_id'],
+                'peserta_id'    => Auth::user()->id,
                 'amount'        => $amount,
-                'note'          => $userdata->name,
+                'note'          => Auth::user()->name,
                 'status'        => 'pending',
-                'uid'        => $userdata->uid,
+                'uid'        => Auth::user()->uid,
+                'province' => $data['province'],
+                'city' => $data['city'],
+                'address' => $data['address'],
+                'no_hp' => $data['no_hp'],
+                'nik' => $data['nik'],
+                'email' => $data['email'],
+                'nama' => $data['nama'],
             ]);
 
             $payload = [
@@ -809,218 +746,21 @@ class PendaftarController extends Controller
                     'gross_amount'  => $transaksi->amount,
                 ],
                 'customer_details' => [
-                    'first_name'       => $userdata->name,
-                    'email'            => $userdata->email,
+                    'first_name'       => Auth::user()->name,
+                    'email'            => Auth::user()->email,
                 ]
             ];
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
-            $snap = new stdClass();
-            $snap->data = $paymentUrl;
-            // $snap->status = 'success';
-            // $snap->message = $transaksi->amount;
-            return response()->json($snap);
+            Transaksi::where('invoice', $no_invoice)->update([
+                'payment_url' => $paymentUrl
+            ]);
 
-            // die;
-            // if ( isset( $request->input( 'id' )[ 2 ] ) ) {
-            //     $u2 = ( int )$request->input( 'id' )[ 2 ];
-            //     for ( $u = 0; $u<$u2; $u++ ) {
-            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //         $tiket_id[] = $no_tiket;
-            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //         $total_bayar = Event::find( 2 )->harga;
-            //         $amount += $total_bayar;
-            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //             'no_tiket' => $no_tiket,
-            //             'event_id' => 2,
-            //             'total_bayar' => $total_bayar,
-            //             'nik' => $no_tiket,
-            //             'status_payment' => 'pending',
-            // ] ) );
-            //         if ( $media = $request->input( 'ck-media', false ) ) {
-            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //         }
-            //     }
-            // }
-
-            // if ( isset( $request->input( 'id' )[ 3 ] ) ) {
-            //     $u3 = ( int )$request->input( 'id' )[ 3 ];
-            //     for ( $u = 0; $u<$u3; $u++ ) {
-            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //         $tiket_id[] = $no_tiket;
-            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //         $total_bayar = Event::find( 3 )->harga;
-            //         $amount += $total_bayar;
-            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //             'no_tiket' => $no_tiket,
-            //             'event_id' => 3,
-            //             'total_bayar' => $total_bayar,
-            //             'nik' => $no_tiket,
-            //             'status_payment' => 'pending',
-            // ] ) );
-            //         if ( $media = $request->input( 'ck-media', false ) ) {
-            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //         }
-            //     }
-            // }
-
-            // if ( isset( $request->input( 'id' )[ 4 ] ) ) {
-            //     $u4 = ( int )$request->input( 'id' )[ 4 ];
-            //     for ( $u = 0; $u<$u4; $u++ ) {
-            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //         $tiket_id[] = $no_tiket;
-            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //         $total_bayar = Event::find( 4 )->harga;
-            //         $amount += $total_bayar;
-            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //             'no_tiket' => $no_tiket,
-            //             'event_id' => 4,
-            //             'total_bayar' => $total_bayar,
-            //             'nik' => $no_tiket,
-            //             'status_payment' => 'pending',
-            // ] ) );
-            //         if ( $media = $request->input( 'ck-media', false ) ) {
-            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //         }
-            //     }
-            // }
-
-            // if ( isset( $request->input( 'id' )[ 5 ] ) ) {
-            //     $u5 = ( int )$request->input( 'id' )[ 5 ];
-            //     for ( $u = 0; $u<$u5; $u++ ) {
-            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //         $tiket_id[] = $no_tiket;
-            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //         $total_bayar = Event::find( 5 )->harga;
-            //         $amount += $total_bayar;
-            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //             'no_tiket' => $no_tiket,
-            //             'event_id' => 5,
-            //             'total_bayar' => $total_bayar,
-            //             'nik' => $no_tiket,
-            //             'status_payment' => 'pending',
-            // ] ) );
-            //         if ( $media = $request->input( 'ck-media', false ) ) {
-            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //         }
-            //     }
-            // }
-
-            // if ( isset( $request->input( 'id' )[ 6 ] ) ) {
-            //     $u6 = ( int )$request->input( 'id' )[ 6 ];
-            //     for ( $u = 0; $u<$u6; $u++ ) {
-            //         $no_tiket = '0' . ( int )Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //         $tiket_id[] = $no_tiket;
-            //         // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //         $total_bayar = Event::find( 6 )->harga;
-            //         $amount += $total_bayar;
-            //         $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //             'no_tiket' => $no_tiket,
-            //             'event_id' => 6,
-            //             'total_bayar' => $total_bayar,
-            //             'nik' => $no_tiket,
-            //             'status_payment' => 'pending',
-            // ] ) );
-            //         if ( $media = $request->input( 'ck-media', false ) ) {
-            //             Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //         }
-            //     }
-            // }
-
-            // $u2 = ( int )$request->input( 'day_2' );
-            // for ( $u = 0; $u<$u2; $u++ ) {
-            //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //     $tiket_id[] = $no_tiket;
-            //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //     $total_bayar = Event::find( 2 )->harga;
-            //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //         'no_tiket' => $no_tiket,
-            //         'total_bayar' => $total_bayar,
-            //         // 'token' => $request->input( '_token' ),
-            //         'status_payment' => 'pending',
-            // ] ) );
-            //     if ( $media = $request->input( 'ck-media', false ) ) {
-            //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //     }
-
-            // }
-
-            // $u3 = ( int )$request->input( 'day_3' );
-            // for ( $u = 0; $u<$u3; $u++ ) {
-            //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-            //     $tiket_id[] = $no_tiket;
-            //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            //     $total_bayar = Event::find( 3 )->harga;
-            //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-            //         'no_tiket' => $no_tiket,
-            //         'total_bayar' => $total_bayar,
-            //         // 'token' => $request->input( '_token' ),
-            //         'status_payment' => 'pending',
-            // ] ) );
-            //     if ( $media = $request->input( 'ck-media', false ) ) {
-            //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-            //     }
-
-            // }
-
-            // $data = $request->all();
-            // $data[ 'price_1' ]  = $data[ 'day_1' ] * 210000;
-            // $data[ 'price_2' ]  = $data[ 'day_2' ] * 210000;
-            // $data[ 'price_3' ]  = $data[ 'day_3' ] * 280000;
-
-            // $total_bayar = $data[ 'price_1' ] + $data[ 'price_2' ] + $data[ 'price_3' ];
-
-            //create snap token
-            // $snapToken = Snap::getSnapToken( $payload );
-            // $transaksi->snap_token = $snapToken;
-            // $transaksi->save();
-
-            // $snap = new stdClass();
-            // $snap->data = $snapToken;
-
-            // return ( $snap )
-            //     ->response()
-            //     ->setStatusCode( Response::HTTP_ACCEPTED );
-
-            // return json_encode( $snap );
-
-            // dd( $snap );
-            // echo "       
-            // <html>
-            // <head>
-            // <meta name='viewport' content='width=device-width, initial-scale=1'>
-            // <!-- @TODO: replace SET_YOUR_CLIENT_KEY_HERE with your client key -->
-            // <!-- <script type='text/javascript'
-            //     src='https://app.sandbox.midtrans.com/snap/snap.js'
-            //     data-client-key='SB-Mid-client-pbCU77GhpobR9an-'></script>-->
-            //     <script type='text/javascript'
-            //     src='https://app.sandbox.midtrans.com/snap/snap.js'
-            //     data-client-key='SB-Mid-client-D9HPUKW3PBWyP6q3-'></script>
-            // <!-- Note: replace with src='https://app.midtrans.com/snap/snap.js' for Production environment -->
-            // </head>
-            // <script type='text/javascript'>
-            // window.onload = function() {
-            //     window.snap.pay('" . $snapToken . "');
-            //   };
-            //   </script>
-            // <body>
-            // <!-- <button id='pay-button'>Pay!</button> -->
-            // <script type='text/javascript'>
-            //     // For example trigger on button clicked, or any time you need
-            //     var payButton = document.getElementById('pay-button');
-            //     payButton.addEventListener('click', function () {
-            //     // Trigger snap popup. @TODO: Replace TRANSACTION_TOKEN_HERE with your transaction token
-            //     window.snap.pay('" . $snapToken . "');
-            //     // customer will be redirected after completing payment pop-up
-            //     });
-            // </script>
-            // </body>
-            // </html>";
-            //  return view( 'bayar', compact( 'snap' ) );
-            // }
-            // return redirect()->route( 'admin.pendaftars.index' );
+            $data = new stdClass();
+            $data->data = $paymentUrl;
+            $data->invoice = $no_invoice;
+            return response()->json($data);
         } else {
-            //TODO Handle your error
             return response()->json(['data' => $validator->errors()->all()]);
         }
     }
@@ -1052,7 +792,7 @@ class PendaftarController extends Controller
         $fraud        = $notification->fraud_status;
 
         // find transaction by invoice
-        $data_donation = Transaksi::where('invoice', $orderId)->first();
+        $data_transaction = Transaksi::where('invoice', $orderId)->first();
 
         if ($transaction == 'capture') {
 
@@ -1064,7 +804,7 @@ class PendaftarController extends Controller
                     /**
                      *   update invoice to pending
                      */
-                    $data_donation->update([
+                    $data_transaction->update([
                         'status' => 'pending'
                     ]);
                 } else {
@@ -1072,7 +812,7 @@ class PendaftarController extends Controller
                     /**
                      *   update invoice to success
                      */
-                    $data_donation->update([
+                    $data_transaction->update([
                         'status' => 'success'
                     ]);
                 }
@@ -1082,7 +822,7 @@ class PendaftarController extends Controller
             /**
              *   update invoice to success
              */
-            $data_donation->update([
+            $data_transaction->update([
                 'status' => 'success'
             ]);
         } elseif ($transaction == 'pending') {
@@ -1090,7 +830,7 @@ class PendaftarController extends Controller
             /**
              *   update invoice to pending
              */
-            $data_donation->update([
+            $data_transaction->update([
                 'status' => 'pending'
             ]);
         } elseif ($transaction == 'deny') {
@@ -1098,7 +838,7 @@ class PendaftarController extends Controller
             /**
              *   update invoice to failed
              */
-            $data_donation->update([
+            $data_transaction->update([
                 'status' => 'failed'
             ]);
         } elseif ($transaction == 'expire') {
@@ -1106,7 +846,7 @@ class PendaftarController extends Controller
             /**
              *   update invoice to expired
              */
-            $data_donation->update([
+            $data_transaction->update([
                 'status' => 'expired'
             ]);
         } elseif ($transaction == 'cancel') {
@@ -1114,7 +854,7 @@ class PendaftarController extends Controller
             /**
              *   update invoice to failed
              */
-            $data_donation->update([
+            $data_transaction->update([
                 'status' => 'failed'
             ]);
         }

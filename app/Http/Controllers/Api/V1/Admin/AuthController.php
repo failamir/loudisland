@@ -13,9 +13,13 @@ use Illuminate\Support\Carbon;
 
 class AuthController extends Controller
 {
+    public function __construct()
+    {
+        // $this->middleware('auth:sanctum')->except(['login', 'register']);
+    }
+
     public function register(Request $request)
     {
-
         //if email already reistered
         if (User::where('email', $request->email)->exists()) {
             return response()->json([
