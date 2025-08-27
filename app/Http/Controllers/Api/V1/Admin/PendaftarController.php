@@ -723,19 +723,19 @@ class PendaftarController extends Controller
 
             $amount = Tiket::find($data['ticketId'])->harga;
 
-            $user = User::where('uid', $data['uid'])->first();
+            $user = User::where('uid', $data['userId'])->first();
 
             if ($user) {
                 $data['peserta_id'] = $user->id;
             } else {
                 $user = User::create([
-                    'name' => $data['nama'],
+                    'name' => $data['name'],
                     'email' => $data['email'],
-                    'uid' => $data['uid'],
+                    'uid' => $data['userId'],
                     'province' => $data['province'],
                     'city' => $data['city'],
                     'address' => $data['address'],
-                    'no_hp' => $data['no_hp'],
+                    'no_hp' => $data['phone'],
                     'nik' => $data['nik'],
                 ]);
                 $data['peserta_id'] = $user->id;
