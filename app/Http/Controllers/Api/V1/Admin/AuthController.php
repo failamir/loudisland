@@ -93,6 +93,7 @@ class AuthController extends Controller
         // if ($revoke) {
         //     $user->tokens()->delete();
         // }
+        
         $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
         if ($revoke) {
             $user->tokens()->delete();

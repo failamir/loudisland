@@ -65,12 +65,7 @@ class PendaftarController extends Controller
 
         $pendaftar = new stdClass();
         $pendaftar->data = Pendaftar::with(['event'])->get();
-        $request = $_GET['uid'];
-        $user = User::where(
-            'uid',
-            $request    
-        )->first();
-        $pendaftar->transaksi = Transaksi::where('peserta_id', $user->id)->get();
+        $pendaftar->transaksi = Transaksi::where('peserta_id', Auth::user()->id)->get();
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
         $pendaftar->qr = QrCode::format('png')->size(300)->generate($pendaftar->data);
