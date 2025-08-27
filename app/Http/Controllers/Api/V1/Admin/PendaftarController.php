@@ -71,7 +71,7 @@ class PendaftarController extends Controller
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
         $pendaftar->transaksi = $transaksi;
-        $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->no_invoice);
+        $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
         // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
         return response()->json($pendaftar);
     }
