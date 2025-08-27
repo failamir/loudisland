@@ -298,10 +298,10 @@ class PendaftarController extends Controller
             return response()->json($data);
         } else {
             $user = User::create([
-                'uid'     => $request->input('uid'),
+                'uid'     => $request->input('userId'),
                 'email'    => $request->input('email'),
                 'name'    => $request->input('name'),
-                'password' => $request->input('uid'),
+                'password' => $request->input('userId'),
                 // 'password' => $request->input( 'no_hp' ),
             ]);
             // $user->assignRole( 'User' );
