@@ -64,13 +64,14 @@ class PendaftarController extends Controller
         // }
 
         $user = User::where('uid', $_POST['uid'])->first();
-
+        $transaksi = Transaksi::where('peserta_id', $user->id)->first();
         $pendaftar = new stdClass();
         $pendaftar->data = Pendaftar::with(['event'])->get();
-        $pendaftar->transaksi = Transaksi::where('peserta_id', $user->id)->get();
+        $pendaftar->no_tiket = $user->no_tiket;
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
-        $pendaftar->qr = QrCode::format('png')->size(300)->generate($pendaftar->data);
+        $pendaftar->transaksi = $transaksi;
+        $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->no_invoice);
         // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
         return response()->json($pendaftar);
     }
