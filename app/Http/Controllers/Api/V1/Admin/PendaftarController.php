@@ -723,14 +723,32 @@ class PendaftarController extends Controller
 
             $amount = Event::find($data['event_id'])->harga;
 
+            $user = User::where('uid', $data['uid'])->first();
+
+            if ($user) {
+                $data['peserta_id'] = $user->id;
+            } else {
+                $user = User::create([
+                    'name' => $data['nama'],
+                    'email' => $data['email'],
+                    'uid' => $data['uid'],
+                    'province' => $data['province'],
+                    'city' => $data['city'],
+                    'address' => $data['address'],
+                    'no_hp' => $data['no_hp'],
+                    'nik' => $data['nik'],
+                ]);
+                $data['peserta_id'] = $user->id;
+            }
+
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
                 'events'   => $data['event_id'],
-                'peserta_id'    => Auth::user()->id,
+                'peserta_id'    => $user->id,
                 'amount'        => $amount,
-                'note'          => Auth::user()->name,
+                'note'          => $user->name,
                 'status'        => 'pending',
-                'uid'        => Auth::user()->uid,
+                'uid'        => $user->uid,
                 'province' => $data['province'],
                 'city' => $data['city'],
                 'address' => $data['address'],
@@ -746,8 +764,8 @@ class PendaftarController extends Controller
                     'gross_amount'  => $transaksi->amount,
                 ],
                 'customer_details' => [
-                    'first_name'       => Auth::user()->name,
-                    'email'            => Auth::user()->email,
+                    'first_name'       => $user->name,
+                    'email'            => $user->email,
                 ]
             ];
 
