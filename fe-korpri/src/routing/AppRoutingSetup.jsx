@@ -12,8 +12,11 @@ import { Demo1Layout } from '@/layouts/demo1';
 import { ErrorsRouting } from '@/errors';
 import { AuthenticationWelcomeMessagePage, AuthenticationAccountDeactivatedPage, AuthenticationGetStartedPage } from '@/pages/authentication';
 import OrderWizardModal from '@/pages/order/OrderWizardModal';
+import OrderSuccessPage from '@/pages/order/OrderSuccessPage';
 import TransactionsListPage from '@/pages/transactions/TransactionsListPage';
+import TransactionDetailPage from '@/pages/transactions/TransactionDetailPage';
 import NomorPunggungListPage from '@/pages/NomorPunggungListPage';
+import NomorPunggungPairPage from '@/pages/nomor-punggung/NomorPunggungPairPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -23,6 +26,7 @@ const AppRoutingSetup = () => {
           <Route path="/" element={<DefaultPage />} />
           <Route path="/dark-sidebar" element={<Demo1DarkSidebarPage />} />
           <Route path="/order" element={<OrderWizardModal />} />
+          <Route path="/order/success" element={<OrderSuccessPage />} />
           <Route path="/public-profile/profiles/default" element={<ProfileDefaultPage />} />
           <Route path="/public-profile/profiles/creator" element={<ProfileCreatorPage />} />
           <Route path="/public-profile/profiles/company" element={<ProfileCompanyPage />} />
@@ -91,7 +95,9 @@ const AppRoutingSetup = () => {
           <Route path="/users" element={<UsersListPage />} />
           <Route path="/ticket" element={<TicketListPage />} />
           <Route path="/transactions" element={<TransactionsListPage />} />
+          <Route path="/transactions/:id" element={<TransactionDetailPage />} />
           <Route path="/nomor-punggung" element={<NomorPunggungListPage />} />
+          <Route path="/nomor-punggung/pair" element={<NomorPunggungPairPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
           <Route path="/authentication/get-started" element={<AuthenticationGetStartedPage />} />
