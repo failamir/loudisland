@@ -722,7 +722,8 @@ class PendaftarController extends Controller
             $no_invoice = 'TRX-' . Str::upper($random);
 
             $amount = Tiket::find($data['ticketId'])->harga;
-
+            var_dump($amount);
+            die;
             $user = User::where('uid', $data['userId'])->first();
 
             if ($user) {
