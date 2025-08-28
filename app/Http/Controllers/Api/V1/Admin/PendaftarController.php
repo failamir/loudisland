@@ -27,6 +27,8 @@ use App\Models\Tiket;
 use OpenApi\Annotations as OA;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class PendaftarController extends Controller
 {
@@ -122,22 +124,6 @@ class PendaftarController extends Controller
 
     public function beli(Request $request)
     {
-        // $u = ( int )$request->input( 'total_bayar' );
-
-        // for ( $u = 0; $u<$request->input( 'total_bayar' );
-        // $u++ ) {
-        //     $no_tiket = '0' . Pendaftar::orderBy( 'no_tiket', 'DESC' )->first()->no_tiket + 1;
-        //     // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-        //     $total_bayar = Event::find( $request->input( 'event_id' ) )->harga;
-        //     $pendaftar = Pendaftar::create( array_merge( $request->all(), [
-        //         'no_tiket' => $no_tiket,
-        //         'total_bayar' => $total_bayar,
-        // ] ) );
-        //     if ( $media = $request->input( 'ck-media', false ) ) {
-        //         Media::whereIn( 'id', $media )->update( [ 'model_id' => $pendaftar->id ] );
-        //     }
-
-        // }
         $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
         $no_t = User::orderBy('no_tiket', 'DESC')->first();
         $data = $request->all();
@@ -707,10 +693,19 @@ class PendaftarController extends Controller
      *   @OA\Response(response=200, description="OK")
      * )
      */
-    public function beliApi(Request $request)
+    public function buy(Request $request)
     {
         // if jwt not found, return error
         if (!$request->header('Authorization')) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // cek jwt valid
+        try {
+            $jwt = $request->header('Authorization');
+            $jwt = explode(' ', $jwt)[1];
+            $decoded = JWT::decode($jwt, new Key(env('JWT_KEY'), 'HS256'));
+        } catch (\Throwable $th) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
