@@ -125,6 +125,7 @@ class AuthController extends Controller
                 $payload = [
                     'uid' => $firebaseUid,
                     'name' => $data['name'],
+                    'displayName' => $data['name'],
                     'email' => $email,
                     'nik' => $data['nik'] ?? null,
                     'no_hp' => $data['no_hp'] ?? null,
