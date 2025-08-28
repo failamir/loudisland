@@ -27,8 +27,7 @@ use App\Models\Tiket;
 use OpenApi\Annotations as OA;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class PendaftarController extends Controller
 {
@@ -56,24 +55,20 @@ class PendaftarController extends Controller
 
     public function myorder()
     {
-        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-        // if(!Auth::check()) {
-        //     return response()->json([
-        //         'message' => 'Unauthorized',
-        //         'status' => 401,
-        //     ]);
-        // }
+        $user = Auth::guard('api')->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
-        $user = User::where('uid', $_POST['uid'])->first();
         $transaksi = array();
-        $transaksi = Transaksi::where('peserta_id', $user->id)->first();
+        $transaksi = Transaksi::where('peserta_id', $user->id)->get();
         $pendaftar = new stdClass();
         // $pendaftar->data = Pendaftar::with(['event'])->get();
-        $pendaftar->no_tiket = $user->no_tiket;
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
+        $pendaftar->no_tiket = $user->no_tiket;
         $pendaftar->data = $transaksi;
-        $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
+        // $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
         // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
         return response()->json($pendaftar);
     }
@@ -761,6 +756,10 @@ class PendaftarController extends Controller
                 ]);
                 $data['peserta_id'] = $user->id;
             }
+            $qr = QrCode::format('png')->size(300)->generate($no_invoice);
+            // save qr code image   
+            $qrCode = QrCode::format('png')->size(300)->generate($no_invoice);
+            $qrCode->save(public_path('transactions/' . $no_invoice . '.png'));
 
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
@@ -777,6 +776,7 @@ class PendaftarController extends Controller
                 'nik' => $data['nik'],
                 'email' => $data['email'],
                 'nama' => $data['name'],
+                'qr' => $qrCode,
             ]);
 
             $payload = [
