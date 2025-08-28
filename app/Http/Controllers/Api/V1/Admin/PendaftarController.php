@@ -711,16 +711,6 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-
-        // try {
-        //     $jwt = $request->header('Authorization');
-        //     $jwt = explode(' ', $jwt)[1];
-        //     $decoded = JWT::decode($jwt, new Key(env('JWT_KEY'), 'HS256'));
-        // } catch (\Throwable $th) {
-        //     return response()->json(['message' => 'Unauthorized'], 401);
-        // }
-
-
         $data = $request->all();
         $rules = [
             'userId' => 'required', //Must be a number and length of value is 8
@@ -748,7 +738,7 @@ class PendaftarController extends Controller
             $no_invoice = 'TRX-' . Str::upper($random);
 
             $amount = Event::find($data['ticketId'])->harga;
-            $user = User::where('uid', $data['userId'])->first();
+            // $user = User::where('uid', $data['userId'])->first();
 
             if ($user) {
                 $data['peserta_id'] = $user->id;
@@ -789,6 +779,7 @@ class PendaftarController extends Controller
                 'nik' => $data['nik'],
                 'email' => $data['email'],
                 'nama' => $data['name'],
+                'qr' => $qrPath,
             ]);
 
             // Attach QR image to transaksi via Media Library (optional)
