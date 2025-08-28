@@ -14,7 +14,7 @@ const TransactionsListPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
 
   const fetchData = async (params = {}) => {
     try {

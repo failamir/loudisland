@@ -14,7 +14,7 @@ export default function UsersListPage() {
   const [meta, setMeta] = useState({ total: 0 });
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
-  const baseUrl = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+  const baseUrl = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
   const fetchUsers = async (params = {}) => {
     try {
       setLoading(true);

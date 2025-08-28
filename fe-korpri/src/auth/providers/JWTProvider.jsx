@@ -5,7 +5,7 @@ import * as authHelper from '../_helpers';
 // Base API URL for Laravel backend
 // Prefer VITE_APP_API_URL if provided; otherwise default to local Laravel API v1
 // Example expected value: http://localhost:8000/api/v1
-const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+const API_URL = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
 export const LOGIN_URL = `${API_URL}/login`;
 export const REGISTER_URL = `${API_URL}/register`;
 export const FORGOT_PASSWORD_URL = `${API_URL}/forgot-password`;

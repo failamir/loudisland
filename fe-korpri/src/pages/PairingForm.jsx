@@ -7,7 +7,7 @@ const PairingForm = ({ nomorPunggung, onSuccess, onUnpaired, initialPaired = fal
   const [error, setError] = useState('');
   const [paired, setPaired] = useState(!!initialPaired);
   const inputRef = useRef();
-  const baseUrl = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+  const baseUrl = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
 
   // keep local state in sync when the selected nomor changes or props update
   useEffect(() => {
