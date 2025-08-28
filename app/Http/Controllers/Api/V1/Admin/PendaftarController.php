@@ -60,6 +60,9 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // from token get user id
+        $user = JWTAuth::parseToken()->authenticate();
+
         $user = User::where('uid', $user->uid)->first();
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
@@ -71,7 +74,7 @@ class PendaftarController extends Controller
         // $pendaftar->data = Pendaftar::with(['event'])->get();
         $pendaftar->message = 'success';
         $pendaftar->status = 200;
-        $pendaftar->no_tiket = $user->no_tiket;
+        // $pendaftar->no_tiket = $user->no_tiket;
         $pendaftar->data = $transaksi;
         // $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
         // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
