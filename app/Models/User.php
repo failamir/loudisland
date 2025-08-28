@@ -49,6 +49,20 @@ class User extends Authenticatable
         'uid',
         'nik',
         'no_hp',
+        // registration fields migrated from pendaftars
+        'no_tiket',
+        'city',
+        'region',
+        'village',
+        'checkin',
+        'notes',
+        'nomor_punggung',
+        'status_payment',
+        'payment_type',
+        'total_bayar',
+        'event_id',
+        'start_at',
+        'finish_at',
     ];
 
     public function __construct(array $attributes = [])
@@ -107,6 +121,11 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class);
+    }
+
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id');
     }
 
     protected function serializeDate(DateTimeInterface $date)

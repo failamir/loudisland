@@ -12,7 +12,6 @@ use App\Http\Requests\StorePendaftarRequest;
 use App\Http\Requests\UpdatePendaftarRequest;
 use App\Http\Resources\Admin\PendaftarResource;
 use App\Models\Event;
-use App\Models\Pendaftar;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
@@ -46,7 +45,7 @@ class PendaftarController extends Controller
     {
         abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        $pendaftars = Pendaftar::with(['event'])->get();
+        $pendaftars = User::with(['event'])->get();
 
         $events = Event::get();
 
@@ -89,7 +88,7 @@ class PendaftarController extends Controller
     {
         // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
-        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin', 'sudah')->paginate(10));
+        return new PendaftarResource(User::with(['event'])->where('checkin', 'sudah')->paginate(10));
     }
 
     /**
@@ -104,7 +103,7 @@ class PendaftarController extends Controller
     {
         // abort_if ( Gate::denies( 'pendaftar_access' ), Response::HTTP_FORBIDDEN, '403 Forbidden' );
 
-        return new PendaftarResource(Pendaftar::with(['event'])->where('checkin', 'terpakai')->paginate(10));
+        return new PendaftarResource(User::with(['event'])->where('checkin', 'terpakai')->paginate(10));
     }
 
     public function create()
@@ -112,7 +111,7 @@ class PendaftarController extends Controller
         abort_if(Gate::denies('pendaftar_create'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
-        $no_t = Pendaftar::orderBy('no_tiket', 'DESC')->first();
+        $no_t = User::orderBy('no_tiket', 'DESC')->first();
         return view('admin.pendaftars.create', compact('events', 'no_t'));
     }
 
@@ -140,7 +139,7 @@ class PendaftarController extends Controller
 
         // }
         $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
-        $no_t = Pendaftar::orderBy('no_tiket', 'DESC')->first();
+        $no_t = User::orderBy('no_tiket', 'DESC')->first();
         $data = $request->all();
         $data['price_1']  = $data['day_1'] * 210000;
         $data['price_2']  = $data['day_2'] * 210000;
@@ -177,12 +176,12 @@ class PendaftarController extends Controller
         for ($u = 11600; $u < $u1; $u++) {
             $no_tiket = $u;
             $tiket_id[] = $no_tiket;
-            // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
+            // $pendaftar->no_tiket = '0' . User::latest()->first()->name;
             // $total_bayar = Event::find( 1 )->harga;
             // $amount += $total_bayar;
             $code = uniqid() . uniqid();
-            $pendaftar = Pendaftar::create(array_merge($request->all(), [
-                'nama' => 'generate',
+            $pendaftar = User::create(array_merge($request->all(), [
+                'name' => 'generate',
                 'nik' => 'generate',
                 'email' => $code,
                 'no_hp' => $no_tiket,
@@ -223,7 +222,7 @@ class PendaftarController extends Controller
      */
     public function checkin(Request $request)
     {
-        $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
+        $pendaftar = User::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'sudah']);
         $data = new stdClass();
         $data->message = 'success';
@@ -248,7 +247,7 @@ class PendaftarController extends Controller
      */
     public function checkout(Request $request)
     {
-        $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
+        $pendaftar = User::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'terpakai']);
         $data = new stdClass();
         $data->message = 'success';
@@ -273,7 +272,7 @@ class PendaftarController extends Controller
      */
     public function checkin2(Request $request)
     {
-        $pendaftar = Pendaftar::where('no_tiket', $request->input('no_tiket'))->first();
+        $pendaftar = User::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'sudah-note']);
         $data = new stdClass();
         $data->message = 'success';
@@ -335,7 +334,7 @@ class PendaftarController extends Controller
                 $noTiket = $data_transaction->events; // fallback if plain string
             }
             if ($noTiket) {
-                $p = Pendaftar::where('no_tiket', $noTiket)->first();
+                $p = User::where('no_tiket', $noTiket)->first();
                 if ($p) {
                     if ($data_transaction->status === 'success') {
                         $p->status_payment = 'success';
@@ -372,7 +371,7 @@ class PendaftarController extends Controller
         if ($noTiket === false) {
             $noTiket = $trx->events;
         }
-        $pendaftar = $noTiket ? Pendaftar::where('no_tiket', $noTiket)->first() : null;
+        $userDetail = $noTiket ? User::where('no_tiket', $noTiket)->first() : null;
 
         // Build QR URL if exists; do not generate here (generation happens on webhook or register)
         $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
@@ -384,16 +383,16 @@ class PendaftarController extends Controller
             'amount' => $trx->amount,
             'no_tiket' => $noTiket,
             'qr_url' => $qrUrl,
-            'pendaftar' => $pendaftar ? [
-                'id' => $pendaftar->id,
-                'nama' => $pendaftar->nama,
-                'email' => $pendaftar->email,
-                'no_hp' => $pendaftar->no_hp,
-                'status_payment' => $pendaftar->status_payment,
-                'event_id' => $pendaftar->event_id,
-                'nomor_punggung' => $pendaftar->nomor_punggung,
-                'start_at' => $pendaftar->start_at,
-                'finish_at' => $pendaftar->finish_at,
+            'pendaftar' => $userDetail ? [
+                'id' => $userDetail->id,
+                'nama' => $userDetail->name,
+                'email' => $userDetail->email,
+                'no_hp' => $userDetail->no_hp,
+                'status_payment' => $userDetail->status_payment,
+                'event_id' => $userDetail->event_id,
+                'nomor_punggung' => $userDetail->nomor_punggung,
+                'start_at' => $userDetail->start_at,
+                'finish_at' => $userDetail->finish_at,
             ] : null,
         ]);
     }
@@ -415,21 +414,21 @@ class PendaftarController extends Controller
         ]);
 
         // determine next no_tiket
-        $last = Pendaftar::orderBy('no_tiket', 'DESC')->first();
+        $last = User::orderBy('no_tiket', 'DESC')->first();
         $next = $last && is_numeric($last->no_tiket) ? ((int)$last->no_tiket + 1) : 1;
         $no_tiket = (string)$next;
 
         $event = Event::findOrFail($request->input('event_id'));
 
-        $pendaftar = Pendaftar::create([
+        $pendaftar = User::create([
             'no_tiket' => $no_tiket,
-            'nama' => $request->input('nama'),
+            'name' => $request->input('nama'),
             'nik' => $request->input('nik'),
             'email' => $request->input('email'),
             'no_hp' => $request->input('no_hp'),
-            'province' => $request->input('province'),
+            'region' => $request->input('province'),
             'city' => $request->input('city'),
-            'address' => $request->input('address'),
+            'village' => $request->input('address'),
             'event_id' => $event->id,
             'total_bayar' => $event->harga,
             'status_payment' => 'pending',
@@ -454,7 +453,7 @@ class PendaftarController extends Controller
                 'gross_amount' => $transaksi->amount,
             ],
             'customer_details' => [
-                'first_name' => $pendaftar->nama,
+                'first_name' => $pendaftar->name,
                 'email' => $pendaftar->email,
             ],
             'callbacks' => [
@@ -473,7 +472,7 @@ class PendaftarController extends Controller
             'no_tiket' => 'required|string',
             'nomor_punggung' => 'required|string',
         ]);
-        $p = Pendaftar::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
+        $p = User::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
         $p->nomor_punggung = $request->input('nomor_punggung');
         $p->checkin = 'sudah';
         $p->start_at = Carbon::now();
@@ -487,7 +486,7 @@ class PendaftarController extends Controller
         $request->validate([
             'no_tiket' => 'required|string',
         ]);
-        $p = Pendaftar::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
+        $p = User::where('no_tiket', $request->input('no_tiket'))->firstOrFail();
         $p->finish_at = Carbon::now();
         $p->checkin = 'terpakai';
         $p->save();
@@ -509,7 +508,7 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'no_tiket atau nomor_punggung wajib diisi'], 422);
         }
 
-        $query = Pendaftar::with('event');
+        $query = User::with('event');
         if ($request->filled('no_tiket')) {
             $query->where('no_tiket', $request->input('no_tiket'));
         } else {
@@ -523,7 +522,7 @@ class PendaftarController extends Controller
         return response()->json([
             'id' => $p->id,
             'no_tiket' => $p->no_tiket,
-            'nama' => $p->nama,
+            'nama' => $p->name,
             'email' => $p->email,
             'no_hp' => $p->no_hp,
             'status_payment' => $p->status_payment,
@@ -542,16 +541,16 @@ class PendaftarController extends Controller
      */
     public function listPairing(Request $request)
     {
-        $q = Pendaftar::query()->whereNotNull('nomor_punggung');
+        $q = User::query()->whereNotNull('nomor_punggung');
         if ($request->filled('search')) {
             $term = '%' . $request->input('search') . '%';
             $q->where(function ($w) use ($term) {
                 $w->where('no_tiket', 'like', $term)
-                    ->orWhere('nama', 'like', $term)
+                    ->orWhere('name', 'like', $term)
                     ->orWhere('nomor_punggung', 'like', $term);
             });
         }
-        $items = $q->orderBy('nomor_punggung')->limit(200)->get(['id', 'no_tiket', 'nama', 'nomor_punggung']);
+        $items = $q->orderBy('nomor_punggung')->limit(200)->get(['id', 'no_tiket', 'name as nama', 'nomor_punggung']);
         return response()->json($items);
     }
 
