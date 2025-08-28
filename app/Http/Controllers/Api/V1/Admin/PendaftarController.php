@@ -709,6 +709,11 @@ class PendaftarController extends Controller
      */
     public function beliApi(Request $request)
     {
+        // if jwt not found, return error
+        if (!$request->header('Authorization')) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
         $data = $request->all();
         $rules = [
             'userId' => 'required', //Must be a number and length of value is 8
