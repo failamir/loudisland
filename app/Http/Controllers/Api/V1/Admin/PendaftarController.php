@@ -60,6 +60,11 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        $user = User::where('uid', $user->uid)->first();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+
         $transaksi = array();
         $transaksi = Transaksi::where('peserta_id', $user->id)->get();
         $pendaftar = new stdClass();
