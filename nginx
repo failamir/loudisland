@@ -1,0 +1,40 @@
+server {
+listen 8080;
+listen [::]:8080;
+server_name korpri.ifailamir.my.id;
+
+root /var/www/loudisland/public; # PENTING: direktori public Laravel
+index index.php index.html;
+
+# Laravel: teruskan ke index.php bila file/folder tidak ada
+location / {
+try_files $uri $uri/ /index.php?$query_string;
+}
+
+location ~ \.php$ {
+include fastcgi_params;
+fastcgi_index index.php;
+fastcgi_intercept_errors on;
+
+# Jika pakai unix socket:
+# fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+# Jika pakai TCP:
+fastcgi_pass 127.0.0.1:9000;
+
+fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+fastcgi_param DOCUMENT_ROOT $realpath_root;
+fastcgi_read_timeout 3600;
+fastcgi_send_timeout 3600;
+}
+
+location ~* ^.+\.(css|js|jpg|jpeg|gif|png|ico|gz|svg|svgz|ttf|otf|woff|woff2|eot|mp4|ogg|ogv|webm|webp|zip|swf|map)$ {
+add_header Access-Control-Allow-Origin "*";
+expires max;
+access_log off;
+try_files $uri @laravel; # bila asset tidak ditemukan, lempar ke Laravel
+}
+
+location @laravel {
+rewrite ^/(.*)$ /index.php?$1 last;
+}
+}
