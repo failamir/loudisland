@@ -201,6 +201,22 @@ class AuthController extends Controller
         return response()->json(auth('api')->user());
     }
 
+    public function getToken(Request $request)
+    {
+        $uid = $request->uid;
+        $user = User::where('uid', $uid)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+                'data' => null,
+            ], 404);
+        }
+        $token = JWTAuth::fromUser($user);
+        return response()->json([
+            'token' => $token,
+        ]);
+    }
+
     public function logout(Request $request)
     {
         try {
