@@ -64,7 +64,7 @@ class AuthController extends Controller
                 }
 
                 $payload = [
-                    'uid' => $data['uid'],
+                    // 'uid' => $data['uid'],
                     'name' => $data['name'],
                     'email' => $email,
                     'nik' => $data['nik'] ?? null,
