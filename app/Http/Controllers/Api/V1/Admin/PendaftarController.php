@@ -701,13 +701,20 @@ class PendaftarController extends Controller
         }
 
         // cek jwt valid
-        try {
-            $jwt = $request->header('Authorization');
-            $jwt = explode(' ', $jwt)[1];
-            $decoded = JWT::decode($jwt, new Key(env('JWT_KEY'), 'HS256'));
-        } catch (\Throwable $th) {
+        $user = Auth::guard('api')->user();
+        if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
+
+
+        // try {
+        //     $jwt = $request->header('Authorization');
+        //     $jwt = explode(' ', $jwt)[1];
+        //     $decoded = JWT::decode($jwt, new Key(env('JWT_KEY'), 'HS256'));
+        // } catch (\Throwable $th) {
+        //     return response()->json(['message' => 'Unauthorized'], 401);
+        // }
+
 
         $data = $request->all();
         $rules = [
