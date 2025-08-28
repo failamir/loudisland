@@ -33,7 +33,7 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'uid' => 'required|string|max:255',
+            // 'uid' => 'required|string|max:255',
             'nik' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:50',
             'device_name' => 'sometimes|string|max:100',
@@ -49,7 +49,7 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
             'nik' => $data['nik'] ?? null,
             'no_hp' => $data['no_hp'] ?? null,
-            'uid' => $data['uid'],
+            // 'uid' => $data['uid'],
         ]);
 
         // Try to sync to Firebase Realtime Database via REST API
