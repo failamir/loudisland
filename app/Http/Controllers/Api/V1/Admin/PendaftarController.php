@@ -693,7 +693,7 @@ class PendaftarController extends Controller
      *   @OA\Response(response=200, description="OK")
      * )
      */
-    public function buy(Request $request)
+    public function beliApi(Request $request)
     {
         // if jwt not found, return error
         if (!$request->header('Authorization')) {
