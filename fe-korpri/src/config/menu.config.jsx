@@ -1,11 +1,11 @@
 export const MENU_SIDEBAR = [
-  { title: 'Light Sidebar', path: '/' },
-  { title: 'List Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
-  { title: 'Dark Sidebar', path: '/dark-sidebar' },
-  { title: 'Order Tiket', path: '/order' },
-  { title: 'List Users', path: '/users' },
-  { title: 'List Tiket', path: '/ticket' },
-  { title: 'List Transactions', path: '/transactions' },
+  { title: 'Dashboard', path: '/' , icon: 'home' },
+  // { title: 'Dark Sidebar', path: '/dark-sidebar' },
+  { title: 'Users', path: '/users' , icon: 'users' },
+  // { title: 'List Tiket', path: '/ticket' , icon: 'ticket' },
+  { title: 'Transactions', path: '/transactions' , icon: 'cheque' },
+  { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
+  { title: 'Withdrawal', path: '/withdrawal' , icon: 'wallet' },
 ];
 
 export const MENU_MEGA = [{

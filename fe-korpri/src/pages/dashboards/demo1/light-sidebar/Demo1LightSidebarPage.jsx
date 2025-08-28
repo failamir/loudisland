@@ -46,9 +46,9 @@ const Demo1LightSidebarPage = () => {
                 {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
               </span>
             </div>
-            <Link to="/order" className="btn btn-sm btn-primary">
-              <KeenIcon icon="shopping-cart" className="me-1" />
-              Order Tiket
+            <Link to="/withdrawal" className="btn btn-sm btn-primary">
+              <KeenIcon icon="wallet" className="me-1" />
+              Withdrawal
             </Link>
             <Popover>
               <PopoverTrigger asChild>
