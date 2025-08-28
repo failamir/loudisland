@@ -764,10 +764,13 @@ class PendaftarController extends Controller
                 ]);
                 $data['peserta_id'] = $user->id;
             }
-            $qr = QrCode::format('png')->size(300)->generate($no_invoice);
-            // save qr code image   
-            $qrCode = QrCode::format('png')->size(300)->generate($no_invoice);
-            $qrCode->save(public_path('transactions/' . $no_invoice . '.png'));
+            // Generate and save QR code image to public/transactions/{invoice}.png
+            $qrDir = public_path('transactions');
+            if (!file_exists($qrDir)) {
+                @mkdir($qrDir, 0775, true);
+            }
+            $qrPath = $qrDir . DIRECTORY_SEPARATOR . $no_invoice . '.png';
+            QrCode::format('png')->size(300)->generate($no_invoice, $qrPath);
 
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
@@ -784,8 +787,16 @@ class PendaftarController extends Controller
                 'nik' => $data['nik'],
                 'email' => $data['email'],
                 'nama' => $data['name'],
-                'qr' => $qrCode,
             ]);
+
+            // Attach QR image to transaksi via Media Library (optional)
+            if (isset($qrPath) && file_exists($qrPath)) {
+                try {
+                    $transaksi->addMedia($qrPath)->preservingOriginal()->toMediaCollection('qr');
+                } catch (\Throwable $e) {
+                    // Optionally log the error; avoid breaking the flow
+                }
+            }
 
             $payload = [
                 'transaction_details' => [
