@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use GuzzleHttp\Client;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
@@ -35,6 +37,7 @@ class AuthController extends Controller
             'nik' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:50',
             'device_name' => 'sometimes|string|max:100',
+            'id_token' => 'sometimes|string',
         ])->validate();
 
         // Normalize email for consistency
@@ -48,6 +51,40 @@ class AuthController extends Controller
             'no_hp' => $data['no_hp'] ?? null,
             'uid' => $data['uid'],
         ]);
+
+        // Try to sync to Firebase Realtime Database via REST API
+        try {
+            $dbUrl = rtrim(env('FIREBASE_DATABASE_URL', ''), '/');
+            if ($dbUrl) {
+                // Prefer client-provided Firebase ID token if present, fallback to database secret if configured
+                $authToken = $data['id_token'] ?? env('FIREBASE_DATABASE_SECRET');
+                $endpoint = $dbUrl . '/users/' . rawurlencode($data['uid']) . '.json';
+                if ($authToken) {
+                    $endpoint .= '?auth=' . urlencode($authToken);
+                }
+
+                $payload = [
+                    'uid' => $data['uid'],
+                    'name' => $data['name'],
+                    'email' => $email,
+                    'nik' => $data['nik'] ?? null,
+                    'no_hp' => $data['no_hp'] ?? null,
+                    'createdAt' => now()->toISOString(),
+                ];
+
+                $client = new Client(['timeout' => 5]);
+                $client->request('PUT', $endpoint, [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => json_encode($payload),
+                ]);
+            } else {
+                Log::warning('FIREBASE_DATABASE_URL not set. Skipping Firebase sync for user UID ' . $data['uid']);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Firebase REST sync failed for user UID ' . $data['uid'] . ': ' . $e->getMessage());
+        }
 
         // Issue JWT token
         $token = JWTAuth::fromUser($user);
