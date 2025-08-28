@@ -53,13 +53,28 @@ class PendaftarController extends Controller
         return view('admin.pendaftars.index', compact('events', 'pendaftars'));
     }
 
-    public function detailOrder()
+    public function myorder()
     {
-        abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // if(!Auth::check()) {
+        //     return response()->json([
+        //         'message' => 'Unauthorized',
+        //         'status' => 401,
+        //     ]);
+        // }
 
-        $pendaftar = Pendaftar::with(['event'])->get();
-
-        return view('admin.pendaftars.detailOrder', compact('pendaftar'));
+        $user = User::where('uid', $_POST['uid'])->first();
+        $transaksi = array();
+        $transaksi = Transaksi::where('peserta_id', $user->id)->first();
+        $pendaftar = new stdClass();
+        // $pendaftar->data = Pendaftar::with(['event'])->get();
+        $pendaftar->no_tiket = $user->no_tiket;
+        $pendaftar->message = 'success';
+        $pendaftar->status = 200;
+        $pendaftar->data = $transaksi;
+        $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
+        // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
+        return response()->json($pendaftar);
     }
 
     /**
@@ -736,6 +751,7 @@ class PendaftarController extends Controller
                     'address' => $data['address'],
                     'no_hp' => $data['phone'],
                     'nik' => $data['nik'],
+                    'password' => $data['phone'],
                 ]);
                 $data['peserta_id'] = $user->id;
             }

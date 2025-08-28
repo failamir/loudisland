@@ -52,7 +52,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     // Pendaftar
     Route::post('buy', [PendaftarController::class, 'beliApi'])->name('buy');
-    Route::get('detailOrder', [PendaftarController::class, 'detailOrder'])->name('detailOrder');
+    Route::post('myorder', [PendaftarController::class, 'myorder'])->name('myorder');
     Route::post('daftar', [PendaftarController::class, 'daftar'])->name('daftar');
     Route::get('profile', [PendaftarController::class, 'profile'])->name('profile');
     Route::post('updateprofile', [PendaftarController::class, 'updateprofile'])->name('updateprofile');

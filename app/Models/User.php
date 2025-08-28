@@ -72,6 +72,11 @@ class User extends Authenticatable
         return $this->hasMany(Tiket::class, 'peserta_id', 'id');
     }
 
+    public function transaksi()
+    {
+        return $this->hasMany(Transaksi::class, 'user_id', 'id');
+    }
+
     public function userUserAlerts()
     {
         return $this->belongsToMany(UserAlert::class);
