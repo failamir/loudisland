@@ -1,0 +1,440 @@
+openapi: 3.0.3
+info:
+  title: LoudIsland API
+  version: 1.0.0
+  description: |
+    Dokumentasi API untuk LoudIsland. Prefix semua endpoint: `/api/v1`.
+    
+    - Gunakan JWT Bearer untuk endpoint yang terlindungi (`Authorization: Bearer <token>`)
+    - Login via `POST /api/v1/login`
+servers:
+  - url: http://127.0.0.1:8001/api/v1
+    description: Local Dev
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    AuthToken:
+      type: object
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: bearer
+        expires_in:
+          type: integer
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    Pendaftar:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+paths:
+  /register:
+    post:
+      summary: Registrasi akun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password, uid]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+                uid: { type: string, description: "Firebase Auth UID" }
+                nik: { type: string }
+                no_hp: { type: string }
+                id_token:
+                  type: string
+                  description: Firebase ID token (opsional). Jika dikirim, akan digunakan sebagai auth ?auth= untuk write ke Realtime DB.
+                  example: eyJhbGciOiJSUzI1NiIsImtpZCI6...
+      responses:
+        '201': { description: Terdaftar }
+        '422': { description: Validasi gagal }
+  /login:
+    post:
+      summary: Login dan dapatkan JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Token diterbitkan
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '401': { description: Kredensial salah }
+  /refresh:
+    post:
+      summary: Refresh token
+      responses:
+        '200': { description: Token diperbarui }
+  /me:
+    get:
+      summary: Profil user saat ini
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+  /users:
+    get:
+      summary: List user (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+  /nomor-punggung:
+    get:
+      summary: Daftar nomor punggung (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /nomor-punggung/pair:
+    post:
+      summary: Pasangkan nomor punggung (protected)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nomor: { type: string }
+                user_id: { type: integer }
+      responses:
+        '200': { description: OK }
+        '400': { description: Gagal }
+  /nomor-punggung/generate:
+    post:
+      summary: Generate nomor punggung (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '201': { description: Dibuat }
+  /nomor-punggung/unpair:
+    post:
+      summary: Lepaskan pasangan nomor punggung (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /scan/start:
+    post:
+      summary: Mulai scan race day (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /scan/finish:
+    post:
+      summary: Selesai scan race day (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /pairings:
+    get:
+      summary: List pairing (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /qrcodes:
+    get:
+      summary: List QR Codes (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /qrcodes/download-all:
+    get:
+      summary: Unduh semua QR Codes (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: File }
+  /transactions/simple:
+    get:
+      summary: List transaksi sederhana (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /logout:
+    post:
+      summary: Logout (protected)
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200': { description: OK }
+  /buy:
+    post:
+      summary: Pembelian ticket
+      responses:
+        '200': { description: OK }
+  /myorder:
+    post:
+      summary: Pesanan saya
+      responses:
+        '200': { description: OK }
+  /daftar:
+    post:
+      summary: Pendaftaran cepat
+      responses:
+        '200': { description: OK }
+  /profile:
+    get:
+      summary: Profil pendaftar
+      responses:
+        '200': { description: OK }
+  /updateprofile:
+    post:
+      summary: Update profil pendaftar
+      responses:
+        '200': { description: OK }
+  /transaksi:
+    get:
+      summary: Riwayat transaksi
+      responses:
+        '200': { description: OK }
+  /tiket:
+    get:
+      summary: Tiket saya
+      responses:
+        '200': { description: OK }
+  /notification:
+    post:
+      summary: Midtrans notification handler
+      responses:
+        '200': { description: OK }
+  /register-ticket:
+    post:
+      summary: Registrasi sederhana yang mengembalikan URL Midtrans
+      responses:
+        '200': { description: OK }
+  /scan:
+    post:
+      summary: Scan QR (umum)
+      responses:
+        '200': { description: OK }
+  /checkin:
+    post:
+      summary: Check-in
+      responses:
+        '200': { description: OK }
+  /checkin2:
+    post:
+      summary: Check-in alternatif
+      responses:
+        '200': { description: OK }
+  /checkout:
+    post:
+      summary: Check-out
+      responses:
+        '200': { description: OK }
+  /pendaftars:
+    get:
+      summary: List pendaftar (CRUD)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Pendaftar' }
+    post:
+      summary: Buat pendaftar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pendaftar'
+      responses:
+        '201': { description: Dibuat }
+  /pendaftars/{id}:
+    get:
+      summary: Detail pendaftar
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+        '404': { description: Tidak ditemukan }
+    put:
+      summary: Update pendaftar
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pendaftar'
+      responses:
+        '200': { description: OK }
+    delete:
+      summary: Hapus pendaftar
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Dihapus }
+  /tikets:
+    get:
+      summary: List tiket (CRUD)
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Buat tiket
+      responses:
+        '201': { description: Dibuat }
+  /tikets/{id}:
+    get:
+      summary: Detail tiket
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+  /events:
+    get:
+      summary: List event (CRUD)
+      responses:
+        '200': { description: OK }
+  /banners:
+    get:
+      summary: List banner (CRUD)
+      responses:
+        '200': { description: OK }
+  /transactions/media:
+    post:
+      summary: Upload media transaksi
+      responses:
+        '201': { description: Diunggah }
+  /transactions:
+    get:
+      summary: List transaksi (CRUD)
+      responses:
+        '200': { description: OK }
+  /sponsors:
+    get:
+      summary: List sponsor (CRUD)
+      responses:
+        '200': { description: OK }
+  /settings:
+    get:
+      summary: List setting (CRUD)
+      responses:
+        '200': { description: OK }
+  /wilayah/provinces:
+    get:
+      summary: Daftar provinsi
+      servers:
+        - url: http://127.0.0.1:8001/api/v1
+      responses:
+        '200': { description: OK }
+  /wilayah/regencies/{provinceCode}:
+    get:
+      summary: Daftar kabupaten/kota
+      parameters:
+        - in: path
+          name: provinceCode
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /wilayah/districts/{regencyCode}:
+    get:
+      summary: Daftar kecamatan
+      parameters:
+        - in: path
+          name: regencyCode
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /wilayah/villages/{districtCode}:
+    get:
+      summary: Daftar kelurahan/desa
+      parameters:
+        - in: path
+          name: districtCode
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /tickets/hardcoded:
+    get:
+      summary: Hardcoded tickets
+      responses:
+        '200': { description: OK }
+  /payment/{invoice}:
+    get:
+      summary: Status pembayaran invoice
+      parameters:
+        - in: path
+          name: invoice
+          required: true
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+  /total-income:
+    get:
+      summary: Total pemasukan (success only)
+      responses:
+        '200': { description: OK }
+  /withdrawals:
+    post:
+      summary: Ajukan penarikan dana
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, destination]
+              properties:
+                amount: { type: integer, minimum: 1 }
+                destination: { type: string }
+      responses:
+        '202': { description: Diterima antrian }
