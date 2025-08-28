@@ -17,6 +17,7 @@
         "phpmailer/phpmailer": "^6.6",
         "simplesoftwareio/simple-qrcode": "~4",
         "spatie/laravel-medialibrary": "^10.0.7",
+        "tymon/jwt-auth": "^1.0",
         "yajra/laravel-datatables-oracle": "^9.19"
     },
     "require-dev": {

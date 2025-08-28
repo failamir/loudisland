@@ -4,18 +4,17 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\RefreshToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
-        // $this->middleware('auth:sanctum')->except(['login', 'register']);
+        // Routes protection is handled in routes using auth:api (jwt guard)
     }
 
     public function register(Request $request)
@@ -48,17 +47,19 @@ class AuthController extends Controller
             'nik' => $data['nik'] ?? null,
             'no_hp' => $data['no_hp'] ?? null,
             'uid' => $data['uid'],
-            'device_name' => $data['device_name'] ?? 'api-token',
         ]);
 
-        $token = $user->createToken($data['device_name'] ?? 'api-token')->plainTextToken;
+        // Issue JWT token
+        $token = JWTAuth::fromUser($user);
 
-        // Return only necessary fields
-        $userPayload = $user->only(['id', 'name', 'email']);
+        $userPayload = $user->only(['id', 'name', 'email', 'uid']);
 
         return response()->json([
             'message' => 'Registered successfully',
             'token' => $token,
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
             'data' => $userPayload,
         ], 201);
     }
@@ -68,144 +69,63 @@ class AuthController extends Controller
         $data = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string',
-            // 'device_name' => 'sometimes|string|max:100',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
-        $email = strtolower($data['email']);
+        $credentials = ['email' => strtolower($data['email']), 'password' => $data['password']];
 
-        // Select only columns we need
-        $user = User::query()
-            ->select(['id', 'name', 'email', 'nik', 'password', 'no_hp','uid'])
-            ->where('email', $email)
-            ->first();
-
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-                'data' => null,
-            ], 401);
+        try {
+            if (!$token = auth('api')->attempt($credentials)) {
+                return response()->json([
+                    'message' => 'Invalid credentials',
+                    'data' => null,
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Could not create token'], 500);
         }
 
-        // Optionally revoke existing tokens (default true for backward compatibility)
-        // Fix: Added missing comment slashes
-        // $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
-        // if ($revoke) {
-        //     $user->tokens()->delete();
-        // }
-
-        $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
-        if ($revoke) {
-            $user->tokens()->delete();
-        }
-
-        $deviceName = $data['device_name'] ?? 'api-token';
-        $accessToken = $user->createToken($deviceName)->plainTextToken;
-
-        // Issue refresh token (opaque), store only its hash
-        $refreshPlain = Str::random(64);
-        $refreshHash = hash('sha256', $refreshPlain);
-        $refreshTtlDays = 30; // adjust as needed
-        $expiresAt = Carbon::now()->addDays($refreshTtlDays);
-
-        RefreshToken::create([
-            'user_id' => $user->id,
-            'token' => $refreshHash,
-            'device_name' => $deviceName,
-            'revoked' => false,
-            'expires_at' => $expiresAt,
-        ]);
-
+        $user = auth('api')->user();
         $userPayload = collect($user)->except(['password'])->all();
 
-        $accessTtlMinutes = config('sanctum.expiration'); // minutes or null
         return response()->json([
             'message' => 'Login successful',
             'uid' => $user->uid,
-            'token' => $accessToken,
-            'access_token' => $accessToken,
-            'access_token_expires_in' => $accessTtlMinutes ? $accessTtlMinutes * 60 : null,
-            'refresh_token' => $refreshPlain,
-            'refresh_token_expires_at' => $expiresAt->toIso8601String(),
+            'token' => $token,
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'access_token_expires_in' => auth('api')->factory()->getTTL() * 60,
             'user' => $userPayload,
         ]);
     }
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json(auth('api')->user());
     }
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        if ($user && $request->user()->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (JWTException $e) {
+            // token might already be invalid/expired
         }
-
         return response()->json(['message' => 'Logged out']);
     }
 
     public function refresh(Request $request)
     {
-        $data = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-            'device_name' => 'sometimes|string|max:100',
-        ])->validate();
-
-        $hash = hash('sha256', $data['refresh_token']);
-
-        $record = RefreshToken::query()
-            ->where('token', $hash)
-            ->where('revoked', false)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
-            })
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'message' => 'Invalid or expired refresh token',
-            ], 401);
+        try {
+            $newToken = auth('api')->refresh();
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Token invalid or expired'], 401);
         }
 
-        $user = User::find($record->user_id);
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 401);
-        }
-
-        // Rotate refresh token: revoke old, issue new
-        $record->revoked = true;
-        $record->save();
-
-        $deviceName = $data['device_name'] ?? ($record->device_name ?: 'api-token');
-
-        // Optionally revoke other access tokens for the user on this device
-        // $user->tokens()->where('name', $deviceName)->delete();
-
-        $accessToken = $user->createToken($deviceName)->plainTextToken;
-
-        $newRefreshPlain = Str::random(64);
-        $newRefreshHash = hash('sha256', $newRefreshPlain);
-        $refreshTtlDays = 30;
-        $expiresAt = Carbon::now()->addDays($refreshTtlDays);
-
-        RefreshToken::create([
-            'user_id' => $user->id,
-            'token' => $newRefreshHash,
-            'device_name' => $deviceName,
-            'revoked' => false,
-            'expires_at' => $expiresAt,
-        ]);
-
-        $accessTtlMinutes = config('sanctum.expiration');
         return response()->json([
-            'access_token' => $accessToken,
-            'access_token_expires_in' => $accessTtlMinutes ? $accessTtlMinutes * 60 : null,
-            'refresh_token' => $newRefreshPlain,
-            'refresh_token_expires_at' => $expiresAt->toIso8601String(),
+            'access_token' => $newToken,
+            'token_type' => 'bearer',
+            'access_token_expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 }
