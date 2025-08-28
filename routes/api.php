@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Admin\BannerApiController;
 use App\Http\Controllers\Api\V1\Admin\TransaksiApiController;
 use App\Http\Controllers\Api\V1\Admin\TiketApiController;
 use App\Http\Controllers\Api\V1\Admin\PendaftarController;
+use App\Http\Controllers\Api\V1\Admin\OrderController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -23,9 +24,13 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('register', [AuthController::class, 'register'])->name('auth.register');
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
+    Route::post('get-token', [AuthController::class, 'getToken'])->name('auth.getToken');
     Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         Route::get('users', [UserApiController::class, 'index']);
+
+        // Orders (create ticket + transaction via Midtrans)
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
 
         // Nomor Punggung QR API
         Route::get('nomor-punggung', [NomorPunggungApiController::class, 'index']);
