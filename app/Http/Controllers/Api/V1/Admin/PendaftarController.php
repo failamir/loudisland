@@ -28,6 +28,7 @@ use OpenApi\Annotations as OA;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use App\Models\Pendaftar;
 
 class PendaftarController extends Controller
 {
@@ -55,30 +56,31 @@ class PendaftarController extends Controller
 
     public function myorder()
     {
-        $user = Auth::guard('api')->user();
-        if (!$user) {
+        // Get authenticated API user
+        $authUser = Auth::guard('api')->user();
+        if (!$authUser) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // from token get user id
-        $user = JWTAuth::parseToken()->authenticate();
+        // Prefer direct lookup by peserta_id = user id
+        $items = Transaksi::where('peserta_id', $authUser->id)
+            ->orderByDesc('created_at')
+            ->get();
 
-        $user = User::where('uid', $user->uid)->first();
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+        // Fallbacks if nothing found: try by uid or email (if such data was stored)
+        if ($items->isEmpty()) {
+            $items = Transaksi::query()
+                ->when(!empty($authUser->uid), fn($q) => $q->orWhere('uid', $authUser->uid))
+                ->when(!empty($authUser->email), fn($q) => $q->orWhere('email', $authUser->email))
+                ->orderByDesc('created_at')
+                ->get();
         }
 
-        $transaksi = array();
-        $transaksi = Transaksi::where('peserta_id', $user->id)->get();
-        $pendaftar = new stdClass();
-        // $pendaftar->data = Pendaftar::with(['event'])->get();
-        $pendaftar->message = 'success';
-        $pendaftar->status = 200;
-        // $pendaftar->no_tiket = $user->no_tiket;
-        $pendaftar->data = $transaksi;
-        // $pendaftar->qr = QrCode::format('png')->size(300)->generate($transaksi->invoice);
-        // return view('admin.pendaftars.detailOrder', compact('pendaftar'));
-        return response()->json($pendaftar);
+        $resp = new stdClass();
+        $resp->message = 'success';
+        $resp->status = 200;
+        $resp->data = $items;
+        return response()->json($resp);
     }
 
     /**
