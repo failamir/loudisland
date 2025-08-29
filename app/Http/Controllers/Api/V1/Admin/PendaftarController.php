@@ -362,7 +362,7 @@ class PendaftarController extends Controller
         if ($noTiket === false) {
             $noTiket = $trx->events;
         }
-        $userDetail = $noTiket ? User::where('no_tiket', $noTiket)->first() : null;
+        $userDetail = $noTiket ? User::where('id', $trx->peserta_id)->first() : null;
 
         // Build QR URL if exists; do not generate here (generation happens on webhook or register)
         $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
