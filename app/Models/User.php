@@ -89,7 +89,7 @@ class User extends Authenticatable implements JWTSubject
 
     public function transaksi()
     {
-        return $this->hasMany(Transaksi::class, 'user_id', 'id');
+        return $this->hasMany(Transaksi::class, 'peserta_id', 'id');
     }
 
     public function userUserAlerts()
