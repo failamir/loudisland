@@ -374,7 +374,7 @@ class PendaftarController extends Controller
             'amount' => $trx->amount,
             'no_tiket' => $noTiket,
             'qr_url' => $qrUrl,
-            'pendaftar' => $userDetail ? [
+            'user' => $userDetail ? [
                 'id' => $userDetail->id,
                 'nama' => $userDetail->name,
                 'email' => $userDetail->email,
