@@ -761,9 +761,11 @@ class PendaftarController extends Controller
             if (!file_exists($qrDir)) {
                 @mkdir($qrDir, 0775, true);
             }
-            $qrPath = $qrDir . DIRECTORY_SEPARATOR . $no_invoice . '.png';
-            QrCode::format('png')->size(300)->generate($no_invoice, $qrPath);
+            $qrFilePath = $qrDir . DIRECTORY_SEPARATOR . $no_invoice . '.png';
+            QrCode::format('png')->size(300)->generate($no_invoice, $qrFilePath);
 
+            // Public URL to be stored in DB (respects APP_URL)
+            $qrUrl = url('transactions/' . $no_invoice . '.png');
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
                 'events'   => $data['ticketId'],
@@ -779,13 +781,13 @@ class PendaftarController extends Controller
                 'nik' => $data['nik'],
                 'email' => $data['email'],
                 'nama' => $data['name'],
-                'qr' => $qrPath,
+                'qr' => $qrUrl,
             ]);
 
             // Attach QR image to transaksi via Media Library (optional)
-            if (isset($qrPath) && file_exists($qrPath)) {
+            if (isset($qrFilePath) && file_exists($qrFilePath)) {
                 try {
-                    $transaksi->addMedia($qrPath)->preservingOriginal()->toMediaCollection('qr');
+                    $transaksi->addMedia($qrFilePath)->preservingOriginal()->toMediaCollection('qr');
                 } catch (\Throwable $e) {
                     // Optionally log the error; avoid breaking the flow
                 }
