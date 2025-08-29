@@ -211,7 +211,7 @@ class PendaftarController extends Controller
      *   @OA\Response(response=200, description="OK")
      * )
      */
-    public function checkin(Request $request)
+    public function checkin1(Request $request)
     {
         $pendaftar = User::where('no_tiket', $request->input('no_tiket'))->first();
         $pendaftar->update(['checkin' => 'sudah']);
