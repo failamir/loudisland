@@ -32,11 +32,53 @@ class TransaksiApiController extends Controller
             ->setStatusCode(Response::HTTP_CREATED);
     }
 
-    public function show(Transaksi $transaksi)
+    public function show(Request $request, Transaksi $transaksi)
     {
         // abort_if(Gate::denies('transaksi_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new TransaksiResource($transaksi->load(['event', 'tiket', 'peserta', 'created_by']));
+        // Prefer route-model binding; fall back to query params (id or invoice)
+        if (!$transaksi || !$transaksi->exists) {
+            $id = $request->query('id');
+            $invoice = $request->query('invoice');
+
+            $query = Transaksi::query()->with(['event', 'tiket', 'peserta']);
+            if ($id) {
+                $transaksi = $query->find($id);
+            } elseif ($invoice) {
+                $transaksi = $query->where('invoice', $invoice)->first();
+            }
+        } else {
+            $transaksi->load(['event', 'tiket', 'peserta']);
+        }
+
+        if (!$transaksi) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+
+        // Shape concise payload for modal usage
+        $payload = [
+            'id'            => $transaksi->id,
+            'invoice'       => $transaksi->invoice,
+            'status'        => $transaksi->status,
+            'amount'        => (float) $transaksi->amount,
+            'payment_type'  => $transaksi->payment_type ?? null,
+            'created_at'    => optional($transaksi->created_at)->toDateTimeString(),
+            'peserta'       => $transaksi->peserta ? [
+                'id'    => $transaksi->peserta->id,
+                'name'  => $transaksi->peserta->name,
+                'email' => $transaksi->peserta->email,
+            ] : null,
+            'event'         => $transaksi->event ? [
+                'id'    => $transaksi->event->id,
+                'name'  => $transaksi->event->name ?? $transaksi->event->judul ?? null,
+            ] : null,
+            'tiket'         => $transaksi->tiket ? [
+                'id'       => $transaksi->tiket->id,
+                'no_tiket' => $transaksi->tiket->no_tiket,
+            ] : null,
+        ];
+
+        return response()->json(['data' => $payload]);
     }
 
     public function update(UpdateTransaksiRequest $request, Transaksi $transaksi)
