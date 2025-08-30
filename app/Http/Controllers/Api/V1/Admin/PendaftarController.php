@@ -76,6 +76,28 @@ class PendaftarController extends Controller
                 ->get();
         }
 
+        // Attach decoded participants and events for easier consumption on FE
+        $items->transform(function ($t) {
+            // participants: stored as JSON text
+            $t->participants_decoded = null;
+            if (!empty($t->participants)) {
+                $decoded = json_decode($t->participants, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $t->participants_decoded = $decoded;
+                }
+            }
+
+            // events: JSON array of ticket IDs (legacy may contain serialized or plain text)
+            $eventsDecoded = json_decode($t->events, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // fallback legacy handling
+                $maybe = @unserialize($t->events);
+                $eventsDecoded = $maybe !== false ? $maybe : $t->events;
+            }
+            $t->events_decoded = $eventsDecoded;
+            return $t;
+        });
+
         $resp = new stdClass();
         $resp->message = 'success';
         $resp->status = 200;
@@ -825,6 +847,9 @@ class PendaftarController extends Controller
             Transaksi::where('invoice', $no_invoice)->update([
                 'payment_url' => $paymentUrl
             ]);
+
+            // tambah 1.7 % di amount
+            $amount = $amount + ($amount * 0.017);
 
             $resp = new stdClass();
             $resp->data = $paymentUrl;

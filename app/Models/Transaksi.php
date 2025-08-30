@@ -61,6 +61,8 @@ class Transaksi extends Model implements HasMedia
         'no_hp',
         'nik',
         'email',
+        // 'uid',
+        'participants',
     ];
 
     public function registerMediaConversions(Media $media = null): void
