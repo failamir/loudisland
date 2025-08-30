@@ -154,6 +154,13 @@ class NomorPunggungApiController extends Controller
         } else {
             $trx = \App\Models\Transaksi::findOrFail($transactionId);
         }
+        // prevent same invoice being paired more than once
+        if (!empty($trx->nomor_punggung)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice sudah dipair dengan nomor: ' . $trx->nomor_punggung,
+            ], 409);
+        }
         if (strtolower((string) $trx->status) !== 'success') {
             return response()->json(['success' => false, 'message' => 'Transaksi belum success. Pairing tidak diizinkan.'], 422);
         }

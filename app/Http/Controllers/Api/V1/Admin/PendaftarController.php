@@ -700,48 +700,58 @@ class PendaftarController extends Controller
      */
     public function beliApi(Request $request)
     {
-        // if jwt not found, return error
-        if (!$request->header('Authorization')) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        // cek jwt valid
-        $user = Auth::guard('api')->user();
-        if (!$user) {
+        // Authenticate via jwt-auth to be consistent with token issuer
+        try {
+            $user = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate();
+            if (!$user) {
+                return response()->json(['message' => 'Unauthorized'], 401);
+            }
+        } catch (\Throwable $e) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = $request->all();
         $rules = [
-            'userId' => 'required', //Must be a number and length of value is 8
-            'ticketId' => 'required',
-            'province' => 'nullable',
-            'city' => 'nullable',
-            'address' => 'required',
-            'phone' => 'required',
-            'nik' => 'required',
-            'email' => 'required',
-            'name' => 'required',
+            'userId' => 'required',
+            // Multi-person purchase: each participant has their own ticketId and identity fields
+            'participants' => 'required|array|min:1',
+            'participants.*.ticketId' => 'required|integer',
+            'participants.*.name' => 'required|string',
+            'participants.*.email' => 'required|email',
+            'participants.*.phone' => 'required|string',
+            'participants.*.nik' => 'required|string',
+            'participants.*.province' => 'required|string',
+            'participants.*.city' => 'required|string',
+            // 'participants.*.address' => 'required|string',
         ];
 
         $validator = Validator::make($data, $rules);
         if (!$validator->fails()) {
-            //TODO Handle your data
-            $data = $request->all();
-
+            // Prepare invoice number
             $length = 10;
             $random = '';
             for ($i = 0; $i < $length; $i++) {
                 $random .= rand(0, 1) ? rand(0, 9) : chr(rand(ord('a'), ord('z')));
             }
-
             $no_invoice = 'TRX-' . Str::upper($random);
 
-            $amount = Event::find($data['ticketId'])->harga;
-            // $user = User::where('uid', $data['userId'])->first();
+            // Calculate total from participants' ticket IDs
+            $ticketIds = collect($data['participants'])->pluck('ticketId')->all();
+            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event', 'harga']);
+            if ($tickets->isEmpty()) {
+                return response()->json(['message' => 'Ticket(s) not found'], 422);
+            }
+            // Sum price per participant's chosen ticket
+            $priceMap = $tickets->keyBy('id')->map(fn($t) => (int) $t->harga);
+            $amount = 0;
+            foreach ($data['participants'] as $p) {
+                $amount += $priceMap[$p['ticketId']] ?? 0;
+            }
 
-            if ($user) {
-                $data['peserta_id'] = $user->id;
+            // Ensure user exists (by uid)
+            $existing = User::where('uid', $data['userId'])->first();
+            if ($existing) {
+                $user = $existing;
             } else {
                 $user = User::create([
                     'name' => $data['name'],
@@ -749,59 +759,66 @@ class PendaftarController extends Controller
                     'uid' => $data['userId'],
                     'province' => $data['province'],
                     'city' => $data['city'],
-                    'address' => $data['address'],
+                    // 'address' => $data['address'],
                     'no_hp' => $data['phone'],
                     'nik' => $data['nik'],
                     'password' => $data['phone'],
                 ]);
-                $data['peserta_id'] = $user->id;
             }
-            // Generate and save QR code image to public/transactions/{invoice}.png
-            $qrDir = public_path('transactions');
-            if (!file_exists($qrDir)) {
-                @mkdir($qrDir, 0775, true);
-            }
-            $qrFilePath = $qrDir . DIRECTORY_SEPARATOR . $no_invoice . '.png';
-            QrCode::format('png')->size(300)->generate($no_invoice, $qrFilePath);
 
-            // Public URL to be stored in DB (respects APP_URL)
-            $qrUrl = url('transactions/' . $no_invoice . '.png');
+            // Build buyer info (fallback to first participant for address/contact)
+            $first = $data['participants'][0];
+            $buyerName = $user->name ?? $first['name'];
+            $buyerEmail = $user->email ?? $first['email'];
+            $buyerPhone = $user->no_hp ?? $first['phone'];
+            $buyerNik = $user->nik ?? $first['nik'];
+            $buyerProvince = $first['province'];
+            $buyerCity = $first['city'];
+            $buyerAddress = $first['address'];
+
+            // Create transaction with multiple tickets stored as JSON array and participants payload
             $transaksi = Transaksi::create([
                 'invoice'       => $no_invoice,
-                'events'   => $data['ticketId'],
+                'events'        => json_encode(array_values(collect($ticketIds)->unique()->values()->all())),
                 'peserta_id'    => $user->id,
                 'amount'        => $amount,
-                'note'          => $user->name,
+                'note'          => $buyerName,
                 'status'        => 'pending',
-                'uid'        => $user->uid,
-                'province' => $data['province'],
-                'city' => $data['city'],
-                'address' => $data['address'],
-                'no_hp' => $data['phone'],
-                'nik' => $data['nik'],
-                'email' => $data['email'],
-                'nama' => $data['name'],
-                'qr' => $qrUrl,
+                'uid'           => $user->uid,
+                'province'      => $buyerProvince,
+                'city'          => $buyerCity,
+                'address'       => $buyerAddress,
+                'no_hp'         => $buyerPhone,
+                'nik'           => $buyerNik,
+                'email'         => $buyerEmail,
+                'nama'          => $buyerName,
+                // new column to be added by migration
+                'participants'  => json_encode($data['participants']),
             ]);
 
-            // Attach QR image to transaksi via Media Library (optional)
-            if (isset($qrFilePath) && file_exists($qrFilePath)) {
-                try {
-                    $transaksi->addMedia($qrFilePath)->preservingOriginal()->toMediaCollection('qr');
-                } catch (\Throwable $e) {
-                    // Optionally log the error; avoid breaking the flow
-                }
+            // Build Midtrans payload with item_details per participant
+            $eventNameMap = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+            $itemDetails = [];
+            foreach ($data['participants'] as $idx => $p) {
+                $tid = $p['ticketId'];
+                $itemDetails[] = [
+                    'id' => 'event-' . $tid,
+                    'price' => (int) ($priceMap[$tid] ?? 0),
+                    'quantity' => 1,
+                    'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
+                ];
             }
 
             $payload = [
                 'transaction_details' => [
                     'order_id'      => $transaksi->invoice,
-                    'gross_amount'  => $transaksi->amount,
+                    'gross_amount'  => (int) $transaksi->amount,
                 ],
                 'customer_details' => [
                     'first_name'       => $user->name,
                     'email'            => $user->email,
-                ]
+                ],
+                'item_details' => $itemDetails,
             ];
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
@@ -809,10 +826,12 @@ class PendaftarController extends Controller
                 'payment_url' => $paymentUrl
             ]);
 
-            $data = new stdClass();
-            $data->data = $paymentUrl;
-            $data->invoice = $no_invoice;
-            return response()->json($data);
+            $resp = new stdClass();
+            $resp->data = $paymentUrl;
+            $resp->invoice = $no_invoice;
+            $resp->participants = $data['participants'];
+            $resp->amount = $amount;
+            return response()->json($resp);
         } else {
             return response()->json(['data' => $validator->errors()->all()]);
         }
