@@ -37,7 +37,12 @@ class TransaksiApiController extends Controller
         // abort_if(Gate::denies('transaksi_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
         // Prefer route-model binding; fall back to query params (id or invoice)
-        if (!$transaksi || !$transaksi->exists) {
+        $bound = ($transaksi instanceof Transaksi) && $transaksi->exists && $transaksi->getKey();
+        if ($bound) {
+            $transaksi->load(['event', 'tiket', 'peserta']);
+        } else {
+            // Treat unbound/empty model as null
+            $transaksi = null;
             $id = $request->query('id');
             $invoice = $request->query('invoice');
 
@@ -47,8 +52,6 @@ class TransaksiApiController extends Controller
             } elseif ($invoice) {
                 $transaksi = $query->where('invoice', $invoice)->first();
             }
-        } else {
-            $transaksi->load(['event', 'tiket', 'peserta']);
         }
 
         if (!$transaksi) {

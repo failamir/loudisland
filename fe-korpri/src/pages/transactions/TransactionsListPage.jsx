@@ -5,6 +5,7 @@ import { Container } from '@/components/container';
 import { Toolbar, ToolbarActions, ToolbarDescription, ToolbarHeading, ToolbarPageTitle } from '@/partials/toolbar';
 import { useLayout } from '@/providers';
 import { DataGrid, DataGridColumnHeader, DataGridRowSelect, DataGridRowSelectAll, KeenIcon } from '@/components';
+import { Modal, ModalBody, ModalContent, ModalHeader, ModalTitle } from '@/components/modal';
 import { Input } from '@/components/ui/input';
 
 const TransactionsListPage = () => {
@@ -14,6 +15,10 @@ const TransactionsListPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+  const [detail, setDetail] = useState(null);
   const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
   const fetchData = async (params = {}) => {
@@ -37,6 +42,21 @@ const TransactionsListPage = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const openDetail = async (id) => {
+    try {
+      setDetailOpen(true);
+      setDetailLoading(true);
+      setDetailError(null);
+      setDetail(null);
+      const res = await axios.get(`${API_URL}/transactions/show`, { params: { id } });
+      setDetail(res?.data?.data || null);
+    } catch (e) {
+      setDetailError('Gagal mengambil detail transaksi.');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
 
   const ColumnInputFilter = ({ column }) => (
     <Input
@@ -123,9 +143,9 @@ const TransactionsListPage = () => {
         header: () => <span>Aksi</span>,
         enableSorting: false,
         cell: ({ row }) => (
-          <Link className="text-primary" to={`/transactions/${row.original.id}`}>
+          <button type="button" className="text-primary underline" onClick={() => openDetail(row.original.id)}>
             Detail
-          </Link>
+          </button>
         ),
         meta: { headerClassName: 'min-w-[100px]' },
       },
@@ -202,6 +222,30 @@ const TransactionsListPage = () => {
           layout={{ card: true }}
         />
       </Container>
+
+      {/* Detail Modal */}
+      <Modal open={detailOpen} onClose={() => setDetailOpen(false)}>
+        <ModalContent className="max-w-xl">
+          <ModalHeader>
+            <ModalTitle>Detail Transaksi {detail?.id ? `#${detail.id}` : ''}</ModalTitle>
+            <button className="btn btn-sm btn-light" onClick={() => setDetailOpen(false)}>Tutup</button>
+          </ModalHeader>
+          <ModalBody>
+            {detailLoading && <div>Memuat...</div>}
+            {detailError && <div className="text-red-600">{detailError}</div>}
+            {!detailLoading && !detailError && (
+              <div className="space-y-2">
+                <div className="flex justify-between"><span className="text-gray-600">Invoice:</span><span className="font-medium">{detail?.invoice || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Status:</span><span className="font-medium">{detail?.status || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Jumlah:</span><span className="font-medium">{new Intl.NumberFormat('id-ID').format(detail?.amount || 0)}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Tipe Pembayaran:</span><span className="font-medium">{detail?.payment_type || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{detail?.created_at || '-'}</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">Peserta:</span><span className="font-medium">{detail?.peserta?.name || '-'}</span></div>
+              </div>
+            )}
+          </ModalBody>
+        </ModalContent>
+      </Modal>
     </Fragment>
   );
 };

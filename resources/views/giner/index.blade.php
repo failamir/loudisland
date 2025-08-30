@@ -18,11 +18,20 @@
     <link rel="stylesheet" href="{{ asset('giner-assets/css/style.css') }}">
     <style>
         /* Show Register button only on mobile; hide on desktop */
-        @media (min-width: 992px) { /* lg and up */
-            .header-register-btn { display: none !important; }
+        @media (min-width: 992px) {
+
+            /* lg and up */
+            .header-register-btn {
+                display: none !important;
+            }
         }
-        @media (max-width: 991.98px) { /* below lg */
-            .header-register-btn { display: inline-flex !important; }
+
+        @media (max-width: 991.98px) {
+
+            /* below lg */
+            .header-register-btn {
+                display: inline-flex !important;
+            }
         }
     </style>
 </head>
@@ -46,10 +55,10 @@
             <span></span>
         </a>
         @guest
-            <a href="{{ route('register') }}" class="btn btn-white header-register-btn"
-               style="position:absolute; right:70px; top:20px; z-index:1000;">
-                <span>Register</span>
-            </a>
+        <a href="{{ route('register') }}" class="btn btn-white header-register-btn"
+            style="position:absolute; right:70px; top:20px; z-index:1000;">
+            <span>Register</span>
+        </a>
         @endguest
         <div class="top-panel">
             <div class="container">
@@ -94,7 +103,7 @@
                             </li>
                         </ul>
                     </nav>
-                    <a href="{{ url('welcome') }}" class="btn btn-white"><span>registration</span></a>
+                    <a href="{{ 'https://register.ifailamir.my.id' }}" class="btn btn-white"><span>registration</span></a>
                 </div>
             </div>
         </div>
