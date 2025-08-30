@@ -855,6 +855,7 @@ class PendaftarController extends Controller
             $resp->data = $paymentUrl;
             $resp->invoice = $no_invoice;
             $resp->participants = $data['participants'];
+            $resp->service_fee = $amount * 0.017;
             $resp->amount = $amount;
             return response()->json($resp);
         } else {
