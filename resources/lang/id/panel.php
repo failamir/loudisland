@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'site_title' => 'Loud Island',
+    'site_title' => 'Mandalika KORPRI Fun Night Run 2025',
 ];
