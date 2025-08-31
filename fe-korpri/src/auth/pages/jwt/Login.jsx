@@ -14,8 +14,8 @@ const loginSchema = Yup.object().shape({
   remember: Yup.boolean()
 });
 const initialValues = {
-  email: 'demo@keenthemes.com',
-  password: 'demo1234',
+  email: '',
+  password: '',
   remember: false
 };
 const Login = () => {
@@ -88,7 +88,7 @@ const Login = () => {
         </div> */}
 
         <div className="flex items-center gap-2">
-        KORPRI RUN MANDALIKA 2025
+        Mandalika KORPRI Fun Night Run 2025
         </div>
 
         {/* <Alert variant="primary">
