@@ -831,10 +831,20 @@ class PendaftarController extends Controller
                 ];
             }
 
+            // tambah 1.7 % di amount
+            $total_amount = $amount + ($amount * 0.017);
+            $fee_service = $amount * 0.017;
+            $total_payment = $amount + $fee_service;
+
+            $emailTesting = ['lvlysunday@gmail.com', 'kezia1@gmail.com', 'ifailamir@gmail.com'];
+            if (in_array($user->email, $emailTesting)) {
+                $total_payment = '1000';
+            }
+
             $payload = [
                 'transaction_details' => [
                     'order_id'      => $transaksi->invoice,
-                    'gross_amount'  => (int) $transaksi->amount,
+                    'gross_amount'  => (int) $total_payment,
                 ],
                 'customer_details' => [
                     'first_name'       => $user->name,
@@ -848,10 +858,6 @@ class PendaftarController extends Controller
                 'payment_url' => $paymentUrl
             ]);
 
-            // tambah 1.7 % di amount
-            $total_amount = $amount + ($amount * 0.017);
-            $fee_service = $amount * 0.017;
-            $total_payment = $amount + $fee_service;
             $resp = new stdClass();
             $resp->data = $paymentUrl;
             $resp->invoice = $no_invoice;
