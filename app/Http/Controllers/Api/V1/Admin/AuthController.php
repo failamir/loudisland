@@ -155,6 +155,8 @@ class AuthController extends Controller
             'message' => 'Registered successfully',
             'token' => $token,
             'access_token' => $token,
+            'firebaseUid' => $firebaseUid,
+            'firebaseIdToken' => $firebaseIdToken,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'data' => $userPayload,
@@ -185,8 +187,14 @@ class AuthController extends Controller
         $user = auth('api')->user();
         $userPayload = collect($user)->except(['password'])->all();
 
+        //login to firebase
+        $firebaseUid = $user->uid;
+        $firebaseIdToken = $user->id_token;
+
         return response()->json([
             'message' => 'Login successful',
+            'firebaseUid' => $firebaseUid,
+            'firebaseIdToken' => $firebaseIdToken,
             'uid' => $user->uid,
             'token' => $token,
             'access_token' => $token,
@@ -198,7 +206,44 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
-        return response()->json(auth('api')->user());
+        $user = auth('api')->user();
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not authenticated',
+                'data' => null,
+            ], 401);
+        }
+
+        $firebaseUid = $user->uid ?? null;
+        $firebaseIdToken = $user->id_token ?? null;
+        $firebaseUser = null;
+        $firebaseError = null;
+
+        if ($firebaseIdToken) {
+            try {
+                $apiKey = env('FIREBASE_WEB_API_KEY');
+                $client = new \GuzzleHttp\Client(['timeout' => 5]);
+                $response = $client->post('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . $apiKey, [
+                    'json' => ['idToken' => $firebaseIdToken],
+                ]);
+                $firebaseData = json_decode($response->getBody()->getContents(), true);
+                $firebaseUser = $firebaseData['users'][0] ?? null;
+            } catch (\Throwable $e) {
+                $firebaseError = $e->getMessage();
+            }
+        }
+
+        // Prepare user data, excluding sensitive fields
+        $userPayload = collect($user)->except(['password'])->all();
+
+        return response()->json([
+            'message' => 'Current user fetched successfully',
+            'firebaseUid' => $firebaseUid,
+            'firebaseIdToken' => $firebaseIdToken,
+            'firebaseUser' => $firebaseUser,
+            'firebaseError' => $firebaseError,
+            'data' => $userPayload,
+        ]);
     }
 
     public function getToken(Request $request)
