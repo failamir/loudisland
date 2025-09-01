@@ -236,14 +236,15 @@ class AuthController extends Controller
         // Prepare user data, excluding sensitive fields
         $userPayload = collect($user)->except(['password'])->all();
 
-        return response()->json([
-            'message' => 'Current user fetched successfully',
+        return response()->json(
+            // 'message' => 'Current user fetched successfully',
             // 'firebaseUid' => $firebaseUid,
             // 'firebaseIdToken' => $firebaseIdToken,
             // 'firebaseUser' => $firebaseUser,
             // 'firebaseError' => $firebaseError,
-            'data' => $userPayload,
-        ]);
+            // 'data' => 
+            $userPayload,
+        );
     }
 
     public function getToken(Request $request)
