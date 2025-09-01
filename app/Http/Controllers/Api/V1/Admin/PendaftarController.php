@@ -857,6 +857,14 @@ class PendaftarController extends Controller
             $total_payment = $amount + ($amount * 0.017);
             $fee_service = $amount * 0.017;
 
+            //add service fee to itemDetails
+            $itemDetails[] = [
+                'id' => 'service-fee',
+                'price' => (int) $fee_service,
+                'quantity' => 1,
+                'name' => 'Service Fee',
+            ];
+
             $emailTesting = ['lvlysunday@gmail.com', 'kezia1@gmail.com', 'ifailamir@gmail.com'];
             if (in_array($user->email, $emailTesting)) {
                 $total_payment = 1000.00;
