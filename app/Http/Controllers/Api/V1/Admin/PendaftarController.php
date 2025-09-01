@@ -105,7 +105,27 @@ class PendaftarController extends Controller
         return response()->json($resp);
     }
 
-    public function myticket() {}
+    public function myticket()
+    {
+        // Get authenticated API user
+        $authUser = Auth::guard('api')->user();
+        if (!$authUser) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        // return participants who status payment success
+        $participants = Transaksi::where('status_payment', 'success')->get();
+        $participants->transform(function ($p) {
+            $p->participants_decoded = json_decode($p->participants, true);
+            return $p;
+        });
+
+        $resp = new stdClass();
+        $resp->message = 'success';
+        $resp->status = 200;
+        $resp->data = $participants;
+        return response()->json($resp);
+    }
 
     /**
      * @OA\Get(
