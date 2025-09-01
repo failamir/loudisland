@@ -105,6 +105,8 @@ class PendaftarController extends Controller
         return response()->json($resp);
     }
 
+    public function myticket() {}
+
     /**
      * @OA\Get(
      *   path="/api/v1/list_checkin",
@@ -838,7 +840,7 @@ class PendaftarController extends Controller
 
             $emailTesting = ['lvlysunday@gmail.com', 'kezia1@gmail.com', 'ifailamir@gmail.com'];
             if (in_array($user->email, $emailTesting)) {
-                $total_payment = '1000';
+                $total_payment = 1000.00;
             }
 
             $payload = [
@@ -865,6 +867,8 @@ class PendaftarController extends Controller
             $resp->service_fee = $fee_service;
             $resp->total_amount = $total_amount;
             $resp->total_payment = $total_payment;
+            $resp->total_ticket = count($data['participants']) . ' Tiket';
+
             return response()->json($resp);
         } else {
             return response()->json(['data' => $validator->errors()->all()]);
