@@ -854,9 +854,8 @@ class PendaftarController extends Controller
             }
 
             // tambah 1.7 % di amount
-            $total_amount = $amount + ($amount * 0.017);
+            $total_payment = $amount + ($amount * 0.017);
             $fee_service = $amount * 0.017;
-            $total_payment = $amount + $fee_service;
 
             $emailTesting = ['lvlysunday@gmail.com', 'kezia1@gmail.com', 'ifailamir@gmail.com'];
             if (in_array($user->email, $emailTesting)) {
@@ -885,7 +884,7 @@ class PendaftarController extends Controller
             $resp->invoice = $no_invoice;
             $resp->participants = $data['participants'];
             $resp->service_fee = $fee_service;
-            $resp->total_amount = $total_amount;
+            $resp->total_amount = $amount;
             $resp->total_payment = $total_payment;
             $resp->total_ticket = count($data['participants']) . ' Tiket';
 
