@@ -409,7 +409,7 @@ class PendaftarController extends Controller
             'nama' => 'required|string',
             'no_hp' => 'required|string',
             'email' => 'required|email',
-            'address' => 'required|string',
+            // 'address' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
         ]);
