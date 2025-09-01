@@ -850,14 +850,15 @@ class PendaftarController extends Controller
 
             // tambah 1.7 % di amount
             $total_amount = $amount + ($amount * 0.017);
-
+            $fee_service = $amount * 0.017;
+            $total_payment = $amount + $fee_service;
             $resp = new stdClass();
             $resp->data = $paymentUrl;
             $resp->invoice = $no_invoice;
             $resp->participants = $data['participants'];
-            $resp->service_fee = $amount * 0.017;
-            $resp->amount = $amount;
+            $resp->service_fee = $fee_service;
             $resp->total_amount = $total_amount;
+            $resp->total_payment = $total_payment;
             return response()->json($resp);
         } else {
             return response()->json(['data' => $validator->errors()->all()]);
