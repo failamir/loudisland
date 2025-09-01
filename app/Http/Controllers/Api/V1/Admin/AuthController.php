@@ -155,8 +155,8 @@ class AuthController extends Controller
             'message' => 'Registered successfully',
             'token' => $token,
             'access_token' => $token,
-            'firebaseUid' => $firebaseUid,
-            'firebaseIdToken' => $firebaseIdToken,
+            // 'firebaseUid' => $firebaseUid,
+            // 'firebaseIdToken' => $firebaseIdToken,
             'token_type' => 'bearer',
             'expires_in' => auth('api')->factory()->getTTL() * 60,
             'data' => $userPayload,
@@ -193,8 +193,8 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Login successful',
-            'firebaseUid' => $firebaseUid,
-            'firebaseIdToken' => $firebaseIdToken,
+            // 'firebaseUid' => $firebaseUid,
+            // 'firebaseIdToken' => $firebaseIdToken,
             'uid' => $user->uid,
             'token' => $token,
             'access_token' => $token,
@@ -238,10 +238,10 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => 'Current user fetched successfully',
-            'firebaseUid' => $firebaseUid,
-            'firebaseIdToken' => $firebaseIdToken,
-            'firebaseUser' => $firebaseUser,
-            'firebaseError' => $firebaseError,
+            // 'firebaseUid' => $firebaseUid,
+            // 'firebaseIdToken' => $firebaseIdToken,
+            // 'firebaseUser' => $firebaseUser,
+            // 'firebaseError' => $firebaseError,
             'data' => $userPayload,
         ]);
     }
