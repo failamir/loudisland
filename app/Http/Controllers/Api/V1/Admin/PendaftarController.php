@@ -429,7 +429,7 @@ class PendaftarController extends Controller
             'no_hp' => $request->input('no_hp'),
             'province' => $request->input('province'),
             'city' => $request->input('city'),
-            'address' => $request->input('address'),
+            // 'address' => $request->input('address'),
             'event_id' => $event->id,
             'total_bayar' => $event->harga,
             'status_payment' => 'pending',
