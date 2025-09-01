@@ -716,7 +716,7 @@ class PendaftarController extends Controller
             'ticketId' => 'required',
             'province' => 'nullable',
             'city' => 'nullable',
-            'address' => 'required',
+            // 'address' => 'required',
             'phone' => 'required',
             'nik' => 'required',
             'email' => 'required',
