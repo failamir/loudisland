@@ -421,7 +421,7 @@ class PendaftarController extends Controller
             'nama' => 'required|string',
             'no_hp' => 'required|string',
             'email' => 'required|email',
-            'address' => 'required|string',
+            // 'address' => 'required|string',
             'province' => 'required|string',
             'city' => 'required|string',
         ]);
@@ -796,7 +796,7 @@ class PendaftarController extends Controller
             $buyerNik = $user->nik ?? $first['nik'];
             $buyerProvince = $first['province'];
             $buyerCity = $first['city'];
-            $buyerAddress = $first['address'];
+            // $buyerAddress = $first['address'];
 
             // Create transaction with multiple tickets stored as JSON array and participants payload
             $transaksi = Transaksi::create([
@@ -809,7 +809,7 @@ class PendaftarController extends Controller
                 'uid'           => $user->uid,
                 'province'      => $buyerProvince,
                 'city'          => $buyerCity,
-                'address'       => $buyerAddress,
+                // 'address'       => $buyerAddress,
                 'no_hp'         => $buyerPhone,
                 'nik'           => $buyerNik,
                 'email'         => $buyerEmail,
