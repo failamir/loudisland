@@ -16,7 +16,8 @@ const DropdownUser = ({
     storeSettings
   } = useSettings();
   const {
-    logout
+    logout,
+    currentUser
   } = useAuthContext();
   const {
     isRTL
@@ -26,17 +27,22 @@ const DropdownUser = ({
     storeSettings({
       themeMode: newThemeMode
     });
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    console.log(user);
   };
   const buildHeader = () => {
+    const name = currentUser?.name ?? 'User';
+    const email = currentUser?.email ?? '';
     return <div className="flex items-center justify-between px-5 py-1.5 gap-1.5">
         <div className="flex items-center gap-2">
           <img className="size-9 rounded-full border-2 border-success" src={toAbsoluteUrl('/media/avatars/300-2.png')} alt="" />
           <div className="flex flex-col gap-1.5">
             <Link to="/account/hoteme/get-stard" className="text-sm text-gray-800 hover:text-primary font-semibold leading-none">
-              Cody Fisher
+              {name}
             </Link>
-            <a href="mailto:c.fisher@gmail.com" className="text-xs text-gray-600 hover:text-primary font-medium leading-none">
-              c.fisher@gmail.com
+            <a href={email ? `mailto:${email}` : undefined} className="text-xs text-gray-600 hover:text-primary font-medium leading-none">
+              {email || '—'}
             </a>
           </div>
         </div>
@@ -47,7 +53,7 @@ const DropdownUser = ({
     return <Fragment>
         <MenuSeparator />
         <div className="flex flex-col">
-          <MenuItem>
+          {/* <MenuItem>
             <MenuLink path="/public-profile/profiles/default">
               <MenuIcon className="menu-icon">
                 <KeenIcon icon="badge" />
@@ -56,7 +62,7 @@ const DropdownUser = ({
                 <FormattedMessage id="USER.MENU.PUBLIC_PROFILE" />
               </MenuTitle>
             </MenuLink>
-          </MenuItem>
+          </MenuItem> */}
           <MenuItem>
             <MenuLink path="/account/home/user-profile">
               <MenuIcon>
@@ -76,7 +82,7 @@ const DropdownUser = ({
             }
           }]
         }}>
-            <MenuLink>
+            {/* <MenuLink>
               <MenuIcon>
                 <KeenIcon icon="setting-2" />
               </MenuIcon>
@@ -86,8 +92,8 @@ const DropdownUser = ({
               <MenuArrow>
                 <KeenIcon icon="right" className="text-3xs rtl:transform rtl:rotate-180" />
               </MenuArrow>
-            </MenuLink>
-            <MenuSub className="menu-default light:border-gray-300 w-[200px]] md:w-[220px]">
+            </MenuLink> */}
+            {/* <MenuSub className="menu-default light:border-gray-300 w-[200px]] md:w-[220px]">
               <MenuItem>
                 <MenuLink path="/account/home/get-started">
                   <MenuIcon>
@@ -165,9 +171,9 @@ const DropdownUser = ({
                   </label>
                 </MenuLink>
               </MenuItem>
-            </MenuSub>
+            </MenuSub> */}
           </MenuItem>
-          <MenuItem>
+          {/* <MenuItem>
             <MenuLink path="https://devs.keenthemes.com">
               <MenuIcon>
                 <KeenIcon icon="message-programming" />
@@ -176,7 +182,7 @@ const DropdownUser = ({
                 <FormattedMessage id="USER.MENU.DEV_FORUM" />
               </MenuTitle>
             </MenuLink>
-          </MenuItem>
+          </MenuItem> */}
           <DropdownUserLanguages menuItemRef={menuItemRef} />
           <MenuSeparator />
         </div>

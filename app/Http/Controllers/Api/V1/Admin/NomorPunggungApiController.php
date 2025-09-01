@@ -44,19 +44,32 @@ class NomorPunggungApiController extends Controller
         $offset = ($page - 1) * $perPage;
         $data = array_slice($items, $offset, $perPage);
 
-        // enrich with pairing info (batched lookup)
+        // enrich with pairing info from transactions only (batched lookup)
         if (!empty($data)) {
-            $nomors = array_map(function ($row) {
-                return $row['nomor_punggung'];
-            }, $data);
-            $pairs = \App\Models\Pendaftar::whereIn('nomor_punggung', $nomors)
-                ->get(['id', 'nomor_punggung', 'paired_at'])
+            $nomors = array_map(fn($row) => $row['nomor_punggung'], $data);
+            $trxs = \App\Models\Transaksi::whereIn('nomor_punggung', $nomors)
+                ->get(['id', 'nomor_punggung', 'paired_at', 'peserta_id'])
                 ->keyBy('nomor_punggung');
+            $users = [];
             foreach ($data as &$row) {
-                $p = $pairs->get($row['nomor_punggung']);
-                $row['paired'] = (bool) $p;
-                $row['pendaftar_id'] = $p ? $p->id : null;
-                $row['paired_at'] = $p ? optional($p->paired_at)->toDateTimeString() : null;
+                /** @var \App\Models\Transaksi|null $t */
+                $t = $trxs->get($row['nomor_punggung']);
+                $row['paired'] = (bool) $t;
+                $row['pendaftar_id'] = null; // deprecated
+                $row['paired_at'] = $t ? optional($t->paired_at)->toDateTimeString() : null;
+                if ($t && $t->peserta_id) {
+                    if (!array_key_exists($t->peserta_id, $users)) {
+                        $users[$t->peserta_id] = \App\Models\User::find($t->peserta_id);
+                    }
+                    $u = $users[$t->peserta_id];
+                    $row['user_id'] = $t->peserta_id;
+                    $row['user_name'] = $u ? ($u->name ?? null) : null;
+                    $row['user_email'] = $u ? ($u->email ?? null) : null;
+                } else {
+                    $row['user_id'] = null;
+                    $row['user_name'] = null;
+                    $row['user_email'] = null;
+                }
             }
             unset($row);
         }
@@ -117,30 +130,65 @@ class NomorPunggungApiController extends Controller
         ]);
     }
 
-    // Pair nomor punggung with pendaftar (by nomor)
+    // Pair nomor punggung to a transaction (by nomor)
     public function pair(Request $request)
     {
         $request->validate([
             'nomor_punggung' => 'required|string',
-            'pendaftar_id' => 'required|integer',
+            'transaction_id' => 'nullable|integer|required_without:invoice',
+            'invoice' => 'nullable|string|required_without:transaction_id',
         ]);
 
         $nomor = $request->input('nomor_punggung');
-        $pendaftarId = $request->input('pendaftar_id');
-        // check if nomor punggung already pair
-        $existing = \App\Models\Pendaftar::where('nomor_punggung', $nomor)->first();
-        if ($existing) {
-            return response()->json(['success' => false, 'message' => 'Nomor punggung already paired.']);
+        $invoice = $request->input('invoice');
+        $transactionId = $request->filled('transaction_id') ? (int) $request->input('transaction_id') : null;
+        // check if nomor already paired in transactions
+        $existingTrxWithNomor = \App\Models\Transaksi::where('nomor_punggung', $nomor)->first();
+        if ($existingTrxWithNomor) {
+            return response()->json(['success' => false, 'message' => 'Nomor punggung already paired.'], 409);
         }
-        // Save pairing in database (assume Pendaftar model has 'nomor_punggung' field)
-        $pendaftar = \App\Models\Pendaftar::findOrFail($pendaftarId);
-        $pendaftar->nomor_punggung = $nomor;
-        $pendaftar->paired_at = now();
-        $pendaftar->save();
-        return response()->json(['success' => true, 'message' => 'Paired successfully.', 'paired_at' => $pendaftar->paired_at?->toDateTimeString()]);
+        // Find transaction and ensure it's successful
+        /** @var \App\Models\Transaksi $trx */
+        if ($invoice) {
+            $trx = \App\Models\Transaksi::where('invoice', $invoice)->firstOrFail();
+        } else {
+            $trx = \App\Models\Transaksi::findOrFail($transactionId);
+        }
+        // prevent same invoice being paired more than once
+        if (!empty($trx->nomor_punggung)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice sudah dipair dengan nomor: ' . $trx->nomor_punggung,
+            ], 409);
+        }
+        if (strtolower((string) $trx->status) !== 'success') {
+            return response()->json(['success' => false, 'message' => 'Transaksi belum success. Pairing tidak diizinkan.'], 422);
+        }
+        // Set nomor + paired_at on the transaction, ensure peserta_id is present
+        if (empty($trx->peserta_id) && $trx->email) {
+            $user = \App\Models\User::where('email', $trx->email)->first();
+            if ($user) {
+                $trx->peserta_id = $user->id;
+            }
+        }
+        $trx->nomor_punggung = $nomor;
+        $trx->paired_at = now();
+        $trx->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Paired successfully.',
+            'paired_at' => optional($trx->paired_at)->toDateTimeString(),
+            'pendaftar_id' => null,
+            'transaction' => [
+                'id' => $trx->id,
+                'paired_at' => optional($trx->paired_at)->toDateTimeString(),
+                'peserta_id' => $trx->peserta_id,
+            ],
+        ]);
     }
 
-    // Unpair nomor punggung from a pendaftar
+    // Unpair nomor punggung from transaction
     public function unpair(Request $request)
     {
         $request->validate([
@@ -148,13 +196,14 @@ class NomorPunggungApiController extends Controller
         ]);
 
         $nomor = $request->input('nomor_punggung');
-        $pendaftar = \App\Models\Pendaftar::where('nomor_punggung', $nomor)->first();
-        if (!$pendaftar) {
+        $trx = \App\Models\Transaksi::where('nomor_punggung', $nomor)->first();
+        if (!$trx) {
             return response()->json(['success' => false, 'message' => 'Pairing not found.']);
         }
-        $pendaftar->nomor_punggung = null;
-        $pendaftar->paired_at = null;
-        $pendaftar->save();
+        $trx->nomor_punggung = null;
+        $trx->paired_at = null;
+        $trx->save();
+
         return response()->json(['success' => true, 'message' => 'Unpaired successfully.']);
     }
 }

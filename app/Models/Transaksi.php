@@ -34,11 +34,13 @@ class Transaksi extends Model implements HasMedia
         'created_at',
         'updated_at',
         'deleted_at',
+        'paired_at',
     ];
 
     protected $fillable = [
         'events',
         'invoice',
+        'nomor_punggung',
         'event_id',
         'tiket_id',
         'peserta_id',
@@ -46,10 +48,21 @@ class Transaksi extends Model implements HasMedia
         'note',
         'snap_token',
         'status',
+        'paired_at',
         'created_at',
         'updated_at',
         'deleted_at',
         'created_by_id',
+        'nama',
+        'qr',
+        'province',
+        'city',
+        'address',
+        'no_hp',
+        'nik',
+        'email',
+        // 'uid',
+        'participants',
     ];
 
     public function registerMediaConversions(Media $media = null): void

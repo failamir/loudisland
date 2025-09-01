@@ -7,7 +7,7 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 use App\Http\Requests\StorePendaftarRequest;
 use App\Http\Requests\UpdatePendaftarRequest;
 use App\Http\Resources\Admin\PendaftarResource;
-use App\Models\Pendaftar;
+use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -58,7 +58,7 @@ class PendaftarApiController extends Controller
     {
         // abort_if(Gate::denies('pendaftar_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new PendaftarResource(Pendaftar::with(['event'])->paginate(10));
+        return new PendaftarResource(User::with(['event'])->paginate(10));
     }
 
     /**
@@ -81,7 +81,7 @@ class PendaftarApiController extends Controller
      */
     public function store(StorePendaftarRequest $request)
     {
-        $pendaftar = Pendaftar::create($request->all());
+        $pendaftar = User::create($request->all());
 
         return (new PendaftarResource($pendaftar))
             ->response()
@@ -105,7 +105,7 @@ class PendaftarApiController extends Controller
      *     @OA\Response(response=404, description="Not found")
      * )
      */
-    public function show(Pendaftar $pendaftar)
+    public function show(User $pendaftar)
     {
         // abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
@@ -137,7 +137,7 @@ class PendaftarApiController extends Controller
      *     @OA\Response(response=422, description="Validation error")
      * )
      */
-    public function update(UpdatePendaftarRequest $request, Pendaftar $pendaftar)
+    public function update(UpdatePendaftarRequest $request, User $pendaftar)
     {
         $pendaftar->update($request->all());
 
@@ -164,7 +164,7 @@ class PendaftarApiController extends Controller
      *     @OA\Response(response=404, description="Not found")
      * )
      */
-    public function destroy(Pendaftar $pendaftar)
+    public function destroy(User $pendaftar)
     {
         abort_if(Gate::denies('pendaftar_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 

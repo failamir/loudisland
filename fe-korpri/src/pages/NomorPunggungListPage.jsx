@@ -1,18 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import PairingForm from './PairingForm';
-import { Container } from '@/components/container';
-import { DataGrid, DataGridColumnHeader } from '@/components';
-import { KeenIcon } from '@/components';
+import { DataGrid, DataGridColumnHeader, DataGridRowSelect, DataGridRowSelectAll } from '@/components';
+import { Input } from '@/components/ui/input';
+import { Modal } from '@/components/modal/Modal';
+import { ModalContent } from '@/components/modal/ModalContent';
 let QrReader;
 try {
   QrReader = require('react-qr-reader').default;
 } catch {}
 
 const NomorPunggungListPage = () => {
-  const [data, setData] = useState([]);
   const [search, setSearch] = useState('');
-  const [filtered, setFiltered] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
   const [scannedNomor, setScannedNomor] = useState('');
@@ -23,12 +22,29 @@ const NomorPunggungListPage = () => {
   const [genSize, setGenSize] = useState(300);
   const [genLoading, setGenLoading] = useState(false);
   const [genMsg, setGenMsg] = useState('');
-  const baseUrl = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
-  // Pagination
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
-  const [total, setTotal] = useState(0);
-  const [lastPage, setLastPage] = useState(1);
+  const baseUrl = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+  const [headerTotal, setHeaderTotal] = useState(0);
+  const [gridKey, setGridKey] = useState(0);
+  const [qrModalOpen, setQrModalOpen] = useState(false);
+  const [qrModalData, setQrModalData] = useState({ nomor: '', url: '' });
+
+  const formatIDDate = (value) => {
+    if (!value) return '-';
+    try {
+      const s = new Date(value).toLocaleString('id-ID', {
+        timeZone: 'Asia/Jakarta',
+        day: '2-digit',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      });
+      return `${s} WIB`;
+    } catch {
+      return String(value);
+    }
+  };
   const handleGenerate = async () => {
     setGenMsg('');
     if (!Number.isInteger(+genStart) || !Number.isInteger(+genEnd) || +genStart < 1 || +genEnd < +genStart) {
@@ -42,259 +58,274 @@ const NomorPunggungListPage = () => {
       const created = res?.data?.created ?? 0;
       const skipped = res?.data?.skipped ?? 0;
       setGenMsg(`Selesai. Dibuat: ${created}, dilewati: ${skipped}.`);
-      await fetchList();
+      // refresh grid data
+      setGridKey((k) => k + 1);
     } catch (e) {
       setGenMsg(e?.response?.data?.message || 'Gagal generate.');
     } finally {
       setGenLoading(false);
     }
   };
-  const fetchList = async (opts = {}) => {
+  const fetchServerNomor = async ({ pageIndex, pageSize }) => {
     try {
       setLoading(true);
-      const currentPage = opts.page ?? page;
-      const currentPerPage = opts.per_page ?? perPage;
-      const qParam = Object.prototype.hasOwnProperty.call(opts, 'q') ? opts.q : (search.trim() || undefined);
-      const res = await axios.get(`${baseUrl}/nomor-punggung`, { params: { per_page: currentPerPage, page: currentPage, q: qParam } });
-      // API returns shape: { data: [...], pagination: {...} }
-      const items = Array.isArray(res.data) ? res.data : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
-      setData(items);
-      setFiltered(items);
-      const p = res?.data?.pagination;
-      if (p) {
-        setTotal(p.total ?? 0);
-        setLastPage(p.last_page ?? 1);
-      }
+      const res = await axios.get(`${baseUrl}/nomor-punggung`, {
+        params: {
+          page: pageIndex + 1,
+          per_page: pageSize,
+          q: search.trim() || undefined,
+        },
+      });
+      const items = Array.isArray(res.data)
+        ? res.data
+        : (res.data && Array.isArray(res.data.data) ? res.data.data : []);
+      const total = res?.data?.pagination?.total ?? items.length;
+      setHeaderTotal(total);
+      return { data: items, totalCount: total };
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchList();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    fetchList({ page, per_page: perPage });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, perPage]);
-
-  useEffect(() => {
-    // server-side search: reset to first page and fetch with q
-    setPage(1);
-    fetchList({ page: 1, per_page: perPage, q: search.trim() || undefined });
+    // trigger grid reload on initial mount and when search changes
+    setGridKey((k) => k + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
-  if (loading) return <div>Loading...</div>;
+  const ColumnInputFilter = ({ column }) => (
+    <Input
+      placeholder="Filter..."
+      value={column.getFilterValue() ?? ''}
+      onChange={(event) => column.setFilterValue(event.target.value)}
+      className="h-9 w-full max-w-40"
+    />
+  );
 
   const columns = useMemo(
     () => [
       {
-        accessorFn: (_row, i) => i,
-        id: 'no',
-        header: ({ column }) => <DataGridColumnHeader title="No" column={column} />,
+        accessorKey: 'id',
+        header: () => <DataGridRowSelectAll />,
+        cell: ({ row }) => <DataGridRowSelect row={row} />,
         enableSorting: false,
-        cell: ({ row }) => (page - 1) * perPage + row.index + 1,
-        meta: { headerClassName: 'w-[80px]' },
+        enableHiding: false,
+        meta: { headerClassName: 'w-0 text-center', cellClassName: 'text-center' },
       },
       {
         accessorKey: 'nomor_punggung',
         id: 'nomor_punggung',
-        header: ({ column }) => <DataGridColumnHeader title="Nomor Punggung" column={column} />,
-        enableSorting: false,
-        cell: ({ row }) => <span className="font-semibold text-gray-900">{row.original.nomor_punggung}</span>,
-        meta: { headerClassName: 'min-w-[160px]' },
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Nomor Punggung" column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => (
+          <span className="text-3xl font-bold tracking-wide">{row.original.nomor_punggung}</span>
+        ),
+        meta: { headerClassName: 'min-w-[160px] text-center', cellClassName: 'text-center' },
       },
       {
         accessorKey: 'qr_url',
-        id: 'qr',
-        header: ({ column }) => <DataGridColumnHeader title="QR" column={column} />,
+        id: 'qr_url',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="QR" column={column} />
+        ),
         enableSorting: false,
         cell: ({ row }) => (
-          <img
-            src={row.original.qr_url}
-            alt={row.original.nomor_punggung}
-            className="w-24 h-24 object-contain"
-          />
+          <div className="flex justify-center">
+            <img
+              src={row.original.qr_url}
+              alt={row.original.nomor_punggung}
+              className="w-16 h-16 object-contain cursor-pointer"
+              title="Klik untuk perbesar & pairing"
+              onClick={() => {
+                setQrModalData({ nomor: row.original.nomor_punggung, url: row.original.qr_url });
+                setQrModalOpen(true);
+              }}
+            />
+          </div>
         ),
-        meta: { headerClassName: 'min-w-[140px]' },
+        meta: { headerClassName: 'min-w-[140px] text-center', cellClassName: 'text-center' },
       },
       {
-        accessorKey: 'pairing',
-        id: 'pairing',
-        header: ({ column }) => <DataGridColumnHeader title="Pairing" column={column} />,
+        accessorKey: 'paired_at',
+        id: 'paired_at',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Paired At" column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => formatIDDate(row.original.paired_at),
+        meta: { headerClassName: 'min-w-[180px] text-center', cellClassName: 'text-center' },
+      },
+      {
+        accessorKey: 'user_name',
+        id: 'user',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="User" column={column} />
+        ),
         enableSorting: false,
         cell: ({ row }) => (
-          <PairingForm
-            nomorPunggung={row.original.nomor_punggung}
-            initialPaired={!!row.original.paired}
-            initialPendaftarId={row.original.pendaftar_id}
-            onSuccess={() => fetchList({ page, per_page: perPage, q: search.trim() || undefined })}
-            onUnpaired={() => fetchList({ page, per_page: perPage, q: search.trim() || undefined })}
-          />
+          <div className="flex flex-col gap-0.5">
+            <span className="text-sm font-medium text-gray-900">{row.original.user_name || '-'}</span>
+            <span className="text-2sm text-gray-700">{row.original.user_email || '-'}</span>
+          </div>
         ),
-        meta: { headerClassName: 'min-w-[220px]' },
+        meta: { headerClassName: 'min-w-[220px] text-center', cellClassName: 'text-center' },
+      },
+      {
+        accessorKey: 'user_id',
+        id: 'user_id',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="User ID" column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => row.original.user_id || '-',
+        meta: { headerClassName: 'min-w-[120px] text-center', cellClassName: 'text-center' },
+      },
+      {
+        id: 'pairing',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Pairing" column={column} />
+        ),
+        enableSorting: false,
+        cell: ({ row }) => (
+          <div className="flex justify-center">
+            <PairingForm
+              nomorPunggung={row.original.nomor_punggung}
+              initialPaired={!!row.original.paired}
+              initialPendaftarId={row.original.pendaftar_id}
+              onSuccess={() => setGridKey((k) => k + 1)}
+              onUnpaired={() => setGridKey((k) => k + 1)}
+            />
+          </div>
+        ),
+        meta: { headerClassName: 'min-w-[200px] text-center', cellClassName: 'text-center' },
       },
     ],
-    [page, perPage, search]
+    []
   );
 
-  const ToolbarContent = () => (
-    <div className="card-header flex-wrap gap-2 border-b-0 px-5 w-full">
-      <div className="flex items-center gap-2 flex-wrap">
-        <label className="input input-sm">
-          <KeenIcon icon="magnifier" />
-          <input
-            type="text"
+  const Toolbar = (
+    <div data-toolbar>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <div className="flex flex-col">
+          <h3 className="text-lg font-semibold">Daftar Nomor Lari & QR</h3>
+          <span className="text-sm text-muted-foreground">Scan QR untuk Pairing</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <Input
             placeholder="Cari nomor..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') fetchList({ page: 1, per_page: perPage, q: e.currentTarget.value.trim() || undefined });
-            }}
+            className="h-9 w-full max-w-64"
           />
-        </label>
-        <button
-          className="btn btn-sm btn-primary"
-          onClick={() => fetchList({ page: 1, per_page: perPage, q: search.trim() || undefined })}
-          disabled={loading}
-        >
-          <KeenIcon icon="magnifier" />
-          Cari
-        </button>
-        {search && (
+          <label className="text-sm text-muted-foreground">
+            Start
+            <input type="number" value={genStart} onChange={e => setGenStart(e.target.value)} min={1} className="ml-2 px-3 py-2 w-28 border rounded" />
+          </label>
+          <label className="text-sm text-muted-foreground">
+            End
+            <input type="number" value={genEnd} onChange={e => setGenEnd(e.target.value)} min={1} className="ml-2 px-3 py-2 w-28 border rounded" />
+          </label>
+          <label className="text-sm text-muted-foreground">
+            Size
+            <input type="number" value={genSize} onChange={e => setGenSize(e.target.value)} min={64} max={1024} className="ml-2 px-3 py-2 w-24 border rounded" />
+          </label>
           <button
-            className="btn btn-sm btn-light"
-            onClick={() => {
-              setSearch('');
-              fetchList({ page: 1, per_page: perPage, q: undefined });
-            }}
-            disabled={loading}
+            onClick={handleGenerate}
+            disabled={genLoading}
+            className="btn btn-info px-3 py-2"
+            type="button"
           >
-            Clear
+            {genLoading ? 'Generating...' : 'Generate QR'}
           </button>
+        </div>
+      </div>
+      {genMsg && <div className="mt-2 text-xs text-muted-foreground">{genMsg}</div>}
+      {/* Optional: QR Scanner trigger inside card header */}
+      <div className="mt-3">
+        <button onClick={() => setShowScanner(s => !s)} className="text-sm underline" type="button">
+          {showScanner ? 'Tutup QR Scanner' : 'Scan QR untuk Pairing'}
+        </button>
+        {showScanner && QrReader && (
+          <div className="mt-3">
+            <QrReader
+              delay={300}
+              onError={console.error}
+              onScan={data => {
+                if (data) {
+                  setScannedNomor(data);
+                  setShowScanner(false);
+                }
+              }}
+              style={{ width: 240 }}
+            />
+          </div>
+        )}
+        {scannedNomor && (
+          <div className="mt-2 rounded bg-muted/40 p-3">
+            <b>Nomor hasil scan:</b> {scannedNomor}
+            <div className="mt-2">
+              <PairingForm nomorPunggung={scannedNomor} onSuccess={() => {setPairSuccess(true); setTimeout(()=>{setPairSuccess(false); setScannedNomor('');}, 2000);}} />
+            </div>
+            {pairSuccess && <div className="text-green-600 text-sm mt-1">Pairing berhasil!</div>}
+          </div>
         )}
       </div>
     </div>
   );
 
   return (
-    <Container>
-      <div className="flex items-center justify-between flex-wrap gap-2 py-4">
-        <h2 className="text-xl font-semibold">Daftar Nomor Punggung & QR</h2>
-        <button className="btn btn-sm btn-info" onClick={() => setShowScanner((s) => !s)}>
-          {showScanner ? 'Tutup QR Scanner' : 'Scan QR untuk Pairing'}
-        </button>
-      </div>
-
-      {showScanner && QrReader && (
-        <div className="mb-4">
-          <QrReader
-            delay={300}
-            onError={console.error}
-            onScan={(data) => {
-              if (data) {
-                setScannedNomor(data);
-                setShowScanner(false);
-              }
-            }}
-            style={{ width: 240 }}
-          />
-        </div>
-      )}
-
-      {scannedNomor && (
-        <div className="mb-4 bg-gray-50 p-3 rounded-lg">
-          <b>Nomor hasil scan:</b> {scannedNomor}
-          <PairingForm
-            nomorPunggung={scannedNomor}
-            onSuccess={() => {
-              setPairSuccess(true);
-              setTimeout(() => {
-                setPairSuccess(false);
-                setScannedNomor('');
-              }, 2000);
-            }}
-          />
-          {pairSuccess && <div className="text-success">Pairing berhasil!</div>}
-        </div>
-      )}
-
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <label className="text-sm">Start:</label>
-        <input
-          type="number"
-          value={genStart}
-          onChange={(e) => setGenStart(e.target.value)}
-          min={1}
-          className="input input-sm w-[110px]"
-        />
-        <label className="text-sm">End:</label>
-        <input
-          type="number"
-          value={genEnd}
-          onChange={(e) => setGenEnd(e.target.value)}
-          min={1}
-          className="input input-sm w-[110px]"
-        />
-        <label className="text-sm">Size:</label>
-        <input
-          type="number"
-          value={genSize}
-          onChange={(e) => setGenSize(e.target.value)}
-          min={64}
-          max={1024}
-          className="input input-sm w-[110px]"
-        />
-        <button onClick={handleGenerate} disabled={genLoading} className="btn btn-sm btn-info">
-          {genLoading ? 'Generating...' : 'Generate QR'}
-        </button>
-        {genMsg && <span className="text-2sm ms-2">{genMsg}</span>}
-      </div>
-
+    <div className="p-6">
       <DataGrid
+        key={gridKey}
         columns={columns}
-        data={filtered}
-        pagination={{ size: 10 }}
+        rowSelection={true}
+        serverSide={true}
+        pagination={{
+          size: 10,
+          sizes: [10, 50, 100, 200],
+          info: 'Menampilkan {from}-{to} dari {count}',
+          moreLimit: 5,
+        }}
+        onFetchData={async ({ pageIndex, pageSize }) => fetchServerNomor({ pageIndex, pageSize })}
         layout={{ card: true }}
-        toolbar={<ToolbarContent />}
+        toolbar={Toolbar}
       />
 
-      <div className="flex items-center gap-3 mt-4 flex-wrap">
-        <button className="btn btn-sm btn-light" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
-          Prev
-        </button>
-        <span>
-          Page {page} / {lastPage}
-        </span>
-        <button
-          className="btn btn-sm btn-light"
-          onClick={() => setPage((p) => Math.min(lastPage, p + 1))}
-          disabled={page >= lastPage}
-        >
-          Next
-        </button>
-        <span>Total: {total}</span>
-        <label className="flex items-center gap-2">
-          <span>Per page:</span>
-          <select
-            className="select select-sm"
-            value={perPage}
-            onChange={(e) => {
-              setPage(1);
-              setPerPage(parseInt(e.target.value, 10));
-            }}
-          >
-            <option value={10}>10</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
-            <option value={200}>200</option>
-          </select>
-        </label>
-      </div>
-    </Container>
+      {/* QR Modal */}
+      <Modal open={qrModalOpen} onClose={() => setQrModalOpen(false)}>
+        <ModalContent className="max-w-md mx-auto mt-20">
+          <div className="p-5">
+            <div className="flex items-start justify-between mb-4">
+              <div>
+                <h3 className="text-lg font-semibold">QR Nomor {qrModalData.nomor}</h3>
+                <p className="text-sm text-muted-foreground">Perbesar QR & lakukan pairing di sini</p>
+              </div>
+              <button className="text-sm" onClick={() => setQrModalOpen(false)} type="button">Tutup</button>
+            </div>
+            <div className="flex justify-center mb-4">
+              {/* larger preview */}
+              {qrModalData.url && (
+                <img src={qrModalData.url} alt={qrModalData.nomor} className="w-64 h-64 object-contain" />
+              )}
+            </div>
+            {/* Pairing input inside modal */}
+            {qrModalData.nomor && (
+              <div className="flex justify-center">
+                <PairingForm
+                  nomorPunggung={qrModalData.nomor}
+                  onSuccess={() => {
+                    setGridKey(k => k + 1);
+                    setQrModalOpen(false);
+                  }}
+                />
+              </div>
+            )}
+          </div>
+        </ModalContent>
+      </Modal>
+    </div>
   );
 };
 

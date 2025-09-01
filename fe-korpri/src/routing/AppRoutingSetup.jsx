@@ -17,6 +17,7 @@ import TransactionsListPage from '@/pages/transactions/TransactionsListPage';
 import TransactionDetailPage from '@/pages/transactions/TransactionDetailPage';
 import NomorPunggungListPage from '@/pages/NomorPunggungListPage';
 import NomorPunggungPairPage from '@/pages/nomor-punggung/NomorPunggungPairPage';
+import WithdrawalPage from '@/pages/withdrawal/WithdrawalPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -27,6 +28,7 @@ const AppRoutingSetup = () => {
           <Route path="/dark-sidebar" element={<Demo1DarkSidebarPage />} />
           <Route path="/order" element={<OrderWizardModal />} />
           <Route path="/order/success" element={<OrderSuccessPage />} />
+          <Route path="/withdrawal" element={<WithdrawalPage />} />
           <Route path="/public-profile/profiles/default" element={<ProfileDefaultPage />} />
           <Route path="/public-profile/profiles/creator" element={<ProfileCreatorPage />} />
           <Route path="/public-profile/profiles/company" element={<ProfileCompanyPage />} />

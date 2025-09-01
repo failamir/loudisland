@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\V1\Admin\BannerApiController;
 use App\Http\Controllers\Api\V1\Admin\TransaksiApiController;
 use App\Http\Controllers\Api\V1\Admin\TiketApiController;
 use App\Http\Controllers\Api\V1\Admin\PendaftarController;
+use App\Http\Controllers\Api\V1\Admin\OrderController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -23,9 +24,19 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('register', [AuthController::class, 'register'])->name('auth.register');
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::post('get-token', [AuthController::class, 'getToken'])->name('auth.getToken');
+    Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
+        // Users API for FE admin
         Route::get('users', [UserApiController::class, 'index']);
+        Route::get('users/{user}', [UserApiController::class, 'show']);
+        Route::post('users', [UserApiController::class, 'store']);
+        Route::put('users/{user}', [UserApiController::class, 'update']);
+        Route::delete('users/{user}', [UserApiController::class, 'destroy']);
+        Route::get('roles', [UserApiController::class, 'roles']);
+
+        // Orders (create ticket + transaction via Midtrans)
+        Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
 
         // Nomor Punggung QR API
         Route::get('nomor-punggung', [NomorPunggungApiController::class, 'index']);
@@ -64,7 +75,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('register-ticket', [PendaftarController::class, 'registerTicket'])->name('register-ticket');
 
     Route::post('scan', [PendaftarController::class, 'scan'])->name('scan');
-    Route::post('checkin', [PendaftarController::class, 'checkin'])->name('checkin');
+    Route::post('checkin1', [PendaftarController::class, 'checkin1'])->name('checkin1');
     Route::post('checkin2', [PendaftarController::class, 'checkin2'])->name('checkin2');
     Route::post('checkout', [PendaftarController::class, 'checkout'])->name('checkout');
     Route::post('pendaftars/media', [PendaftarController::class, 'storeMedia'])->name('pendaftars.storeMedia');
@@ -91,7 +102,10 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     // Transaksi
     Route::post('transactions/media', [TransaksiApiController::class, 'storeMedia'])->name('transactions.storeMedia');
-    Route::apiResource('transactions', TransaksiApiController::class);
+    // Extra show endpoint to fetch by query (?id= or ?invoice=) for modal usage
+    Route::get('transactions/show', [TransaksiApiController::class, 'show'])->name('transactions.showByQuery');
+    Route::apiResource('transactions', TransaksiApiController::class)
+        ->parameters(['transactions' => 'transaksi']);
 
     // Sponsor
     Route::post('sponsors/media', [SponsorApiController::class, 'storeMedia'])->name('sponsors.storeMedia');
@@ -134,6 +148,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         return response()->json(['total_income' => $sum]);
     });
 
+    // TODO: email to ifailamir@kardusinfo.com and kardusinfo@failamir.com
+    // TODO: add withdrawal history in database
     Route::post('withdrawals', function (\Illuminate\Http\Request $request) {
         $request->validate([
             'amount' => 'required|integer|min:1',

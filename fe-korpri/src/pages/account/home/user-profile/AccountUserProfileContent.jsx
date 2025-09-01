@@ -6,23 +6,23 @@ const AccountUserProfileContent = () => {
         <div className="grid gap-5 lg:gap-7.5">
           <PersonalInfo />
 
-          <BasicSettings title="Basic Settings" />
 
-          <Work />
+          {/* <Work /> */}
 
-          <CommunityBadges />
+          {/* <CommunityBadges /> */}
         </div>
       </div>
 
       <div className="col-span-1">
         <div className="grid gap-5 lg:gap-7.5">
-          <StartNow />
+          <BasicSettings title="Basic Settings" />
+          {/* <StartNow /> */}
 
-          <CalendarAccounts />
+          {/* <CalendarAccounts /> */}
 
-          <Connections url="#" />
+          {/* <Connections url="#" /> */}
 
-          <RecentUploads title="My Files" />
+          {/* <RecentUploads title="My Files" /> */}
         </div>
       </div>
     </div>;

@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Auth;
 
 Route::view('/', 'giner/index');
 Route::view('welcome', 'wizard');
+// API documentation (Swagger UI)
+Route::view('/docs', 'swagger')->name('swagger.docs');
 Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
 // Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');

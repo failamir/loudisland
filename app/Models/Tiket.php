@@ -34,7 +34,7 @@ class Tiket extends Model implements HasMedia
         'Refund'  => 'Refund',
     ];
 
-    public $table = 'tickets';
+    public $table = 'tikets';
 
     protected $appends = [
         'qr',
@@ -61,9 +61,6 @@ class Tiket extends Model implements HasMedia
     ];
 
     protected $hidden = [
-        'payment_type',
-        'status_payment',
-        'total_bayar',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -75,9 +72,9 @@ class Tiket extends Model implements HasMedia
         $this->addMediaConversion('preview')->fit('crop', 120, 120);
     }
 
-    public function tikettransactions()
+    public function transaksi()
     {
-        return $this->hasMany(Transaksi::class, 'tiket_id', 'id');
+        return $this->hasOne(Transaksi::class, 'tiket_id', 'id');
     }
 
     public function peserta()

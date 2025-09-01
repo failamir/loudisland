@@ -60,6 +60,9 @@ const DataGridPagination = () => {
     }
     return null;
   };
+  // Ensure sizes is always an array to avoid runtime errors
+  const sizeOptions = Array.isArray(props.pagination?.sizes) ? props.pagination.sizes : [5, 10, 25, 50, 100];
+
   return <div className="flex flex-col md:flex-row justify-between items-center gap-5 md:gap-4" data-pagination>
       <div className="flex items-center space-x-2 order-2 md:order-1 pb-2 md:pb-0">
         <div className="text-sm text-muted-foreground">Rows per page</div>
@@ -70,7 +73,7 @@ const DataGridPagination = () => {
             <SelectValue placeholder={table.getState().pagination.pageSize} />
           </SelectTrigger>
           <SelectContent side="top">
-            {props.pagination?.sizes?.map(pageSize => <SelectItem key={pageSize} value={`${pageSize}`}>
+            {sizeOptions.map(pageSize => <SelectItem key={pageSize} value={`${pageSize}`}>
                 {pageSize}
               </SelectItem>)}
           </SelectContent>

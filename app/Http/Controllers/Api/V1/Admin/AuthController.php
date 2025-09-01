@@ -4,18 +4,19 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Models\RefreshToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
-use Illuminate\Support\Carbon;
+use GuzzleHttp\Client;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
 
 class AuthController extends Controller
 {
     public function __construct()
     {
-        // $this->middleware('auth:sanctum')->except(['login', 'register']);
+        // Routes protection is handled in routes using auth:api (jwt guard)
     }
 
     public function register(Request $request)
@@ -32,14 +33,74 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
             'password' => 'required|string|min:6',
-            'uid' => 'required|string|max:255',
+            // 'uid' => 'required|string|max:255',
             'nik' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:50',
             'device_name' => 'sometimes|string|max:100',
+            // client does not need to send id_token; server will create Firebase user
+            'id_token' => 'sometimes|string',
         ])->validate();
 
         // Normalize email for consistency
         $email = strtolower($data['email']);
+
+        // Create Firebase user (email/password) via Identity Toolkit signUp to obtain UID
+        $firebaseUid = null;
+        $firebaseIdToken = null; // can be used for DB sync
+        try {
+            $apiKey = env('FIREBASE_WEB_API_KEY');
+            if (!$apiKey) {
+                return response()->json([
+                    'message' => 'Server misconfiguration: FIREBASE_WEB_API_KEY is not set',
+                    'data' => null,
+                ], 500);
+            }
+
+            $client = new Client(['timeout' => 8]);
+            $signUpUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=' . urlencode($apiKey);
+            $resp = $client->request('POST', $signUpUrl, [
+                'headers' => [
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => json_encode([
+                    'email' => $email,
+                    'password' => $data['password'],
+                    'returnSecureToken' => true,
+                ]),
+            ]);
+
+            $body = json_decode((string) $resp->getBody(), true);
+            if (!isset($body['localId'])) {
+                return response()->json([
+                    'message' => 'Failed to create Firebase user',
+                    'data' => null,
+                ], 502);
+            }
+            $firebaseUid = $body['localId'];
+            $firebaseIdToken = $body['idToken'] ?? null;
+        } catch (\GuzzleHttp\Exception\ClientException $e) {
+            // Parse Firebase error
+            $responseBody = (string) $e->getResponse()->getBody();
+            $err = json_decode($responseBody, true);
+            $code = $err['error']['message'] ?? '';
+            if ($code === 'EMAIL_EXISTS') {
+                return response()->json([
+                    'message' => 'Email already registered on Firebase',
+                    'data' => null,
+                ], 400);
+            }
+            Log::warning('Firebase signUp failed: ' . $responseBody);
+            return response()->json([
+                'message' => 'Firebase sign up failed',
+                'data' => null,
+            ], 502);
+        } catch (\Throwable $e) {
+            Log::warning('Firebase signUp exception: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Unable to create Firebase user',
+                'data' => null,
+            ], 502);
+        }
 
         $user = User::create([
             'name' => $data['name'],
@@ -47,18 +108,55 @@ class AuthController extends Controller
             'password' => Hash::make($data['password']),
             'nik' => $data['nik'] ?? null,
             'no_hp' => $data['no_hp'] ?? null,
-            'uid' => $data['uid'],
-            'device_name' => $data['device_name'] ?? 'api-token',
+            'uid' => $firebaseUid,
         ]);
 
-        $token = $user->createToken($data['device_name'] ?? 'api-token')->plainTextToken;
+        // Try to sync to Firebase Realtime Database via REST API
+        try {
+            $dbUrl = rtrim(env('FIREBASE_DATABASE_URL', ''), '/');
+            if ($dbUrl) {
+                // Use freshly issued Firebase ID token if present, fallback to database secret if configured
+                $authToken = $firebaseIdToken ?? env('FIREBASE_DATABASE_SECRET');
+                $endpoint = $dbUrl . '/users/' . rawurlencode($firebaseUid) . '.json';
+                if ($authToken) {
+                    $endpoint .= '?auth=' . urlencode($authToken);
+                }
 
-        // Return only necessary fields
-        $userPayload = $user->only(['id', 'name', 'email']);
+                $payload = [
+                    'uid' => $firebaseUid,
+                    'name' => $data['name'],
+                    'displayName' => $data['name'],
+                    'email' => $email,
+                    'nik' => $data['nik'] ?? null,
+                    'no_hp' => $data['no_hp'] ?? null,
+                    'createdAt' => now()->toISOString(),
+                ];
+
+                $client = new Client(['timeout' => 5]);
+                $client->request('PUT', $endpoint, [
+                    'headers' => [
+                        'Content-Type' => 'application/json',
+                    ],
+                    'body' => json_encode($payload),
+                ]);
+            } else {
+                Log::warning('FIREBASE_DATABASE_URL not set. Skipping Firebase sync for user UID ' . $firebaseUid);
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Firebase REST sync failed for user UID ' . $firebaseUid . ': ' . $e->getMessage());
+        }
+
+        // Issue JWT token
+        $token = JWTAuth::fromUser($user);
+
+        $userPayload = $user->only(['id', 'name', 'email', 'uid']);
 
         return response()->json([
             'message' => 'Registered successfully',
             'token' => $token,
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth('api')->factory()->getTTL() * 60,
             'data' => $userPayload,
         ], 201);
     }
@@ -68,144 +166,79 @@ class AuthController extends Controller
         $data = Validator::make($request->all(), [
             'email' => 'required|email',
             'password' => 'required|string',
-            // 'device_name' => 'sometimes|string|max:100',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
-        $email = strtolower($data['email']);
+        $credentials = ['email' => strtolower($data['email']), 'password' => $data['password']];
 
-        // Select only columns we need
-        $user = User::query()
-            ->select(['id', 'name', 'email', 'nik', 'password', 'no_hp','uid'])
-            ->where('email', $email)
-            ->first();
-
-        if (!$user || !Hash::check($data['password'], $user->password)) {
-            return response()->json([
-                'message' => 'Invalid credentials',
-                'data' => null,
-            ], 401);
+        try {
+            if (!$token = auth('api')->attempt($credentials)) {
+                return response()->json([
+                    'message' => 'Invalid credentials',
+                    'data' => null,
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Could not create token'], 500);
         }
 
-        // Optionally revoke existing tokens (default true for backward compatibility)
-        // Fix: Added missing comment slashes
-        // $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
-        // if ($revoke) {
-        //     $user->tokens()->delete();
-        // }
-
-        $revoke = array_key_exists('revoke_others', $data) ? (bool)$data['revoke_others'] : true;
-        if ($revoke) {
-            $user->tokens()->delete();
-        }
-
-        $deviceName = $data['device_name'] ?? 'api-token';
-        $accessToken = $user->createToken($deviceName)->plainTextToken;
-
-        // Issue refresh token (opaque), store only its hash
-        $refreshPlain = Str::random(64);
-        $refreshHash = hash('sha256', $refreshPlain);
-        $refreshTtlDays = 30; // adjust as needed
-        $expiresAt = Carbon::now()->addDays($refreshTtlDays);
-
-        RefreshToken::create([
-            'user_id' => $user->id,
-            'token' => $refreshHash,
-            'device_name' => $deviceName,
-            'revoked' => false,
-            'expires_at' => $expiresAt,
-        ]);
-
+        $user = auth('api')->user();
         $userPayload = collect($user)->except(['password'])->all();
 
-        $accessTtlMinutes = config('sanctum.expiration'); // minutes or null
         return response()->json([
             'message' => 'Login successful',
             'uid' => $user->uid,
-            'token' => $accessToken,
-            'access_token' => $accessToken,
-            'access_token_expires_in' => $accessTtlMinutes ? $accessTtlMinutes * 60 : null,
-            'refresh_token' => $refreshPlain,
-            'refresh_token_expires_at' => $expiresAt->toIso8601String(),
-            'user' => $userPayload,
+            'token' => $token,
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'access_token_expires_in' => auth('api')->factory()->getTTL() * 60,
+            'data' => $userPayload,
         ]);
     }
 
     public function me(Request $request)
     {
-        return response()->json($request->user());
+        return response()->json(auth('api')->user());
+    }
+
+    public function getToken(Request $request)
+    {
+        $uid = $request->uid;
+        $user = User::where('uid', $uid)->first();
+        if (!$user) {
+            return response()->json([
+                'message' => 'User not found',
+                'data' => null,
+            ], 404);
+        }
+        $token = JWTAuth::fromUser($user);
+        return response()->json([
+            'token' => $token,
+        ]);
     }
 
     public function logout(Request $request)
     {
-        $user = $request->user();
-        if ($user && $request->user()->currentAccessToken()) {
-            $request->user()->currentAccessToken()->delete();
+        try {
+            JWTAuth::invalidate(JWTAuth::getToken());
+        } catch (JWTException $e) {
+            // token might already be invalid/expired
         }
-
         return response()->json(['message' => 'Logged out']);
     }
 
     public function refresh(Request $request)
     {
-        $data = Validator::make($request->all(), [
-            'refresh_token' => 'required|string',
-            'device_name' => 'sometimes|string|max:100',
-        ])->validate();
-
-        $hash = hash('sha256', $data['refresh_token']);
-
-        $record = RefreshToken::query()
-            ->where('token', $hash)
-            ->where('revoked', false)
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', Carbon::now());
-            })
-            ->first();
-
-        if (!$record) {
-            return response()->json([
-                'message' => 'Invalid or expired refresh token',
-            ], 401);
+        try {
+            $newToken = auth('api')->refresh();
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Token invalid or expired'], 401);
         }
 
-        $user = User::find($record->user_id);
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found',
-            ], 401);
-        }
-
-        // Rotate refresh token: revoke old, issue new
-        $record->revoked = true;
-        $record->save();
-
-        $deviceName = $data['device_name'] ?? ($record->device_name ?: 'api-token');
-
-        // Optionally revoke other access tokens for the user on this device
-        // $user->tokens()->where('name', $deviceName)->delete();
-
-        $accessToken = $user->createToken($deviceName)->plainTextToken;
-
-        $newRefreshPlain = Str::random(64);
-        $newRefreshHash = hash('sha256', $newRefreshPlain);
-        $refreshTtlDays = 30;
-        $expiresAt = Carbon::now()->addDays($refreshTtlDays);
-
-        RefreshToken::create([
-            'user_id' => $user->id,
-            'token' => $newRefreshHash,
-            'device_name' => $deviceName,
-            'revoked' => false,
-            'expires_at' => $expiresAt,
-        ]);
-
-        $accessTtlMinutes = config('sanctum.expiration');
         return response()->json([
-            'access_token' => $accessToken,
-            'access_token_expires_in' => $accessTtlMinutes ? $accessTtlMinutes * 60 : null,
-            'refresh_token' => $newRefreshPlain,
-            'refresh_token_expires_at' => $expiresAt->toIso8601String(),
+            'access_token' => $newToken,
+            'token_type' => 'bearer',
+            'access_token_expires_in' => auth('api')->factory()->getTTL() * 60,
         ]);
     }
 }

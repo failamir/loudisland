@@ -14,8 +14,9 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class User extends Authenticatable
+class User extends Authenticatable implements JWTSubject
 {
     use SoftDeletes;
     use Notifiable;
@@ -49,6 +50,20 @@ class User extends Authenticatable
         'uid',
         'nik',
         'no_hp',
+        // registration fields migrated from pendaftars
+        'no_tiket',
+        'city',
+        'region',
+        'village',
+        'checkin',
+        'notes',
+        'nomor_punggung',
+        'status_payment',
+        'payment_type',
+        'total_bayar',
+        'event_id',
+        'start_at',
+        'finish_at',
     ];
 
     public function __construct(array $attributes = [])
@@ -74,7 +89,7 @@ class User extends Authenticatable
 
     public function transaksi()
     {
-        return $this->hasMany(Transaksi::class, 'user_id', 'id');
+        return $this->hasMany(Transaksi::class, 'peserta_id', 'id');
     }
 
     public function userUserAlerts()
@@ -109,8 +124,24 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class);
     }
 
+    public function event()
+    {
+        return $this->belongsTo(Event::class, 'event_id');
+    }
+
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');
+    }
+
+    // JWTSubject implementation
+    public function getJWTIdentifier()
+    {
+        return $this->getKey();
+    }
+
+    public function getJWTCustomClaims()
+    {
+        return [];
     }
 }

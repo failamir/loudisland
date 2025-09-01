@@ -25,7 +25,7 @@ const HeaderTopbar = () => {
     setSearchModalOpen(false);
   };
   return <div className="flex items-center gap-2 lg:gap-3.5">
-      <button onClick={handleOpen} className="btn btn-icon btn-icon-lg size-9 rounded-full hover:bg-primary-light hover:text-primary text-gray-500">
+      {/* <button onClick={handleOpen} className="btn btn-icon btn-icon-lg size-9 rounded-full hover:bg-primary-light hover:text-primary text-gray-500">
         <KeenIcon icon="magnifier" />
       </button>
       <ModalSearch open={searchModalOpen} onOpenChange={handleClose} />
@@ -85,7 +85,7 @@ const HeaderTopbar = () => {
           menuTtemRef: itemNotificationsRef
         })}
         </MenuItem>
-      </Menu>
+      </Menu> */}
 
       <Menu>
         <MenuItem ref={itemUserRef} toggle="dropdown" trigger="click" dropdownProps={{
