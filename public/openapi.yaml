@@ -8,7 +8,7 @@ info:
     - Gunakan JWT Bearer untuk endpoint yang terlindungi (`Authorization: Bearer <token>`)
     - Login via `POST /api/v1/login`
 servers:
-  - url: http://korpri.ifailamir.my.id/api/v1
+  - url: http://mandalikakorprirun.com/api/v1
     description: Production
 components:
   securitySchemes:

@@ -8,7 +8,7 @@ const PairingForm = ({ nomorPunggung, onSuccess, onUnpaired, initialPaired = fal
   const [error, setError] = useState('');
   const [paired, setPaired] = useState(!!initialPaired);
   const inputRef = useRef();
-  const baseUrl = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
+  const baseUrl = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
 
   // keep local state in sync when the selected nomor changes or props update
   useEffect(() => {
@@ -65,7 +65,7 @@ const PairingForm = ({ nomorPunggung, onSuccess, onUnpaired, initialPaired = fal
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{marginTop: 8}}>
+    <form onSubmit={handleSubmit} style={{ marginTop: 8 }}>
       {!paired && (
         <>
           <input
@@ -75,7 +75,7 @@ const PairingForm = ({ nomorPunggung, onSuccess, onUnpaired, initialPaired = fal
             value={trxOrInvoice}
             onChange={e => setTrxOrInvoice(e.target.value)}
             required
-            style={{padding: 6, width: 120, marginRight: 8}}
+            style={{ padding: 6, width: 120, marginRight: 8 }}
           />
           <button type="submit" disabled={loading} className="btn btn-primary px-3 py-2">
             {loading ? 'Pairing...' : 'Pair'}
@@ -87,7 +87,7 @@ const PairingForm = ({ nomorPunggung, onSuccess, onUnpaired, initialPaired = fal
           {loading ? 'Unpairing...' : 'Unpair'}
         </button>
       )}
-      {error && <div style={{color: 'red', fontSize: 12}}>{error}</div>}
+      {error && <div style={{ color: 'red', fontSize: 12 }}>{error}</div>}
     </form>
   );
 };

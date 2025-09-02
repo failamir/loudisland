@@ -14,7 +14,7 @@ const TicketListPage = () => {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState({ id: 'nama', desc: false });
 
-  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
 
   useEffect(() => {
     setLoading(true);

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_APP_API_URL || 'https://korpri.ifailamir.my.id/api/v1';
+const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
 
 export default function NomorPunggungPairPage() {
   const [nomorPunggung, setNomorPunggung] = useState('');

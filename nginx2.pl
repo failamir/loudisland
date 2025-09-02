@@ -5,11 +5,11 @@ server {
   listen 443 ssl http2;
   listen [::]:443 ssl http2;
 
-  server_name korpri.ifailamir.my.id;
+  server_name mandalikakorprirun.com;
 
   # SSL (isi cert/key Anda)
-  ssl_certificate     /etc/letsencrypt/live/korpri.ifailamir.my.id/fullchain.pem;
-  ssl_certificate_key /etc/letsencrypt/live/korpri.ifailamir.my.id/privkey.pem;
+  ssl_certificate     /etc/letsencrypt/live/mandalikakorprirun.com/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/mandalikakorprirun.com/privkey.pem;
 
   # Root tetap mengarah ke public agar static assets (css/js/png…) bisa dilayani langsung jika perlu
   root /var/www/loudisland/public;
@@ -68,7 +68,7 @@ server {
 server {
   listen 8080;
   listen [::]:8080;
-  server_name korpri.ifailamir.my.id;
+  server_name mandalikakorprirun.com;
 
   root /var/www/loudisland/public;
   index index.php index.html;

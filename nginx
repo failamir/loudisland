@@ -1,7 +1,7 @@
 server {
 listen 8080;
 listen [::]:8080;
-server_name korpri.ifailamir.my.id;
+server_name mandalikakorprirun.com;
 
 root /var/www/loudisland/public; # PENTING: direktori public Laravel
 index index.php index.html;
