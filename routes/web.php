@@ -3,7 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 
-Route::view('/', 'giner/index');
+Route::view('/', 'giner/new');
 Route::view('welcome', 'wizard');
 // API documentation (Swagger UI)
 Route::view('/docs', 'swagger')->name('swagger.docs');
