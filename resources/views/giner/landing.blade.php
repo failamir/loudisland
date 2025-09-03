@@ -68,6 +68,46 @@
             margin: 0 !important;
             padding: 0 !important;
         }
+
+        /* Ensure the register button sits directly below the counter */
+        .clock-timer .register-below {
+            display: block !important;
+            width: 100% !important;
+            clear: both !important;
+            text-align: center !important;
+            margin-top: 20px !important;
+        }
+
+        /* Absolutely center the button under the timer */
+        .register-below-fixed {
+            position: absolute !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            bottom: 170px !important;
+            /* timer is at bottom:240px; this sits below it */
+            z-index: 10 !important;
+        }
+
+        /* Top-left corner logo */
+        .corner-logo {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 50;
+            display: inline-block;
+        }
+
+        .corner-logo img {
+            width: 140px;
+            height: auto;
+            display: block;
+        }
+
+        @media (max-width: 767.98px) {
+            .corner-logo img {
+                width: 110px;
+            }
+        }
     </style>
 </head>
 
@@ -90,21 +130,12 @@
             <span></span>
             <span></span>
         </a>
-
-        <div class="top-panel">
-            <div class="container">
-                <a href="{{ url('/') }}" class="logo"><img src="{{ asset('giner-assets/img/logo-white.svg') }}" alt="logo"></a>
-                <ul class="social-list">
-                    <li><a target="_blank" href="https://www.facebook.com/rovadex"><i class="fab fa-facebook-f"></i></a>
-                    </li>
-                    <li><a target="_blank" href="https://twitter.com/RovadexStudio"><i class="fab fa-twitter"></i></a>
-                    </li>
-                    <li><a target="_blank" href="https://www.instagram.com/rovadex"><i class="fab fa-instagram"></i></a>
-                    </li>
-                    <li><a target="_blank" href="https://www.youtube.com"><i class="fab fa-youtube"></i></a></li>
-                </ul>
-            </div>
+        -->
+    <div class="top-panel">
+        <div class="container">
+            <a href="{{ url('/') }}" class="logo"><img src="{{ asset('giner-assets/img/logo.png') }}" alt="logo"></a>
         </div>
+        <!-- 
         <div class="header-nav">
             <div class="container">
                 <div class="header-nav-cover">
@@ -139,37 +170,43 @@
             </div>
         </div>
     </header> -->
-    <!-- =============== HEADER END =============== -->
+        <!-- =============== HEADER END =============== -->
 
-    <!-- ============= MARATHON-SLIDER ============= -->
-    <section class="s-marathon-slider"
-        style="padding-top: 0 !important; margin-top: -180px !important; top: 0 !important;">
-        <div class="marathon-slider">
-            <div class="marathon-slide marathon-slide-1">
-                <div data-hover-only="true" data-pointer-events="true" data-scalar-y="0" class="scene">
-                    <div class="scene-item" data-depth="0.2">
-                        <span class="marathon-effect"
-                            style="background-image: url('{{ asset('giner-assets/img/effect-slider-marathon.svg') }}');"></span>
-                    </div>
-                    <div class="scene-item" data-depth="0.2">
-                        <img class="marathon-img" src="{{ asset('giner-assets/img/cewe.png') }}" alt="img">
-                    </div>
-                    <div class="scene-item" data-depth="0.5">
-                        <div class="slider-location">Mandalika <br>Fun Run <span class="date">6 Desember 2025</span>
+        <!-- ============= MARATHON-SLIDER ============= -->
+        <section class="s-marathon-slider"
+            style="padding-top: 0 !important; margin-top: -290px !important; top: 0 !important;">
+            <!-- Top-left Logo -->
+            <a href="{{ url('/') }}" class="corner-logo" aria-label="Mandalika KORPRI Fun Night Run">
+                <img src="{{ asset('giner-assets/img/logo-white.svg') }}" alt="Mandalika KORPRI Fun Night Run">
+            </a>
+            <div class="marathon-slider">
+                <div class="marathon-slide marathon-slide-1">
+                    <div data-hover-only="true" data-pointer-events="true" data-scalar-y="0" class="scene">
+                        <div class="scene-item" data-depth="0.2">
+                            <span class="marathon-effect"
+                                style="background-image: url('{{ asset('giner-assets/img/effect-slider-marathon.svg') }}');"></span>
                         </div>
-                    </div>
-                    <div class="scene-item" data-depth="0.35">
-                        <div class="marathon-text-left">
-                            THE<br>
-                            NIGHT
+                        <div class="scene-item" data-depth="0.2">
+                            <center>
+                                <img class="marathon-img" style="width: 80%;" src="{{ asset('giner-assets/img/fg.png') }}" alt="img">
+                            </center>
                         </div>
-                    </div>
-                    <div class="scene-item" data-depth="0.35">
-                        <div class="marathon-text-right" style="font-size: 100px;">OF MANDALIKA</div>
+                        <div class="scene-item" data-depth="0.5">
+                            <!-- <div class="slider-location">Mandalika <br>Fun Run <span class="date">6 Desember 2025</span>
+                            </div> -->
+                        </div>
+                        <div class="scene-item" data-depth="0.35">
+                            <div class="marathon-text-left">
+                                <!-- THE<br>
+                                NIGHT -->
+                            </div>
+                        </div>
+                        <div class="scene-item" data-depth="0.35">
+                            <!-- <div class="marathon-text-right" style="font-size: 100px;">OF MANDALIKA</div> -->
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="marathon-slide marathon-slide-2">
+                <!-- <div class="marathon-slide marathon-slide-2">
                 <div data-hover-only="true" data-pointer-events="true" data-scalar-y="0" class="scene">
                     <div class="scene-item" data-depth="0.2">
                         <span class="marathon-effect"
@@ -184,7 +221,7 @@
                     </div>
                     <div class="scene-item" data-depth="0.35">
                         <div class="marathon-text-left">
-                            <!-- live<br>your -->
+                            live<br>your
                             THE<br>NIGHT
                         </div>
                     </div>
@@ -192,8 +229,8 @@
                         <div class="marathon-text-right" style="font-size: 100px;">OF MANDALIKA</div>
                     </div>
                 </div>
-            </div>
-            <div class="marathon-slide marathon-slide-3">
+            </div> -->
+                <!-- <div class="marathon-slide marathon-slide-3">
                 <div data-hover-only="true" data-pointer-events="true" data-scalar-y="0" class="scene">
                     <div class="scene-item" data-depth="0.2">
                         <span class="marathon-effect"
@@ -208,7 +245,7 @@
                     </div>
                     <div class="scene-item" data-depth="0.35">
                         <div class="marathon-text-left">
-                            <!-- Feel<br>your -->
+                            Feel<br>your
                             THE<br>NIGHT
                         </div>
                     </div>
@@ -216,50 +253,45 @@
                         <div class="marathon-text-right" style="font-size: 100px;">OF MANDALIKA</div>
                     </div>
                 </div>
+            </div> -->
             </div>
-        </div>
-        <img class="marathon-slider-shape" src="{{ asset('giner-assets/img/slider-home1-shape.svg') }}"
-            alt="shape">
-        <div id="clockdiv" class="clock-timer clock-timer-marathon">
-            <div class="days-item">
-                <img src="{{ asset('giner-assets/img/counter-1.svg') }}" alt="img">
-                <span class="days"></span>
-                <div class="smalltext">Days</div>
+            <img class="marathon-slider-shape" src="{{ asset('giner-assets/img/slider-home1-shape.svg') }}"
+                alt="shape">
+            <div id="clockdiv" class="clock-timer clock-timer-marathon">
+                <div class="days-item">
+                    <img src="{{ asset('giner-assets/img/counter-1.svg') }}" alt="img">
+                    <span class="days"></span>
+                    <div class="smalltext">Days</div>
+                </div>
+                <div class="hours-item">
+                    <img src="{{ asset('giner-assets/img/counter-2.svg') }}" alt="img">
+                    <span class="hours"></span>
+                    <div class="smalltext">Hours</div>
+                </div>
+                <div class="minutes-item">
+                    <img src="{{ asset('giner-assets/img/counter-3.svg') }}" alt="img">
+                    <span class="minutes"></span>
+                    <div class="smalltext">Minutes</div>
+                </div>
+                <div class="seconds-item">
+                    <img src="{{ asset('giner-assets/img/counter-4.svg') }}" alt="img">
+                    <span class="seconds"></span>
+                    <div class="smalltext">Seconds</div>
+                </div>
             </div>
-            <div class="hours-item">
-                <img src="{{ asset('giner-assets/img/counter-2.svg') }}" alt="img">
-                <span class="hours"></span>
-                <div class="smalltext">Hours</div>
-            </div>
-            <div class="minutes-item">
-                <img src="{{ asset('giner-assets/img/counter-3.svg') }}" alt="img">
-                <span class="minutes"></span>
-                <div class="smalltext">Minutes</div>
-            </div>
-            <div class="seconds-item">
-                <img src="{{ asset('giner-assets/img/counter-4.svg') }}" alt="img">
-                <span class="seconds"></span>
-                <div class="smalltext">Seconds</div>
-            </div>
-
-            <br>
-
-            <!-- Registration Button Below Timer -->
-            <div class="text-center" style="margin-top: 30px;">
+            <!-- Registration Button Below Timer (absolute, centered under timer) -->
+            <div class="text-center register-below-fixed">
                 @guest
                 <a href="{{ route('register') }}" class="btn btn-white" style="font-size: 18px; padding: 15px 40px;">
                     <span>Daftar Sekarang</span>
                 </a>
                 @endguest
             </div>
-        </div>
+        </section>
+        <!-- =========== MARATHON-SLIDER END =========== -->
 
-
-    </section>
-    <!-- =========== MARATHON-SLIDER END =========== -->
-
-    <!-- ============== S-OUR-MISSION ============== -->
-    <!-- <section id="about" class="s-our-mission">
+        <!-- ============== S-OUR-MISSION ============== -->
+        <!-- <section id="about" class="s-our-mission">
         <div class="container">
             <img class="mission-effect" src="{{ asset('giner-assets/img/our-mission-5.svg') }}" alt="img">
             <h2 class="title">Our mission</h2>
@@ -296,10 +328,10 @@
             </div>
         </div>
     </section> -->
-    <!-- ============ S-OUR-MISSION END ============ -->
+        <!-- ============ S-OUR-MISSION END ============ -->
 
-    <!-- ================ S-CHOOSE-US ================ -->
-    <!-- <section class="s-choose-us" style="background-image: url('{{ asset('assets/img/bg-1.svg') }}');">
+        <!-- ================ S-CHOOSE-US ================ -->
+        <!-- <section class="s-choose-us" style="background-image: url('{{ asset('assets/img/bg-1.svg') }}');">
         <div class="container">
             <h2 class="title"><span>Reasons to run with us!</span></h2>
             <div class="row">
@@ -330,10 +362,10 @@
             </div>
         </div>
     </section> -->
-    <!-- ============== S-CHOOSE-US END ============== -->
+        <!-- ============== S-CHOOSE-US END ============== -->
 
-    <!-- ============== S-EVENT-SCHEDULE ============== -->
-    <!-- <section id="schedule" class="s-event-schedule">
+        <!-- ============== S-EVENT-SCHEDULE ============== -->
+        <!-- <section id="schedule" class="s-event-schedule">
         <div class="container">
             <h2 class="title"><span>Event schedule</span></h2>
             <img class="schedule-effect-white" src="{{ asset('giner-assets/img/tringle-white.svg') }}" alt="img">
@@ -408,10 +440,10 @@
             </div>
         </div>
     </section> -->
-    <!-- ============ S-EVENT-SCHEDULE END ============ -->
+        <!-- ============ S-EVENT-SCHEDULE END ============ -->
 
-    <!-- =============== MAP-WITH-ROUTE =============== -->
-    <!-- <section id="location" class="map-with-route">
+        <!-- =============== MAP-WITH-ROUTE =============== -->
+        <!-- <section id="location" class="map-with-route">
         <div class="container">
             <h2 class="title"><span>Map with route</span></h2>
             <div class="row">
@@ -443,10 +475,10 @@
             </div>
         </div>
     </section> -->
-    <!-- ============= MAP-WITH-ROUTE END ============= -->
+        <!-- ============= MAP-WITH-ROUTE END ============= -->
 
-    <!-- ============= MAP-WITH-ROUTE END ============= -->
-    <!-- <section id="register" class="s-marathon-register">
+        <!-- ============= MAP-WITH-ROUTE END ============= -->
+        <!-- <section id="register" class="s-marathon-register">
         <img src="{{ asset('giner-assets/img/tringle-gray-little.svg') }}" alt="img" class="register-img-effect-2">
         <div class="container">
             <div class="marathon-register-row">
@@ -498,10 +530,10 @@
             </div>
         </div>
     </section> -->
-    <!-- ============= MAP-WITH-ROUTE END ============= -->
+        <!-- ============= MAP-WITH-ROUTE END ============= -->
 
-    <!--=================== S-CLIENTS ===================-->
-    <!-- <section class="s-clients">
+        <!--=================== S-CLIENTS ===================-->
+        <!-- <section class="s-clients">
         <div class="container">
             <h2 class="title"><span>Sponsors</span></h2>
             <div class="clients-cover">
@@ -533,10 +565,10 @@
             </div>
         </div>
     </section> -->
-    <!--================= S-CLIENTS END =================-->
+        <!--================= S-CLIENTS END =================-->
 
-    <!--================ S-MARATHON-NEWS ================-->
-    <!-- <section id="news" class="s-marathon-news">
+        <!--================ S-MARATHON-NEWS ================-->
+        <!-- <section id="news" class="s-marathon-news">
         <div class="container">
             <h2 class="title"><span>Our news</span></h2>
             <div class="marathon-news-slider">
@@ -633,10 +665,10 @@
             </div>
         </div>
     </section> -->
-    <!--============== S-MARATHON-NEWS END ==============-->
+        <!--============== S-MARATHON-NEWS END ==============-->
 
-    <!--================== S-INSTAGRAM ==================-->
-    <!-- <section class="s-instagram">
+        <!--================== S-INSTAGRAM ==================-->
+        <!-- <section class="s-instagram">
         <div class="instagram-cover">
             <a href="#" class="instagram-item">
                 <ul>
@@ -720,10 +752,10 @@
             </a>
         </div>
     </section> -->
-    <!--================ S-INSTAGRAM END ================-->
+        <!--================ S-INSTAGRAM END ================-->
 
-    <!--==================== FOOTER ====================-->
-    <!-- <footer>
+        <!--==================== FOOTER ====================-->
+        <!-- <footer>
         <div class="container">
             <div class="row">
                 <div class="footer-cont col-12 col-sm-6 col-lg-4">
@@ -738,7 +770,7 @@
                             <a href="mailto:rovadex@gmail.com">rovadex@gmail.com</a>
                         </li>
                     </ul>
-                    <div class="footer-copyright"><a target="_blank" href="https://rovadex.com">Rovadex</a> © 2019.
+                    <div class="footer-copyright"><a target="_blank" href="https://rovadex.com">Rovadex</a> 2019.
                         All
                         Rights Reserved.</div>
                 </div>
@@ -776,21 +808,21 @@
             </div>
         </div>
     </footer> -->
-    <!--================== FOOTER END ==================-->
+        <!--================== FOOTER END ==================-->
 
-    <!--=================== TO TOP ===================-->
-    <!-- <a class="to-top" href="#home">
+        <!--=================== TO TOP ===================-->
+        <!-- <a class="to-top" href="#home">
         <i class="fa fa-angle-double-up" aria-hidden="true"></i>
     </a> -->
-    <!--================= TO TOP END =================-->
+        <!--================= TO TOP END =================-->
 
-    <!--=================== SCRIPT	===================-->
-    <script src="{{ asset('giner-assets/js/jquery-2.2.4.min.js') }}"></script>
-    <script src="{{ asset('giner-assets/js/slick.min.js') }}"></script>
-    <script src="{{ asset('giner-assets/js/rx-lazy.js') }}"></script>
-    <script src="{{ asset('giner-assets/js/jquery.nice-select.js') }}"></script>
-    <script src="{{ asset('giner-assets/js/parallax.min.js') }}"></script>
-    <script src="{{ asset('giner-assets/js/scripts.js') }}"></script>
+        <!--=================== SCRIPT	===================-->
+        <script src="{{ asset('giner-assets/js/jquery-2.2.4.min.js') }}"></script>
+        <script src="{{ asset('giner-assets/js/slick.min.js') }}"></script>
+        <script src="{{ asset('giner-assets/js/rx-lazy.js') }}"></script>
+        <script src="{{ asset('giner-assets/js/jquery.nice-select.js') }}"></script>
+        <script src="{{ asset('giner-assets/js/parallax.min.js') }}"></script>
+        <script src="{{ asset('giner-assets/js/scripts.js') }}"></script>
 </body>
 
 </html>
