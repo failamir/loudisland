@@ -113,15 +113,15 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // Prefer direct lookup by peserta_id = user id
-        $items = Transaksi::where('peserta_id', $authUser->id)
+        // Prefer direct lookup by peserta_id = user id, only successful transactions
+        $trx = Transaksi::where('peserta_id', $authUser->id)
             ->where('status', 'success')
             ->orderByDesc('created_at')
             ->get();
 
         // Fallbacks if nothing found: try by uid or email (if such data was stored)
-        if ($items->isEmpty()) {
-            $items = Transaksi::query()
+        if ($trx->isEmpty()) {
+            $trx = Transaksi::query()
                 ->when(!empty($authUser->uid), fn($q) => $q->orWhere('uid', $authUser->uid))
                 ->when(!empty($authUser->email), fn($q) => $q->orWhere('email', $authUser->email))
                 ->where('status', 'success')
@@ -129,32 +129,78 @@ class PendaftarController extends Controller
                 ->get();
         }
 
-        // Attach decoded participants and events for easier consumption on FE
-        $items->transform(function ($t) {
-            // participants: stored as JSON text
-            $t->participants_decoded = null;
+        // Build flattened tickets list from successful transactions
+        $tickets = [];
+        foreach ($trx as $t) {
+            // decode participants
+            $participants = [];
             if (!empty($t->participants)) {
                 $decoded = json_decode($t->participants, true);
-                if (json_last_error() === JSON_ERROR_NONE) {
-                    $t->participants_decoded = $decoded;
+                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                    $participants = $decoded;
                 }
             }
-
-            // events: JSON array of ticket IDs (legacy may contain serialized or plain text)
+            // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
-                // fallback legacy handling
                 $maybe = @unserialize($t->events);
                 $eventsDecoded = $maybe !== false ? $maybe : $t->events;
             }
-            $t->events_decoded = $eventsDecoded;
-            return $t;
-        });
+            $eventIds = collect(is_array($eventsDecoded) ? $eventsDecoded : [$eventsDecoded])->filter()->unique()->values();
+            $events = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event', 'harga', 'tanggal']) : collect();
+            $eventMap = $events->keyBy('id');
+
+            // expand one ticket per participant
+            foreach ($participants as $p) {
+                $eid = isset($p['ticketId']) ? (int) $p['ticketId'] : null;
+                $ev = $eid ? ($eventMap[$eid] ?? null) : null;
+                $tickets[] = [
+                    'invoice'       => $t->invoice,
+                    'transaction_id' => $t->id,
+                    'status'        => $t->status,
+                    'created_at'    => $t->created_at,
+                    'participant'   => [
+                        'name'   => $p['name']   ?? null,
+                        'email'  => $p['email']  ?? null,
+                        'phone'  => $p['phone']  ?? null,
+                        'nik'    => $p['nik']    ?? null,
+                        'province' => $p['province'] ?? null,
+                        'city'   => $p['city']   ?? null,
+                    ],
+                    'event'         => $ev ? [
+                        'id'         => $ev->id,
+                        'nama_event' => $ev->nama_event,
+                        'harga'      => (int) $ev->harga,
+                        'tanggal'    => $ev->tanggal ?? null,
+                    ] : null,
+                ];
+            }
+
+            // if no participants payload, still surface a generic ticket per event id
+            if (empty($participants)) {
+                foreach ($eventIds as $eid) {
+                    $ev = $eventMap[$eid] ?? null;
+                    $tickets[] = [
+                        'invoice'       => $t->invoice,
+                        'transaction_id' => $t->id,
+                        'status'        => $t->status,
+                        'created_at'    => $t->created_at,
+                        'participant'   => null,
+                        'event'         => $ev ? [
+                            'id'         => $ev->id,
+                            'nama_event' => $ev->nama_event,
+                            'harga'      => (int) $ev->harga,
+                            'tanggal'    => $ev->tanggal ?? null,
+                        ] : null,
+                    ];
+                }
+            }
+        }
 
         $resp = new stdClass();
         $resp->message = 'success';
         $resp->status = 200;
-        $resp->data = $items;
+        $resp->data = $tickets;
         return response()->json($resp);
     }
 
