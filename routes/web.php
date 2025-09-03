@@ -9,7 +9,6 @@ Route::view('welcome', 'wizard');
 Route::view('/docs', 'swagger')->name('swagger.docs');
 Route::get('generate', 'PendaftarController@generate')->name('generate');
 Route::post('beli', 'PendaftarController@beli')->name('beli');
-// Route::post('notification', 'PendaftarController@notificationHandler')->name('notificationHandler');
 
 Route::view('finish', 'finish');
 Route::view('unfinish', 'unfinish');
@@ -19,6 +18,14 @@ Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
 // Payment finish callback page (Midtrans)
 Route::get('payment/success/{invoice}', 'PendaftarController@paymentSuccess')->name('payment.success');
 Auth::routes();
+
+//redirect /login dan /register ke https://daftar.mandalikakorprirun.com
+Route::get('/login', function () {
+    return redirect('https://daftar.mandalikakorprirun.com');
+});
+Route::get('/register', function () {
+    return redirect('https://daftar.mandalikakorprirun.com');
+});
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth', 'admin']], function () {
     Route::get('/', 'HomeController@index')->name('home');
