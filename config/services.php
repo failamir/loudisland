@@ -39,7 +39,13 @@ return [
         // Isi false jika masih tahap development dan true jika sudah di production, default false (development)
         'isProduction'  => env('MIDTRANS_IS_PRODUCTION', false),
         'isSanitized'   => env('MIDTRANS_IS_SANITIZED', true),
-        'is3ds'         => env('MIDTRANS_IS_3DS', true),                
-    ]
+        'is3ds'         => env('MIDTRANS_IS_3DS', true),
+    ],
 
+    // WAHA (WhatsApp HTTP API)
+    'waha' => [
+        'base_url' => env('WAHA_BASE_URL', 'https://waha-1tssjsoucdmi.cinta.sumopod.my.id'),
+        'session'  => env('WAHA_SESSION', 'FailAmir'),
+        'api_key'  => env('WAHA_API_KEY', 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg'),
+    ],
 ];
