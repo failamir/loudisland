@@ -94,6 +94,25 @@ class PendaftarController extends Controller
                 $maybe = @unserialize($t->events);
                 $eventsDecoded = $maybe !== false ? $maybe : $t->events;
             }
+
+            // Build map of event id => nama_event for quick lookup
+            $eventIds = collect(is_array($eventsDecoded) ? $eventsDecoded : [$eventsDecoded])
+                ->filter()
+                ->unique()
+                ->values();
+            $eventMap = $eventIds->isNotEmpty()
+                ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event'])->keyBy('id')
+                : collect();
+
+            // Enrich participants with event_name based on their ticketId
+            if (is_array($t->participants_decoded)) {
+                $t->participants_decoded = array_map(function ($p) use ($eventMap) {
+                    $eid = isset($p['ticketId']) ? (int) $p['ticketId'] : null;
+                    $p['event_name'] = ($eid && isset($eventMap[$eid])) ? $eventMap[$eid]['nama_event'] : null;
+                    return $p;
+                }, $t->participants_decoded);
+            }
+
             $t->events_decoded = $eventsDecoded;
             return $t;
         });
