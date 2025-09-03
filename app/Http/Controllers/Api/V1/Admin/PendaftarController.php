@@ -113,17 +113,48 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        // return participants who status payment success
-        $participants = Transaksi::where('status_payment', 'success')->get();
-        $participants->transform(function ($p) {
-            $p->participants_decoded = json_decode($p->participants, true);
-            return $p;
+        // Prefer direct lookup by peserta_id = user id
+        $items = Transaksi::where('peserta_id', $authUser->id)
+            ->where('status', 'success')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Fallbacks if nothing found: try by uid or email (if such data was stored)
+        if ($items->isEmpty()) {
+            $items = Transaksi::query()
+                ->when(!empty($authUser->uid), fn($q) => $q->orWhere('uid', $authUser->uid))
+                ->when(!empty($authUser->email), fn($q) => $q->orWhere('email', $authUser->email))
+                ->where('status', 'success')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        // Attach decoded participants and events for easier consumption on FE
+        $items->transform(function ($t) {
+            // participants: stored as JSON text
+            $t->participants_decoded = null;
+            if (!empty($t->participants)) {
+                $decoded = json_decode($t->participants, true);
+                if (json_last_error() === JSON_ERROR_NONE) {
+                    $t->participants_decoded = $decoded;
+                }
+            }
+
+            // events: JSON array of ticket IDs (legacy may contain serialized or plain text)
+            $eventsDecoded = json_decode($t->events, true);
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // fallback legacy handling
+                $maybe = @unserialize($t->events);
+                $eventsDecoded = $maybe !== false ? $maybe : $t->events;
+            }
+            $t->events_decoded = $eventsDecoded;
+            return $t;
         });
 
         $resp = new stdClass();
         $resp->message = 'success';
         $resp->status = 200;
-        $resp->data = $participants;
+        $resp->data = $items;
         return response()->json($resp);
     }
 
