@@ -51,6 +51,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // Pairings listing (protected)
         Route::get('pairings', [PendaftarController::class, 'listPairing'])->name('pairings');
 
+        //partisipan tukar id partisipan restpack
+        Route::post('restpack', [PendaftarController::class, 'restpack'])->name('restpack');
+
         // QR Codes API for FE consumption (protected)
         Route::get('qrcodes', [QrCodeApiController::class, 'index'])->name('qrcodes.index');
         Route::get('qrcodes/download-all', [QrCodeApiController::class, 'downloadAll'])->name('qrcodes.downloadAll');
