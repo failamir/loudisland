@@ -147,7 +147,7 @@ class PendaftarController extends Controller
                 $eventsDecoded = $maybe !== false ? $maybe : $t->events;
             }
             $eventIds = collect(is_array($eventsDecoded) ? $eventsDecoded : [$eventsDecoded])->filter()->unique()->values();
-            $events = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event', 'harga', 'tanggal']) : collect();
+            $events = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event', 'harga', 'tanggal_mulai']) : collect();
             $eventMap = $events->keyBy('id');
 
             // expand one ticket per participant
@@ -171,7 +171,7 @@ class PendaftarController extends Controller
                         'id'         => $ev->id,
                         'nama_event' => $ev->nama_event,
                         'harga'      => (int) $ev->harga,
-                        'tanggal'    => $ev->tanggal ?? null,
+                        'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
                     ] : null,
                 ];
             }
@@ -190,7 +190,7 @@ class PendaftarController extends Controller
                             'id'         => $ev->id,
                             'nama_event' => $ev->nama_event,
                             'harga'      => (int) $ev->harga,
-                            'tanggal'    => $ev->tanggal ?? null,
+                            'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
                         ] : null,
                     ];
                 }
@@ -643,7 +643,7 @@ class PendaftarController extends Controller
             'event' => $p->event ? [
                 'id' => $p->event->id,
                 'nama_event' => $p->event->nama_event,
-                'tanggal' => $p->event->tanggal ?? null,
+                'tanggal_mulai' => $p->event->tanggal_mulai ?? null,
             ] : null,
         ]);
     }
