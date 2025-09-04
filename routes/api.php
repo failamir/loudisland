@@ -208,9 +208,16 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'caption' => $caption,
             'session' => $session,
         ]);
+
+        if ($response->successful()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Image sent successfully',
+            ], 200);
+        }
         return response()->json([
-            'status' => 'success',
-            'message' => 'Image sent successfully',
-        ], 200);
+            'status' => 'error',
+            'message' => 'Failed to send image',
+        ], 500);
     });
 });
