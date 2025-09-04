@@ -166,4 +166,50 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'destination' => $request->input('destination'),
         ], 202);
     });
+
+
+    // buat api untuk hit waha
+    // https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage
+    // x-api-key:YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg
+    // {
+    //     "chatId": "6282282225802",
+    //     "file": {
+    //       "mimetype": "image/jpeg",
+    //       "filename": "filename.jpg",
+    //       "url": "https://akcdn.detik.net.id/visual/2015/09/23/3a9afdbe-dc0d-4ecb-bf5a-8ae156b84c45_169.jpg?w=1200"
+    //     },
+    //     "reply_to": null,
+    //     "caption": "mirip kamu",
+    //     "session": "FailAmir"
+    //   }
+
+    Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'phone' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'caption' => 'required',
+        ]);
+        $chatId = $request->input('phone');
+        $file = [
+            'mimetype' => 'image/jpeg',
+            'filename' => 'id_peserta.jpg',
+            'url' => $request->file('image')->store('public/images'),
+        ];
+        $reply_to = null;
+        $caption = $request->input('caption');
+        $session = 'FailAmir';
+        $response = Http::withHeaders([
+            'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+        ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', [
+            'chatId' => $chatId,
+            'file' => $file,
+            'reply_to' => $reply_to,
+            'caption' => $caption,
+            'session' => $session,
+        ]);
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Image sent successfully',
+        ], 200);
+    });
 });
