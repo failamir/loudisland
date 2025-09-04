@@ -169,11 +169,11 @@
             inset: 0;
             z-index: 0;
             background: repeating-linear-gradient(-20deg,
-                    rgba(66, 255, 169, 0.13) 0 2px,
-                    rgba(66, 255, 169, 0.00) 2px 14px);
-            opacity: .18;
+                    rgba(66, 255, 169, 0.18) 0 2px,
+                    rgba(66, 255, 169, 0.00) 2px 11px);
+            opacity: .26;
             mix-blend-mode: screen;
-            animation: linesSlide 6s linear infinite;
+            animation: linesSlide 4.5s linear infinite;
         }
 
         @keyframes linesSlide {
@@ -199,8 +199,8 @@
                     rgba(255, 255, 255, 0.0) 65%,
                     rgba(255, 255, 255, 0) 100%);
             transform: translateX(-150%);
-            animation: sweep 8s linear infinite;
-            opacity: .35;
+            animation: sweep 5.5s linear infinite;
+            opacity: .5;
             mix-blend-mode: screen;
         }
 
@@ -431,11 +431,11 @@
             if (hasTouch) return;
 
             // Strength & smoothing
-            const T = 18; // px translate
-            const R = 4; // deg tilt
-            const damping = 0.12; // 0..1, lebih kecil = lebih halus
-            const idleAmp = 0.015; // amplitudo breathing (scale), 1.5%
-            const idlePeriod = 2800; // ms per siklus nafas
+            const T = 22; // px translate (lebih kuat)
+            const R = 5; // deg tilt (sedikit lebih tinggi)
+            const damping = 0.16; // respon sedikit lebih cepat
+            const idleAmp = 0.022; // amplitudo breathing (scale)
+            const idlePeriod = 2200; // ms per siklus nafas (lebih cepat)
 
             let targetX = 0,
                 targetY = 0; // -0.5..0.5
