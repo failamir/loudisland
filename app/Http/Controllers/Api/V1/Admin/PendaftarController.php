@@ -1289,17 +1289,23 @@ class PendaftarController extends Controller
     {
         try {
             $chatId = $this->normalizePhone($phone);
+            // Check if QR file exists before sending
+            $qrPath = public_path('qrcodes/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+            if (!file_exists($qrPath)) {
+                \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
+                return;
+            }
+            
             $response = Http::post(url('/api/v1/waha/sendImage'), [
                 'chatId' => $chatId,
                 'url' => $imageUrl,
                 'caption' => $caption,
             ]);
-            var_dump($response->json());
-            die;
+            
+            // Log response for debugging
+            \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
-            var_dump($e->getMessage());
-            die;
         }
     }
 
