@@ -148,9 +148,12 @@
             width: 111%;
             margin-left: -5%;
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
-            margin-bottom: clamp(-12px, -2.2vw, -26px);
+            margin-bottom: clamp(-44px, -4.2vw, -28px);
             pointer-events: none;
             opacity: .98;
+            /* vignette halus agar tepi tidak "kotak" */
+            -webkit-mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%);
+            mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%);
         }
 
         .runners img {
@@ -163,18 +166,8 @@
             /* If you want a touch more pop without losing green: saturate(1.2) contrast(1.05) */
         }
 
-        /* Speed lines overlay (subtle) */
-        .runners .speedlines {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background: repeating-linear-gradient(-20deg,
-                    rgba(66, 255, 169, 0.18) 0 2px,
-                    rgba(66, 255, 169, 0.00) 2px 11px);
-            opacity: .26;
-            mix-blend-mode: screen;
-            animation: linesSlide 4.5s linear infinite;
-        }
+        /* Speed lines overlay (disabled) */
+        .runners .speedlines { display: none !important; }
 
         @keyframes linesSlide {
             from {
@@ -186,31 +179,18 @@
             }
         }
 
-        /* Light sweep overlay */
+        /* Light sweep overlay (disabled) */
         .runners .sweep {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            pointer-events: none;
-            background: linear-gradient(75deg,
-                    rgba(255, 255, 255, 0) 0%,
-                    rgba(255, 255, 255, 0.0) 35%,
-                    rgba(255, 255, 255, 0.16) 50%,
-                    rgba(255, 255, 255, 0.0) 65%,
-                    rgba(255, 255, 255, 0) 100%);
-            transform: translateX(-150%);
-            animation: sweep 5.5s linear infinite;
-            opacity: .5;
-            mix-blend-mode: screen;
+            display: none !important;
         }
 
         @keyframes sweep {
             from {
-                transform: translateX(-150%);
+                transform: translateX(-60%);
             }
 
             to {
-                transform: translateX(150%);
+                transform: translateX(60%);
             }
         }
 
@@ -227,7 +207,7 @@
         /* Countdown */
         .countdown {
             /* perkecil jarak atas agar lebih dekat ke gambar */
-            margin: clamp(6px, 1.6vw, 16px) auto 18px;
+            margin: clamp(-52px, -6.2vw, -18px) auto 10px;
             display: grid;
             grid-auto-flow: column;
             gap: clamp(10px, 3vw, 28px);
@@ -261,7 +241,7 @@
         .cta {
             display: flex;
             justify-content: center;
-            margin: 18px 0 28px;
+            margin: clamp(-5px, -2.2vw, 12px) 0 22px;
         }
 
         .btn-primary {
@@ -378,7 +358,6 @@
             <div class="frame">
                 <div class="frame-content">
                     <div class="runners" id="runners" style="will-change: transform; transition: transform .12s ease-out;">
-                        <div class="speedlines" aria-hidden="true"></div>
                         <!-- <img src="{{ asset('giner-assets/img/fg.png') }}" alt="Runners"> -->
                         <img src="{{ asset('giner-assets/img/fg.webp') }}" alt="Runners">
                         <div class="sweep" aria-hidden="true"></div>
