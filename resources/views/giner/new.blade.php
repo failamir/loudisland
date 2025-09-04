@@ -179,7 +179,8 @@
 
         .cd-value {
             font-family: 'Russo One', sans-serif;
-            font-size: clamp(28px, 6vw, 44px);
+            font-size: clamp(32px, 7.2vw, 64px);
+            line-height: 1.1;
             letter-spacing: .04em;
             color: var(--neon);
             /* hijau */
@@ -389,34 +390,92 @@
             const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const hero = document.querySelector('.hero');
             const runners = document.getElementById('runners');
-            if (!hero || !runners || prefersReduced) return;
+            if (!hero || !runners) return;
+            if (prefersReduced) return; // hormati setting reduce motion
 
-            // Nonaktifkan di perangkat sentuh
+            // Nonaktifkan di perangkat sentuh (hemat dan hindari jitter)
             const hasTouch = 'ontouchstart' in window || (navigator.maxTouchPoints || 0) > 0;
             if (hasTouch) return;
 
-            const maxTranslate = 18; // px
-            const maxRotate = 4; // deg
+            // Strength & smoothing
+            const T = 18; // px translate
+            const R = 4; // deg tilt
+            const damping = 0.12; // 0..1, lebih kecil = lebih halus
 
-            function onMove(e) {
-                const rect = hero.getBoundingClientRect();
-                const nx = (e.clientX - rect.left) / rect.width - 0.5; // -0.5..0.5
-                const ny = (e.clientY - rect.top) / rect.height - 0.5; // -0.5..0.5
-                const tx = nx * maxTranslate;
-                const ty = ny * maxTranslate;
-                const rx = -ny * maxRotate; // tilt atas/bawah
-                const ry = nx * maxRotate; // tilt kiri/kanan
+            let targetX = 0,
+                targetY = 0; // -0.5..0.5
+            let x = 0,
+                y = 0;
+            let rafId = null;
+            let hovering = false;
+
+            function apply(nx, ny) {
+                const tx = nx * T;
+                const ty = ny * T;
+                const rx = -ny * R;
+                const ry = nx * R;
                 runners.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
             }
 
-            function onLeave() {
-                runners.style.transform = 'translate3d(0,0,0)';
+            function loop() {
+                x += (targetX - x) * damping;
+                y += (targetY - y) * damping;
+                apply(x, y);
+                if (!hovering && Math.abs(x) < 0.002 && Math.abs(y) < 0.002) {
+                    x = y = 0;
+                    apply(0, 0);
+                    rafId = null;
+                    return;
+                }
+                rafId = requestAnimationFrame(loop);
             }
 
-            hero.addEventListener('mousemove', onMove);
-            hero.addEventListener('mouseleave', onLeave);
+            function start() {
+                if (rafId == null) rafId = requestAnimationFrame(loop);
+            }
+
+            function onMove(e) {
+                const rect = hero.getBoundingClientRect();
+                targetX = (e.clientX - rect.left) / rect.width - 0.5;
+                targetY = (e.clientY - rect.top) / rect.height - 0.5;
+                start();
+            }
+
+            function onEnter() {
+                hovering = true;
+                start();
+            }
+
+            function onLeave() {
+                hovering = false;
+                targetX = 0;
+                targetY = 0;
+                start();
+            }
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = null;
+                } else if (!document.hidden && (hovering || Math.abs(x) > 0.002 || Math.abs(y) > 0.002)) {
+                    start();
+                }
+            }, {
+                passive: true
+            });
+
+            hero.addEventListener('mouseenter', onEnter, {
+                passive: true
+            });
+            hero.addEventListener('mousemove', onMove, {
+                passive: true
+            });
+            hero.addEventListener('mouseleave', onLeave, {
+                passive: true
+            });
         })();
     </script>
+
 </body>
 
 </html>
