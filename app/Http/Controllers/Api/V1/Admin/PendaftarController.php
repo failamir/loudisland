@@ -1251,10 +1251,17 @@ class PendaftarController extends Controller
         $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
         $text = implode("\n", $lines);
 
-        // Send once per unique phone via WAHA
+        // Send text message and QR images per unique phone via WAHA
         $phones = $participants->pluck('phone')->filter()->unique();
         foreach ($phones as $phone) {
+            // Send text message first
             $this->sendWhatsapp($phone, $text);
+            
+            // Send QR images for each participant with this phone
+            $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
+            foreach ($participantsForPhone as $p) {
+                $this->sendWhatsappImage($phone, url("/qrcodes/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
+            }
         }
     }
 
@@ -1274,7 +1281,21 @@ class PendaftarController extends Controller
             ]);
         } catch (\Throwable $e) {
             // swallow errors; optionally log
-            \Log::warning('WA send failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
+        }
+    }
+
+    protected function sendWhatsappImage(string $phone, string $imageUrl, string $caption = null): void
+    {
+        try {
+            $chatId = $this->normalizePhone($phone);
+            Http::post(url('/api/waha/sendImage'), [
+                'chatId' => $chatId,
+                'url' => $imageUrl,
+                'caption' => $caption,
+            ]);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
         }
     }
 
