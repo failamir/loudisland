@@ -1296,6 +1296,8 @@ class PendaftarController extends Controller
             ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
+            var_dump($e->getMessage());
+            die;
         }
     }
 
