@@ -1165,18 +1165,19 @@ class PendaftarController extends Controller
         $lines = [];
         $lines[] = 'Hai ' . $greetName . ',';
         $lines[] = '';
-        $lines[] = 'Kamu sudah bisa check tiket online melalui website mandalikakorprirun.com untuk pesanan berikut:';
+        $lines[] = 'Kamu sudah bisa check tiket online melalui website daftar.mandalikakorprirun.com untuk pesanan berikut:';
         $lines[] = '';
         foreach ($participants as $p) {
             $jenis = isset($p['ticketId']) ? ($eventName[$p['ticketId']] ?? ('Event #' . $p['ticketId'])) : 'Tiket';
             $lines[] = 'ID Transaksi: ' . $trx->invoice;
+            $lines[] = 'ID Peserta: ' . $p['participant_id'];
             $lines[] = 'Nama: ' . ($p['name'] ?? '-');
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
             $lines[] = '==============================';
             $lines[] = '';
         }
-        $lines[] = 'Check Dashboard kamu mandalikakorprirun.com/#/dashboard';
+        $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
         $text = implode("\n", $lines);
 
         // Send to each participant's phone via WAHA
