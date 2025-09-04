@@ -501,11 +501,14 @@ class PendaftarController extends Controller
         if (!$trx) {
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
+
+        // events may be serialized or JSON/plain; keep legacy behavior
         $noTiket = @unserialize($trx->events);
         if ($noTiket === false) {
             $noTiket = $trx->events;
         }
-        $userDetail = $noTiket ? User::where('id', $trx->peserta_id)->first() : null;
+
+        $userDetail = User::where('id', $trx->peserta_id)->first();
 
         // Build QR URL if exists; do not generate here (generation happens on webhook or register)
         $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
@@ -515,14 +518,32 @@ class PendaftarController extends Controller
         $participants = null;
         if (!empty($trx->participants)) {
             $decoded = json_decode($trx->participants, true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $i = 0;
-                foreach ($decoded as &$p) {
-                    $p['participant_id'] = $p['participant_id'] ?? 'PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT);
-                    $i++;
-                }
-                unset($p); // remove reference
+            if (json_last_error() === JSON_ERROR_NONE) {
                 $participants = $decoded;
+            }
+        }
+
+        // Backfill: if payment success but participants missing participant_id/status_restpack, generate and persist (no WA sending here)
+        if ($trx->status === 'success' && is_array($participants)) {
+            $modified = false;
+            foreach ($participants as $i => $p) {
+                if (empty($p['participant_id'])) {
+                    $length = 10;
+                    $random = '';
+                    for ($i = 0; $i < $length; $i++) {
+                        $random .= rand(0, 1) ? rand(0, 9) : chr(rand(ord('a'), ord('z')));
+                    }
+                    $participants[$i]['participant_id'] = 'PID-' . Str::upper($random);
+                    $modified = true;
+                }
+                if (empty($p['status_restpack'])) {
+                    $participants[$i]['status_restpack'] = 'belum';
+                    $modified = true;
+                }
+            }
+            if ($modified) {
+                $trx->participants = json_encode($participants);
+                $trx->save();
             }
         }
 
