@@ -185,28 +185,24 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'phone' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'chatId' => 'required',
+            'url' => 'required|string',
             'caption' => 'required',
         ]);
-        $chatId = $request->input('phone');
-        $file = [
-            'mimetype' => 'image/jpeg',
-            'filename' => 'id_peserta.jpg',
-            'url' => env('APP_URL') . '/' . $request->file('image')->store('public/images'),
+        $data = [
+            'chatId' => $request->input('chatId'),
+            'file' => [
+                'mimetype' => 'image/jpeg',
+                'filename' => 'id_peserta.jpg',
+                'url' => $request->input('url'),
+            ],
+            'reply_to' => null,
+            'caption' => $request->input('caption'),
+            'session' => 'FailAmir',
         ];
-        $reply_to = null;
-        $caption = $request->input('caption');
-        $session = 'FailAmir';
         $response = Http::withHeaders([
             'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-        ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', [
-            'chatId' => $chatId,
-            'file' => $file,
-            'reply_to' => $reply_to,
-            'caption' => $caption,
-            'session' => $session,
-        ]);
+        ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
 
         if ($response->successful()) {
             return response()->json([
