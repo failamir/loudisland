@@ -516,9 +516,9 @@ class PendaftarController extends Controller
         $qrUrl = ($qrPath && file_exists($qrPath)) ? url("/qrcodes/{$noTiket}.png") : null;
 
         // Get participants from participants table, backfill if needed
-        $participants = $trx->participants;
-        if ($participants->isEmpty() && !empty($trx->participants)) {
-            $decoded = json_decode($trx->participants, true);
+        $participants = $trx->participants();
+        if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
+            $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
                     $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
@@ -533,6 +533,8 @@ class PendaftarController extends Controller
                 }
                 $participants = $trx->participants()->get();
             }
+        } else {
+            $participants = $participants->get();
         }
 
         return response()->json([
@@ -1148,11 +1150,11 @@ class PendaftarController extends Controller
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
         // Check if participants already exist in table
-        $participants = $trx->participants;
+        $participants = $trx->participants();
         
         // If no participants in table but JSON exists, backfill
-        if ($participants->isEmpty() && !empty($trx->participants)) {
-            $decoded = json_decode($trx->participants, true);
+        if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
+            $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
                     $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
@@ -1168,6 +1170,8 @@ class PendaftarController extends Controller
                 // Reload participants
                 $participants = $trx->participants()->get();
             }
+        } else {
+            $participants = $participants->get();
         }
 
         if ($participants->isEmpty()) {
