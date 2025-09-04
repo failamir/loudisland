@@ -154,11 +154,74 @@
         }
 
         .runners img {
+            position: relative;
+            z-index: 1;
             width: 100%;
             height: auto;
             display: block;
             filter: none;
             /* If you want a touch more pop without losing green: saturate(1.2) contrast(1.05) */
+        }
+
+        /* Speed lines overlay (subtle) */
+        .runners .speedlines {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background: repeating-linear-gradient(-20deg,
+                    rgba(66, 255, 169, 0.13) 0 2px,
+                    rgba(66, 255, 169, 0.00) 2px 14px);
+            opacity: .18;
+            mix-blend-mode: screen;
+            animation: linesSlide 6s linear infinite;
+        }
+
+        @keyframes linesSlide {
+            from {
+                background-position: 0 0;
+            }
+
+            to {
+                background-position: 160px 0;
+            }
+        }
+
+        /* Light sweep overlay */
+        .runners .sweep {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: linear-gradient(75deg,
+                    rgba(255, 255, 255, 0) 0%,
+                    rgba(255, 255, 255, 0.0) 35%,
+                    rgba(255, 255, 255, 0.16) 50%,
+                    rgba(255, 255, 255, 0.0) 65%,
+                    rgba(255, 255, 255, 0) 100%);
+            transform: translateX(-150%);
+            animation: sweep 8s linear infinite;
+            opacity: .35;
+            mix-blend-mode: screen;
+        }
+
+        @keyframes sweep {
+            from {
+                transform: translateX(-150%);
+            }
+
+            to {
+                transform: translateX(150%);
+            }
+        }
+
+        /* Hormati prefers-reduced-motion: matikan animasi dekoratif */
+        @media (prefers-reduced-motion: reduce) {
+
+            .runners .sweep,
+            .runners .speedlines {
+                animation: none !important;
+                opacity: 0 !important;
+            }
         }
 
         /* Countdown */
@@ -315,8 +378,10 @@
             <div class="frame">
                 <div class="frame-content">
                     <div class="runners" id="runners" style="will-change: transform; transition: transform .12s ease-out;">
+                        <div class="speedlines" aria-hidden="true"></div>
                         <!-- <img src="{{ asset('giner-assets/img/fg.png') }}" alt="Runners"> -->
                         <img src="{{ asset('giner-assets/img/fg.webp') }}" alt="Runners">
+                        <div class="sweep" aria-hidden="true"></div>
                     </div>
                 </div>
             </div>
@@ -355,38 +420,6 @@
 
     <script>
         (function() {
-            const target = new Date('2025-12-06T00:00:00+08:00').getTime();
-            const $d = document.getElementById('cd-days');
-            const $h = document.getElementById('cd-hours');
-            const $m = document.getElementById('cd-mins');
-            const $s = document.getElementById('cd-secs');
-
-            function pad(n) {
-                return String(n).padStart(2, '0');
-            }
-
-            function tick() {
-                const now = Date.now();
-                let diff = Math.max(0, target - now);
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                diff -= days * 86400000;
-                const hours = Math.floor(diff / (1000 * 60 * 60));
-                diff -= hours * 3600000;
-                const mins = Math.floor(diff / (1000 * 60));
-                diff -= mins * 60000;
-                const secs = Math.floor(diff / 1000);
-                $d.textContent = days;
-                $h.textContent = pad(hours);
-                $m.textContent = pad(mins);
-                $s.textContent = pad(secs);
-            }
-            tick();
-            setInterval(tick, 1000);
-        })();
-    </script>
-
-    <script>
-        (function() {
             const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const hero = document.querySelector('.hero');
             const runners = document.getElementById('runners');
@@ -401,6 +434,8 @@
             const T = 18; // px translate
             const R = 4; // deg tilt
             const damping = 0.12; // 0..1, lebih kecil = lebih halus
+            const idleAmp = 0.015; // amplitudo breathing (scale), 1.5%
+            const idlePeriod = 2800; // ms per siklus nafas
 
             let targetX = 0,
                 targetY = 0; // -0.5..0.5
@@ -414,7 +449,10 @@
                 const ty = ny * T;
                 const rx = -ny * R;
                 const ry = nx * R;
-                runners.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg)`;
+                // idle breathing scale saat tidak hover
+                const now = performance.now();
+                const scale = hovering ? 1 : 1 + Math.sin((now % idlePeriod) / idlePeriod * Math.PI * 2) * idleAmp;
+                runners.style.transform = `translate3d(${tx}px, ${ty}px, 0) rotateX(${rx}deg) rotateY(${ry}deg) scale(${scale})`;
             }
 
             function loop() {
@@ -473,6 +511,38 @@
             hero.addEventListener('mouseleave', onLeave, {
                 passive: true
             });
+        })();
+    </script>
+
+    <script>
+        (function() {
+            const target = new Date('2025-12-06T00:00:00+08:00').getTime();
+            const $d = document.getElementById('cd-days');
+            const $h = document.getElementById('cd-hours');
+            const $m = document.getElementById('cd-mins');
+            const $s = document.getElementById('cd-secs');
+
+            function pad(n) {
+                return String(n).padStart(2, '0');
+            }
+
+            function tick() {
+                const now = Date.now();
+                let diff = Math.max(0, target - now);
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                diff -= days * 86400000;
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                diff -= hours * 3600000;
+                const mins = Math.floor(diff / (1000 * 60));
+                diff -= mins * 60000;
+                const secs = Math.floor(diff / 1000);
+                $d.textContent = days;
+                $h.textContent = pad(hours);
+                $m.textContent = pad(mins);
+                $s.textContent = pad(secs);
+            }
+            tick();
+            setInterval(tick, 1000);
         })();
     </script>
 
