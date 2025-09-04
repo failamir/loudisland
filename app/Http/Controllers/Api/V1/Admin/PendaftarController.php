@@ -1153,7 +1153,7 @@ class PendaftarController extends Controller
         foreach ($participants as $i => $p) {
             // assign participant_id if missing (deterministic per invoice + index)
             if (empty($p['participant_id'])) {
-                $p['participant_id'] = 'PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT);
+                $p['participant_id'] = 'PID-' . rand(1000, 9999);
                 $modified = true;
             }
             if (empty($p['status_restpack'])) {
