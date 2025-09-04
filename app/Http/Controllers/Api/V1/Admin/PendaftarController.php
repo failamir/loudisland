@@ -1154,6 +1154,7 @@ class PendaftarController extends Controller
             // assign participant_id if missing (deterministic per invoice + index)
             if (empty($p['participant_id'])) {
                 $p['participant_id'] = 'PID-' . rand(1000, 9999);
+
                 $modified = true;
             }
             if (empty($p['status_restpack'])) {
