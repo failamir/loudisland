@@ -193,7 +193,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $file = [
             'mimetype' => 'image/jpeg',
             'filename' => 'id_peserta.jpg',
-            'url' => $request->file('image')->store('public/images'),
+            'url' => env('APP_URL') . '/' . $request->file('image')->store('public/images'),
         ];
         $reply_to = null;
         $caption = $request->input('caption');
@@ -202,8 +202,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
         ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', [
             'chatId' => $chatId,
-            'filename' => $file['filename'],
-            'url' => $file['url'],
+            'file' => $file,
             'reply_to' => $reply_to,
             'caption' => $caption,
             'session' => $session,
@@ -214,10 +213,15 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'status' => 'success',
                 'message' => 'Image sent successfully',
             ], 200);
+        } else {
+            //know the error
+            $error = $response->json();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send image',
+                'error' => $error,
+            ], 500);
         }
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Failed to send image',
-        ], 500);
     });
 });
