@@ -168,6 +168,16 @@ class PendaftarController extends Controller
                             'ticket_id' => $p['ticketId'] ?? null,
                             'status_restpack' => $p['status_restpack'] ?? 'belum',
                         ]);
+                        
+                        // Generate QR code for participant_id
+                        $qrDir = public_path('qrcodes/participants');
+                        if (!file_exists($qrDir)) {
+                            mkdir($qrDir, 0755, true);
+                        }
+                        $qrPath = $qrDir . '/' . $pid . '.png';
+                        if (!file_exists($qrPath)) {
+                            QrCode::format('png')->size(300)->generate($pid, $qrPath);
+                        }
                     }
                     $participants = $t->participants()->get();
                 }
@@ -202,6 +212,7 @@ class PendaftarController extends Controller
                         'city'   => null, // not stored in participants table
                         'participant_id' => $p->participant_id,
                         'status_restpack' => $p->status_restpack,
+                        'qr_url' => url("/qrcodes/participants/{$p->participant_id}.png"),
                     ],
                     'event'         => $ev ? [
                         'id'         => $ev->id,
@@ -543,6 +554,16 @@ class PendaftarController extends Controller
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
+                    
+                    // Generate QR code for participant_id
+                    $qrDir = public_path('qrcodes/participants');
+                    if (!file_exists($qrDir)) {
+                        mkdir($qrDir, 0755, true);
+                    }
+                    $qrPath = $qrDir . '/' . $pid . '.png';
+                    if (!file_exists($qrPath)) {
+                        QrCode::format('png')->size(300)->generate($pid, $qrPath);
+                    }
                 }
                 $participants = $trx->participants()->get();
             }
@@ -573,6 +594,7 @@ class PendaftarController extends Controller
                 'phone' => $p->phone,
                 'ticket_id' => $p->ticket_id,
                 'status_restpack' => $p->status_restpack,
+                'qr_url' => url("/qrcodes/participants/{$p->participant_id}.png"),
             ]),
         ]);
     }
@@ -1179,6 +1201,16 @@ class PendaftarController extends Controller
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
+                    
+                    // Generate QR code for participant_id
+                    $qrDir = public_path('qrcodes/participants');
+                    if (!file_exists($qrDir)) {
+                        mkdir($qrDir, 0755, true);
+                    }
+                    $qrPath = $qrDir . '/' . $pid . '.png';
+                    if (!file_exists($qrPath)) {
+                        QrCode::format('png')->size(300)->generate($pid, $qrPath);
+                    }
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
