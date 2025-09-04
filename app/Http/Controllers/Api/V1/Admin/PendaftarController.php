@@ -24,6 +24,7 @@ use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Tiket;
+use App\Models\Participant;
 use OpenApi\Annotations as OA;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
@@ -514,12 +515,23 @@ class PendaftarController extends Controller
         $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
         $qrUrl = ($qrPath && file_exists($qrPath)) ? url("/qrcodes/{$noTiket}.png") : null;
 
-        // decode participants if present
-        $participants = null;
-        if (!empty($trx->participants)) {
+        // Get participants from participants table, backfill if needed
+        $participants = $trx->participants;
+        if ($participants->isEmpty() && !empty($trx->participants)) {
             $decoded = json_decode($trx->participants, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
-                $participants = $decoded;
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                foreach ($decoded as $i => $p) {
+                    $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                    Participant::create([
+                        'transaction_id' => $trx->id,
+                        'participant_id' => $pid,
+                        'name' => $p['name'] ?? null,
+                        'phone' => $p['phone'] ?? null,
+                        'ticket_id' => $p['ticketId'] ?? null,
+                        'status_restpack' => $p['status_restpack'] ?? 'belum',
+                    ]);
+                }
+                $participants = $trx->participants()->get();
             }
         }
 
@@ -540,7 +552,13 @@ class PendaftarController extends Controller
                 'start_at' => $userDetail->start_at,
                 'finish_at' => $userDetail->finish_at,
             ] : null,
-            'participants' => $participants,
+            'participants' => $participants->map(fn($p) => [
+                'participant_id' => $p->participant_id,
+                'name' => $p->name,
+                'phone' => $p->phone,
+                'ticket_id' => $p->ticket_id,
+                'status_restpack' => $p->status_restpack,
+            ]),
         ]);
     }
 
@@ -1124,83 +1142,58 @@ class PendaftarController extends Controller
     }
 
     /**
-     * After payment success: generate participant_id if missing, keep status_restpack default 'belum',
-     * and send WhatsApp messages via WAHA to each participant phone.
+     * After payment success: ensure participants exist in participants table,
+     * backfill from JSON if needed, and send WhatsApp messages.
      */
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
-        // Decode participants
-        $participants = [];
-        if (!empty($trx->participants)) {
+        // Check if participants already exist in table
+        $participants = $trx->participants;
+        
+        // If no participants in table but JSON exists, backfill
+        if ($participants->isEmpty() && !empty($trx->participants)) {
             $decoded = json_decode($trx->participants, true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                $participants = $decoded;
+                foreach ($decoded as $i => $p) {
+                    $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                    Participant::create([
+                        'transaction_id' => $trx->id,
+                        'participant_id' => $pid,
+                        'name' => $p['name'] ?? null,
+                        'phone' => $p['phone'] ?? null,
+                        'ticket_id' => $p['ticketId'] ?? null,
+                        'status_restpack' => $p['status_restpack'] ?? 'belum',
+                    ]);
+                }
+                // Reload participants
+                $participants = $trx->participants()->get();
             }
         }
-        if (empty($participants)) {
+
+        if ($participants->isEmpty()) {
             return; // nothing to do
         }
 
-        // Build map: ticketId => event name for message
-        $ticketIds = collect($participants)->pluck('ticketId')->filter()->unique()->values();
-        $tickets = $ticketIds->isNotEmpty() ? Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']) : collect();
-        $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
-
-        // $modified = false;
-        // foreach ($participants as $i => $p) {
-        //     // assign participant_id if missing (deterministic per invoice + index)
-        //     if (empty($p['participant_id'])) {
-        //         $p['participant_id'] = 'PID-' . rand(1000, 9999);
-        //         $modified = true;
-        //     }
-        //     if (empty($p['status_restpack'])) {
-        //         $p['status_restpack'] = 'belum';
-        //         $modified = true;
-        //     }
-        //     $participants[$i] = $p;
-        // }
-
-        // Backfill: if payment success but participants missing participant_id/status_restpack, generate and persist (no WA sending here)
-        if ($trx->status === 'success' && is_array($participants)) {
-            $modified = false;
-            foreach ($participants as $i => $p) {
-                if (empty($p['participant_id'])) {
-                    $length = 10;
-                    $random = '';
-                    for ($i = 0; $i < $length; $i++) {
-                        $random .= rand(0, 1) ? rand(0, 9) : chr(rand(ord('a'), ord('z')));
-                    }
-                    $participants[$i]['participant_id'] = 'PID-' . Str::upper($random);
-                    $modified = true;
-                }
-                if (empty($p['status_restpack'])) {
-                    $participants[$i]['status_restpack'] = 'belum';
-                    $modified = true;
-                }
-            }
-            if ($modified) {
-                $trx->participants = json_encode($participants);
-                $trx->save();
-            }
+        // Build map: ticket_id => event name for message
+        $ticketIds = $participants->pluck('ticket_id')->filter()->unique();
+        $eventName = collect();
+        if ($ticketIds->isNotEmpty()) {
+            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
+            $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
         }
 
-        if ($modified) {
-            $trx->participants = json_encode($participants);
-            $trx->save();
-        }
-
-        // Build message text once (list all participants) and send to each participant phone
-        $greetName = $trx->nama ?: ($participants[0]['name'] ?? 'Peserta');
+        // Build message text once (list all participants)
+        $greetName = $trx->nama ?: ($participants->first()->name ?? 'Peserta');
         $lines = [];
         $lines[] = 'Hai ' . $greetName . ',';
         $lines[] = '';
         $lines[] = 'Kamu sudah bisa check tiket online melalui website daftar.mandalikakorprirun.com untuk pesanan berikut:';
         $lines[] = '';
         foreach ($participants as $p) {
-            $jenis = isset($p['ticketId']) ? ($eventName[$p['ticketId']] ?? ('Event #' . $p['ticketId'])) : 'Tiket';
+            $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
             $lines[] = 'ID Transaksi: ' . $trx->invoice;
-            $lines[] = 'ID Peserta: ' . $p['participant_id'];
-            $lines[] = 'Nama: ' . ($p['name'] ?? '-');
+            $lines[] = 'ID Peserta: ' . $p->participant_id;
+            $lines[] = 'Nama: ' . ($p->name ?? '-');
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
             $lines[] = '==============================';
@@ -1209,10 +1202,9 @@ class PendaftarController extends Controller
         $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
         $text = implode("\n", $lines);
 
-        // Send to each participant's phone via WAHA
-        foreach ($participants as $p) {
-            $phone = $p['phone'] ?? null;
-            if (!$phone) continue;
+        // Send once per unique phone via WAHA
+        $phones = $participants->pluck('phone')->filter()->unique();
+        foreach ($phones as $phone) {
             $this->sendWhatsapp($phone, $text);
         }
     }
@@ -1246,37 +1238,25 @@ class PendaftarController extends Controller
     }
 
     /**
-     * Update status_restpack to 'sudah' for a participant by invoice and participant_id
+     * Update status_restpack to 'sudah' for a participant by participant_id only
      */
     public function restpack(Request $request)
     {
         $request->validate([
-            'invoice' => 'required|string',
             'participant_id' => 'required|string',
         ]);
 
-        $trx = Transaksi::where('invoice', $request->input('invoice'))->first();
-        if (!$trx) {
-            return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
-        }
-        $participants = json_decode($trx->participants, true);
-        if (json_last_error() !== JSON_ERROR_NONE || !is_array($participants)) {
-            return response()->json(['message' => 'Participants not found'], 404);
-        }
-        $found = false;
-        foreach ($participants as $i => $p) {
-            if (($p['participant_id'] ?? null) === $request->input('participant_id')) {
-                $participants[$i]['status_restpack'] = 'sudah';
-                $found = true;
-                break;
-            }
-        }
-        if (!$found) {
+        $participant = Participant::where('participant_id', $request->input('participant_id'))->first();
+        if (!$participant) {
             return response()->json(['message' => 'Participant not found'], 404);
         }
-        $trx->participants = json_encode($participants);
-        $trx->save();
-        return response()->json(['message' => 'Status restpack updated']);
+
+        $participant->update(['status_restpack' => 'sudah']);
+
+        return response()->json([
+            'message' => 'Status restpack updated',
+            'invoice' => $participant->transaction->invoice
+        ]);
     }
 
     public function store(StorePendaftarRequest $request)
