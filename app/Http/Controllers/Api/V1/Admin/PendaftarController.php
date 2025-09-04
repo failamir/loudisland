@@ -159,7 +159,7 @@ class PendaftarController extends Controller
                 $decoded = json_decode($t->getAttributes()['participants'], true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                     foreach ($decoded as $i => $p) {
-                        $pid = $p['participant_id'] ?? ('PID-' . strtoupper($t->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                        $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
                         Participant::create([
                             'transaction_id' => $t->id,
                             'participant_id' => $pid,
@@ -534,7 +534,7 @@ class PendaftarController extends Controller
             $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
-                    $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
                     Participant::create([
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
@@ -1170,7 +1170,7 @@ class PendaftarController extends Controller
             $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
-                    $pid = $p['participant_id'] ?? ('PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
                     Participant::create([
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
