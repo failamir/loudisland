@@ -91,6 +91,11 @@ class Transaksi extends Model implements HasMedia
         return $this->belongsTo(User::class, 'created_by_id');
     }
 
+    public function participants()
+    {
+        return $this->hasMany(Participant::class, 'transaction_id');
+    }
+
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');

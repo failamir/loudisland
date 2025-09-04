@@ -523,30 +523,6 @@ class PendaftarController extends Controller
             }
         }
 
-        // Backfill: if payment success but participants missing participant_id/status_restpack, generate and persist (no WA sending here)
-        if ($trx->status === 'success' && is_array($participants)) {
-            $modified = false;
-            foreach ($participants as $i => $p) {
-                if (empty($p['participant_id'])) {
-                    $length = 10;
-                    $random = '';
-                    for ($i = 0; $i < $length; $i++) {
-                        $random .= rand(0, 1) ? rand(0, 9) : chr(rand(ord('a'), ord('z')));
-                    }
-                    $participants[$i]['participant_id'] = 'PID-' . Str::upper($random);
-                    $modified = true;
-                }
-                if (empty($p['status_restpack'])) {
-                    $participants[$i]['status_restpack'] = 'belum';
-                    $modified = true;
-                }
-            }
-            if ($modified) {
-                $trx->participants = json_encode($participants);
-                $trx->save();
-            }
-        }
-
         return response()->json([
             'invoice' => $trx->invoice,
             'status' => $trx->status,
@@ -1170,18 +1146,42 @@ class PendaftarController extends Controller
         $tickets = $ticketIds->isNotEmpty() ? Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']) : collect();
         $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
 
-        $modified = false;
-        foreach ($participants as $i => $p) {
-            // assign participant_id if missing (deterministic per invoice + index)
-            if (empty($p['participant_id'])) {
-                $p['participant_id'] = 'PID-' . rand(1000, 9999);
-                $modified = true;
+        // $modified = false;
+        // foreach ($participants as $i => $p) {
+        //     // assign participant_id if missing (deterministic per invoice + index)
+        //     if (empty($p['participant_id'])) {
+        //         $p['participant_id'] = 'PID-' . rand(1000, 9999);
+        //         $modified = true;
+        //     }
+        //     if (empty($p['status_restpack'])) {
+        //         $p['status_restpack'] = 'belum';
+        //         $modified = true;
+        //     }
+        //     $participants[$i] = $p;
+        // }
+
+        // Backfill: if payment success but participants missing participant_id/status_restpack, generate and persist (no WA sending here)
+        if ($trx->status === 'success' && is_array($participants)) {
+            $modified = false;
+            foreach ($participants as $i => $p) {
+                if (empty($p['participant_id'])) {
+                    $length = 10;
+                    $random = '';
+                    for ($i = 0; $i < $length; $i++) {
+                        $random .= rand(0, 1) ? rand(0, 9) : chr(rand(ord('a'), ord('z')));
+                    }
+                    $participants[$i]['participant_id'] = 'PID-' . Str::upper($random);
+                    $modified = true;
+                }
+                if (empty($p['status_restpack'])) {
+                    $participants[$i]['status_restpack'] = 'belum';
+                    $modified = true;
+                }
             }
-            if (empty($p['status_restpack'])) {
-                $p['status_restpack'] = 'belum';
-                $modified = true;
+            if ($modified) {
+                $trx->participants = json_encode($participants);
+                $trx->save();
             }
-            $participants[$i] = $p;
         }
 
         if ($modified) {
