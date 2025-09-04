@@ -1260,7 +1260,7 @@ class PendaftarController extends Controller
             // Send QR images for each participant with this phone
             $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
             foreach ($participantsForPhone as $p) {
-                $this->sendWhatsappImage($phone, url("/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
+                $this->sendWhatsappImage($phone, url("public/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
             }
         }
     }
@@ -1290,7 +1290,7 @@ class PendaftarController extends Controller
         try {
             $chatId = $this->normalizePhone($phone);
             // Check if QR file exists before sending
-            $qrPath = url('participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+            $qrPath = url('public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
             if (!file_exists($qrPath)) {
                 // \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
                 // return;
