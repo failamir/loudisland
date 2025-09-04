@@ -1202,15 +1202,20 @@ class PendaftarController extends Controller
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
 
-                    // Generate QR code for participant_id
-                    $qrDir = public_path('participants');
+                    // Generate QR code for participant_id di folder storage
+                    $qrDir = storage_path('app/public/participants');
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
                     $qrPath = $qrDir . '/' . $pid . '.png';
                     if (!file_exists($qrPath)) {
-                        QrCode::format('png')->size(300)->generate($pid, $qrPath);
+                        $qr = QrCode::format('png')->size(300)->generate($pid);
+                        file_put_contents($qrPath, $qr);
+                        // var_dump($qr);
+                        // die;
                     }
+                    // var_dump($qrPath);
+                    // die;
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
