@@ -186,6 +186,8 @@ class PendaftarController extends Controller
                         'nik'    => $p['nik']    ?? null,
                         'province' => $p['province'] ?? null,
                         'city'   => $p['city']   ?? null,
+                        'participant_id' => $p['participant_id'] ?? null,
+                        'status_restpack' => $p['status_restpack'] ?? null,
                     ],
                     'event'         => $ev ? [
                         'id'         => $ev->id,
