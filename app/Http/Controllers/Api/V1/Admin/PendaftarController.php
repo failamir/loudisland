@@ -515,7 +515,13 @@ class PendaftarController extends Controller
         $participants = null;
         if (!empty($trx->participants)) {
             $decoded = json_decode($trx->participants, true);
-            if (json_last_error() === JSON_ERROR_NONE) {
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                $i = 0;
+                foreach ($decoded as &$p) {
+                    $p['participant_id'] = $p['participant_id'] ?? 'PID-' . strtoupper($trx->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT);
+                    $i++;
+                }
+                unset($p); // remove reference
                 $participants = $decoded;
             }
         }
