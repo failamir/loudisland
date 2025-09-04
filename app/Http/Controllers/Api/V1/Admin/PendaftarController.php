@@ -212,7 +212,7 @@ class PendaftarController extends Controller
                         'city'   => null, // not stored in participants table
                         'participant_id' => $p->participant_id,
                         'status_restpack' => $p->status_restpack,
-                        'qr_url' => url("/qrcodes/participants/{$p->participant_id}.png"),
+                        'qr_url' => url("/participants/{$p->participant_id}.png"),
                     ],
                     'event'         => $ev ? [
                         'id'         => $ev->id,
@@ -556,7 +556,7 @@ class PendaftarController extends Controller
                     ]);
 
                     // Generate QR code for participant_id
-                    $qrDir = public_path('qrcodes/participants');
+                    $qrDir = public_path('participants');
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
@@ -594,7 +594,7 @@ class PendaftarController extends Controller
                 'phone' => $p->phone,
                 'ticket_id' => $p->ticket_id,
                 'status_restpack' => $p->status_restpack,
-                'qr_url' => url("/qrcodes/participants/{$p->participant_id}.png"),
+                'qr_url' => url("/participants/{$p->participant_id}.png"),
             ]),
         ]);
     }
@@ -1203,7 +1203,7 @@ class PendaftarController extends Controller
                     ]);
 
                     // Generate QR code for participant_id
-                    $qrDir = public_path('qrcodes/participants');
+                    $qrDir = public_path('participants');
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
@@ -1290,7 +1290,7 @@ class PendaftarController extends Controller
         try {
             $chatId = $this->normalizePhone($phone);
             // Check if QR file exists before sending
-            $qrPath = public_path('qrcodes/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+            $qrPath = public_path('participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
             if (!file_exists($qrPath)) {
                 \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
                 return;
