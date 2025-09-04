@@ -202,7 +202,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
         ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', [
             'chatId' => $chatId,
-            'file' => $file,
+            'filename' => $file['filename'],
+            'url' => $file['url'],
             'reply_to' => $reply_to,
             'caption' => $caption,
             'session' => $session,
