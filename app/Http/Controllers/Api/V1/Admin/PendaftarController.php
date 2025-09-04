@@ -212,7 +212,7 @@ class PendaftarController extends Controller
                         'city'   => null, // not stored in participants table
                         'participant_id' => $p->participant_id,
                         'status_restpack' => $p->status_restpack,
-                        'qr_url' => url("/participants/{$p->participant_id}.png"),
+                        'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
                     ],
                     'event'         => $ev ? [
                         'id'         => $ev->id,
@@ -594,7 +594,7 @@ class PendaftarController extends Controller
                 'phone' => $p->phone,
                 'ticket_id' => $p->ticket_id,
                 'status_restpack' => $p->status_restpack,
-                'qr_url' => url("/participants/{$p->participant_id}.png"),
+                'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
     }
@@ -1202,20 +1202,15 @@ class PendaftarController extends Controller
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
 
-                    // Generate QR code for participant_id di folder storage
+                    // Generate QR code for participant_id
                     $qrDir = storage_path('app/public/participants');
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
                     $qrPath = $qrDir . '/' . $pid . '.png';
                     if (!file_exists($qrPath)) {
-                        $qr = QrCode::format('png')->size(300)->generate($pid);
-                        file_put_contents($qrPath, $qr);
-                        // var_dump($qr);
-                        // die;
+                        QrCode::format('png')->size(300)->generate($pid, $qrPath);
                     }
-                    // var_dump($qrPath);
-                    // die;
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
@@ -1265,7 +1260,7 @@ class PendaftarController extends Controller
             // Send QR images for each participant with this phone
             $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
             foreach ($participantsForPhone as $p) {
-                $this->sendWhatsappImage($phone, url("public/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
+                $this->sendWhatsappImage($phone, url("/storage/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
             }
         }
     }
@@ -1295,12 +1290,10 @@ class PendaftarController extends Controller
         try {
             $chatId = $this->normalizePhone($phone);
             // Check if QR file exists before sending
-            $qrPath = url('public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+            $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
             if (!file_exists($qrPath)) {
-                // \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
-                // return;
-                var_dump($qrPath);
-                die;
+                \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
+                return;
             }
 
             $response = Http::post(url('/api/v1/waha/sendImage'), [
@@ -1310,13 +1303,9 @@ class PendaftarController extends Controller
             ]);
 
             // Log response for debugging
-            // \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
-            var_dump($response->json());
-            die;
+            \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
         } catch (\Throwable $e) {
-            // \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
-            var_dump($e->getMessage());
-            die;
+            \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
         }
     }
 
