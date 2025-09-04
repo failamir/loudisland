@@ -1260,7 +1260,7 @@ class PendaftarController extends Controller
             // Send QR images for each participant with this phone
             $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
             foreach ($participantsForPhone as $p) {
-                $this->sendWhatsappImage($phone, url("/qrcodes/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
+                $this->sendWhatsappImage($phone, url("/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
             }
         }
     }
@@ -1295,17 +1295,21 @@ class PendaftarController extends Controller
                 \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
                 return;
             }
-            
+
             $response = Http::post(url('/api/v1/waha/sendImage'), [
                 'chatId' => $chatId,
                 'url' => $imageUrl,
                 'caption' => $caption,
             ]);
-            
+
             // Log response for debugging
-            \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
+            // \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
+            var_dump($response->json());
+            die;
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
+            // \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
+            var_dump($e->getMessage());
+            die;
         }
     }
 
