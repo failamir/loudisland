@@ -168,7 +168,7 @@ class PendaftarController extends Controller
                             'ticket_id' => $p['ticketId'] ?? null,
                             'status_restpack' => $p['status_restpack'] ?? 'belum',
                         ]);
-                        
+
                         // Generate QR code for participant_id
                         $qrDir = public_path('qrcodes/participants');
                         if (!file_exists($qrDir)) {
@@ -554,7 +554,7 @@ class PendaftarController extends Controller
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
-                    
+
                     // Generate QR code for participant_id
                     $qrDir = public_path('qrcodes/participants');
                     if (!file_exists($qrDir)) {
@@ -1201,7 +1201,7 @@ class PendaftarController extends Controller
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
-                    
+
                     // Generate QR code for participant_id
                     $qrDir = public_path('qrcodes/participants');
                     if (!file_exists($qrDir)) {
@@ -1256,7 +1256,7 @@ class PendaftarController extends Controller
         foreach ($phones as $phone) {
             // Send text message first
             $this->sendWhatsapp($phone, $text);
-            
+
             // Send QR images for each participant with this phone
             $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
             foreach ($participantsForPhone as $p) {
@@ -1289,7 +1289,7 @@ class PendaftarController extends Controller
     {
         try {
             $chatId = $this->normalizePhone($phone);
-            Http::post(url('/api/waha/sendImage'), [
+            Http::post(url('/api/v1/waha/sendImage'), [
                 'chatId' => $chatId,
                 'url' => $imageUrl,
                 'caption' => $caption,
