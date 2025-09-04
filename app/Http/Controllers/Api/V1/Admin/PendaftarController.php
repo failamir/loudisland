@@ -159,7 +159,7 @@ class PendaftarController extends Controller
                 $decoded = json_decode($t->getAttributes()['participants'], true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                     foreach ($decoded as $i => $p) {
-                        $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
+                        $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
                         Participant::create([
                             'transaction_id' => $t->id,
                             'participant_id' => $pid,
@@ -545,7 +545,7 @@ class PendaftarController extends Controller
             $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
-                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
+                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
                     Participant::create([
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
@@ -1192,7 +1192,7 @@ class PendaftarController extends Controller
             $decoded = json_decode($trx->getAttributes()['participants'], true);
             if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
                 foreach ($decoded as $i => $p) {
-                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(10)));
+                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
                     Participant::create([
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
@@ -1204,6 +1204,8 @@ class PendaftarController extends Controller
 
                     // Generate QR code for participant_id
                     $qrDir = storage_path('app/public/participants');
+                    // var_dump($qrDir);
+                    // die;
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
@@ -1211,6 +1213,8 @@ class PendaftarController extends Controller
                     if (!file_exists($qrPath)) {
                         QrCode::format('png')->size(300)->generate($pid, $qrPath);
                     }
+                    // var_dump($qrPath);
+                    // die;
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
@@ -1291,6 +1295,9 @@ class PendaftarController extends Controller
             $chatId = $this->normalizePhone($phone);
             // Check if QR file exists before sending
             $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+            // var_dump($imageUrl);
+            // var_dump($qrPath);
+            // die;
             if (!file_exists($qrPath)) {
                 \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
                 return;
@@ -1302,9 +1309,14 @@ class PendaftarController extends Controller
                 'caption' => $caption,
             ]);
 
+            // var_dump($response->json());
+            // die;
+
             // Log response for debugging
             \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
         } catch (\Throwable $e) {
+            var_dump($e->getMessage());
+            die;
             \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
         }
     }
