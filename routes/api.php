@@ -187,17 +187,17 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $request->validate([
             'chatId' => 'required',
             'url' => 'required|string',
-            // 'caption' => 'required',
+            'caption' => 'nullable|string',
         ]);
         $data = [
             'chatId' => $request->input('chatId'),
             'file' => [
                 'mimetype' => 'image/jpeg',
-                'filename' => 'id_peserta.jpg',
+                'filename' => $request->input('caption'),
                 'url' => $request->input('url'),
             ],
             'reply_to' => null,
-            'caption' => '',
+            'caption' => $request->input('caption'),
             'session' => 'FailAmir',
         ];
         $response = Http::withHeaders([
