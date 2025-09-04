@@ -1289,11 +1289,13 @@ class PendaftarController extends Controller
     {
         try {
             $chatId = $this->normalizePhone($phone);
-            Http::post(url('/api/v1/waha/sendImage'), [
+            $response = Http::post(url('/api/v1/waha/sendImage'), [
                 'chatId' => $chatId,
                 'url' => $imageUrl,
                 'caption' => $caption,
             ]);
+            var_dump($response->json());
+            die;
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
             var_dump($e->getMessage());
