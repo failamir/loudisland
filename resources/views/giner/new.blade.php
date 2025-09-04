@@ -164,6 +164,16 @@
             display: block;
             filter: none;
             /* If you want a touch more pop without losing green: saturate(1.2) contrast(1.05) */
+            animation: floatUpDown 4s ease-in-out infinite;
+        }
+
+        @keyframes floatUpDown {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
         }
 
         /* Speed lines overlay (disabled) */
@@ -200,7 +210,8 @@
         @media (prefers-reduced-motion: reduce) {
 
             .runners .sweep,
-            .runners .speedlines {
+            .runners .speedlines,
+            .runners img {
                 animation: none !important;
                 opacity: 0 !important;
             }
