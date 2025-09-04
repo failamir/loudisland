@@ -187,7 +187,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $request->validate([
             'chatId' => 'required',
             'url' => 'required|string',
-            'caption' => 'required',
+            // 'caption' => 'required',
         ]);
         $data = [
             'chatId' => $request->input('chatId'),
@@ -197,7 +197,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'url' => $request->input('url'),
             ],
             'reply_to' => null,
-            'caption' => $request->input('caption'),
+            'caption' => '',
             'session' => 'FailAmir',
         ];
         $response = Http::withHeaders([
