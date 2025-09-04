@@ -1292,8 +1292,10 @@ class PendaftarController extends Controller
             // Check if QR file exists before sending
             $qrPath = public_path('participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
             if (!file_exists($qrPath)) {
-                \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
-                return;
+                // \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
+                // return;
+                var_dump($qrPath);
+                die;
             }
 
             $response = Http::post(url('/api/v1/waha/sendImage'), [
