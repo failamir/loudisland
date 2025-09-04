@@ -153,13 +153,26 @@ class PendaftarController extends Controller
         // Build flattened tickets list from successful transactions
         $tickets = [];
         foreach ($trx as $t) {
-            // decode participants
-            $participants = [];
-            if (!empty($t->participants)) {
-                $decoded = json_decode($t->participants, true);
+            // Get participants from participants table, backfill if needed
+            $participants = $t->participants();
+            if ($participants->count() == 0 && !empty($t->getAttributes()['participants'])) {
+                $decoded = json_decode($t->getAttributes()['participants'], true);
                 if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    $participants = $decoded;
+                    foreach ($decoded as $i => $p) {
+                        $pid = $p['participant_id'] ?? ('PID-' . strtoupper($t->invoice) . '-' . str_pad((string)($i + 1), 3, '0', STR_PAD_LEFT));
+                        Participant::create([
+                            'transaction_id' => $t->id,
+                            'participant_id' => $pid,
+                            'name' => $p['name'] ?? null,
+                            'phone' => $p['phone'] ?? null,
+                            'ticket_id' => $p['ticketId'] ?? null,
+                            'status_restpack' => $p['status_restpack'] ?? 'belum',
+                        ]);
+                    }
+                    $participants = $t->participants()->get();
                 }
+            } else {
+                $participants = $participants->get();
             }
             // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
@@ -173,7 +186,7 @@ class PendaftarController extends Controller
 
             // expand one ticket per participant
             foreach ($participants as $p) {
-                $eid = isset($p['ticketId']) ? (int) $p['ticketId'] : null;
+                $eid = $p->ticket_id ? (int) $p->ticket_id : null;
                 $ev = $eid ? ($eventMap[$eid] ?? null) : null;
                 $tickets[] = [
                     'invoice'       => $t->invoice,
@@ -181,14 +194,14 @@ class PendaftarController extends Controller
                     'status'        => $t->status,
                     'created_at'    => $t->created_at,
                     'participant'   => [
-                        'name'   => $p['name']   ?? null,
-                        'email'  => $p['email']  ?? null,
-                        'phone'  => $p['phone']  ?? null,
-                        'nik'    => $p['nik']    ?? null,
-                        'province' => $p['province'] ?? null,
-                        'city'   => $p['city']   ?? null,
-                        'participant_id' => $p['participant_id'] ?? null,
-                        'status_restpack' => $p['status_restpack'] ?? null,
+                        'name'   => $p->name,
+                        'email'  => null, // not stored in participants table
+                        'phone'  => $p->phone,
+                        'nik'    => null, // not stored in participants table
+                        'province' => null, // not stored in participants table
+                        'city'   => null, // not stored in participants table
+                        'participant_id' => $p->participant_id,
+                        'status_restpack' => $p->status_restpack,
                     ],
                     'event'         => $ev ? [
                         'id'         => $ev->id,
@@ -1151,7 +1164,7 @@ class PendaftarController extends Controller
     {
         // Check if participants already exist in table
         $participants = $trx->participants();
-        
+
         // If no participants in table but JSON exists, backfill
         if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
             $decoded = json_decode($trx->getAttributes()['participants'], true);
