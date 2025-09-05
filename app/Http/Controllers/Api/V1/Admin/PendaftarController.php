@@ -595,6 +595,7 @@ class PendaftarController extends Controller
                 'phone' => $p->phone,
                 'ticket_id' => $p->ticket_id,
                 'status_restpack' => $p->status_restpack,
+                'email' => $p->email,
                 'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
