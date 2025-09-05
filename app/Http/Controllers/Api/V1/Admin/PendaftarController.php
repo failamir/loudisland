@@ -164,6 +164,7 @@ class PendaftarController extends Controller
                             'transaction_id' => $t->id,
                             'participant_id' => $pid,
                             'name' => $p['name'] ?? null,
+                            'email' => $p['email'] ?? null,
                             'phone' => $p['phone'] ?? null,
                             'ticket_id' => $p['ticketId'] ?? null,
                             'status_restpack' => $p['status_restpack'] ?? 'belum',
@@ -205,7 +206,7 @@ class PendaftarController extends Controller
                     'created_at'    => $t->created_at,
                     'participant'   => [
                         'name'   => $p->name,
-                        'email'  => null, // not stored in participants table
+                        'email'  => $p->email,
                         'phone'  => $p->phone,
                         'nik'    => null, // not stored in participants table
                         'province' => null, // not stored in participants table
@@ -1199,6 +1200,7 @@ class PendaftarController extends Controller
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
                         'name' => $p['name'] ?? null,
+                        'email' => $p['email'] ?? null,
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
@@ -1317,8 +1319,6 @@ class PendaftarController extends Controller
             // Log response for debugging
             \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
         } catch (\Throwable $e) {
-            var_dump($e->getMessage());
-            die;
             \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
         }
     }

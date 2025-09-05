@@ -15,6 +15,7 @@ class Participant extends Model
         'transaction_id',
         'participant_id',
         'name',
+        'email',
         'phone',
         'ticket_id',
         'status_restpack',
