@@ -550,6 +550,7 @@ class PendaftarController extends Controller
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
                         'name' => $p['name'] ?? null,
+                        'email' => $p['email'] ?? null,
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
