@@ -136,7 +136,7 @@
             border-radius: 0;
             padding: 0;
             background: transparent;
-            overflow: hidden;
+            overflow: visible;
         }
 
         /* Runners image fills and bleeds outside for a bigger look */
@@ -145,8 +145,8 @@
             perspective: 600px;
             /* pastikan kontainer punya tinggi agar layout tidak collapse */
             height: clamp(220px, 36vw, 540px);
-            width: 130%;
-            margin-left: -15%;
+            width: clamp(120%, 140vw, 160%);
+            margin-left: clamp(-30%, -20vw, -10%);
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
             margin-bottom: clamp(-44px, -4.2vw, -28px);
             pointer-events: none;
@@ -298,8 +298,9 @@
             }
 
             .runners {
-                width: 130%;
-                margin: 0 0 0 -15%;
+                width: clamp(140%, 150vw, 180%);
+                margin-left: clamp(-40%, -25vw, -20%);
+                margin-bottom: clamp(-32px, -3.5vw, -20px);
             }
 
             .frame::before {
@@ -330,6 +331,13 @@
 
             .frame-content {
                 padding: 18px;
+                overflow: visible;
+            }
+
+            .runners {
+                width: clamp(160%, 170vw, 200%);
+                margin-left: clamp(-50%, -35vw, -30%);
+                margin-bottom: clamp(-24px, -2.8vw, -16px);
             }
 
             /* offset sedikit lebih kecil di layar kecil */
