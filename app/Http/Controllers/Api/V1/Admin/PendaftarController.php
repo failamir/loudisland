@@ -164,8 +164,11 @@ class PendaftarController extends Controller
                             'transaction_id' => $t->id,
                             'participant_id' => $pid,
                             'name' => $p['name'] ?? null,
+                            'nik' => $p['nik'] ?? null,
                             'email' => $p['email'] ?? null,
                             'phone' => $p['phone'] ?? null,
+                            'province' => $p['province'] ?? null,
+                            'city' => $p['city'] ?? null,
                             'ticket_id' => $p['ticketId'] ?? null,
                             'status_restpack' => $p['status_restpack'] ?? 'belum',
                         ]);
@@ -206,11 +209,11 @@ class PendaftarController extends Controller
                     'created_at'    => $t->created_at,
                     'participant'   => [
                         'name'   => $p->name,
+                        'nik'    => $p->nik,
                         'email'  => $p->email,
                         'phone'  => $p->phone,
-                        'nik'    => null, // not stored in participants table
-                        'province' => null, // not stored in participants table
-                        'city'   => null, // not stored in participants table
+                        'province' => $p->province,
+                        'city'   => $p->city,
                         'participant_id' => $p->participant_id,
                         'status_restpack' => $p->status_restpack,
                         'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
@@ -551,8 +554,11 @@ class PendaftarController extends Controller
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
                         'name' => $p['name'] ?? null,
+                        'nik' => $p['nik'] ?? null,
                         'email' => $p['email'] ?? null,
                         'phone' => $p['phone'] ?? null,
+                        'province' => $p['province'] ?? null,
+                        'city' => $p['city'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_restpack' => $p['status_restpack'] ?? 'belum',
                     ]);
@@ -593,10 +599,13 @@ class PendaftarController extends Controller
             'participants' => $participants->map(fn($p) => [
                 'participant_id' => $p->participant_id,
                 'name' => $p->name,
+                'nik' => $p->nik,
+                'email' => $p->email,
                 'phone' => $p->phone,
+                'province' => $p->province,
+                'city' => $p->city,
                 'ticket_id' => $p->ticket_id,
                 'status_restpack' => $p->status_restpack,
-                'email' => $p->email,
                 'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
@@ -1200,6 +1209,7 @@ class PendaftarController extends Controller
                         'transaction_id' => $trx->id,
                         'participant_id' => $pid,
                         'name' => $p['name'] ?? null,
+                        'nik' => $p['nik'] ?? null,
                         'email' => $p['email'] ?? null,
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
