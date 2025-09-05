@@ -145,8 +145,8 @@
             perspective: 600px;
             /* pastikan kontainer punya tinggi agar layout tidak collapse */
             height: clamp(220px, 36vw, 540px);
-            width: 111%;
-            margin-left: -8%;
+            width: 130%;
+            margin-left: -15%;
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
             margin-bottom: clamp(-44px, -4.2vw, -28px);
             pointer-events: none;
