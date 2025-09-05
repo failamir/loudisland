@@ -1249,37 +1249,29 @@ class PendaftarController extends Controller
             $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
         }
 
-        // Build message text once (list all participants)
-        $greetName = $trx->nama ?: ($participants->first()->name ?? 'Peserta');
-        $lines = [];
-        $lines[] = 'Hai ' . $greetName . ',';
-        $lines[] = '';
-        $lines[] = 'Kamu sudah bisa check tiket online melalui website daftar.mandalikakorprirun.com untuk pesanan berikut:';
-        $lines[] = '';
+        // Send individual message to each participant with only their own data
         foreach ($participants as $p) {
+            if (empty($p->phone)) {
+                continue; // Skip if no phone number
+            }
+
             $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
-            $lines[] = 'ID Transaksi: ' . $trx->invoice;
+            
+            $lines = [];
+            $lines[] = 'Hai ' . ($p->name ?? 'Peserta') . ',';
+            $lines[] = '';
+            $lines[] = 'Kamu sudah bisa check tiket online melalui website daftar.mandalikakorprirun.com untuk pesanan berikut:';
+            $lines[] = '';
             $lines[] = 'ID Peserta: ' . $p->participant_id;
             $lines[] = 'Nama: ' . ($p->name ?? '-');
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
-            $lines[] = '==============================';
-            $lines[] = '';
-        }
-        $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
-        $text = implode("\n", $lines);
-
-        // Send text message and QR images per unique phone via WAHA
-        $phones = $participants->pluck('phone')->filter()->unique();
-        foreach ($phones as $phone) {
-            // Send text message first
-            $this->sendWhatsapp($phone, $text);
-
-            // Send QR images for each participant with this phone
-            $participantsForPhone = $participants->filter(fn($p) => $p->phone === $phone);
-            foreach ($participantsForPhone as $p) {
-                $this->sendWhatsappImage($phone, url("/storage/participants/{$p->participant_id}.png"), "QR Code untuk {$p->name} - ID: {$p->participant_id}");
-            }
+            $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
+            
+            $text = implode("\n", $lines);
+            
+            // Send only text message (no QR image)
+            $this->sendWhatsapp($p->phone, $text);
         }
     }
 
