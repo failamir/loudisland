@@ -144,9 +144,9 @@
             position: relative;
             perspective: 600px;
             /* pastikan kontainer punya tinggi agar layout tidak collapse */
-            height: clamp(220px, 36vw, 540px);
-            width: clamp(120%, 140vw, 160%);
-            margin-left: clamp(-30%, -20vw, -10%);
+            height: clamp(180px, 28vw, 420px);
+            width: clamp(105%, 115vw, 125%);
+            margin-left: clamp(-12%, -7.5vw, -2.5%);
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
             margin-bottom: clamp(-44px, -4.2vw, -28px);
             pointer-events: none;
@@ -298,8 +298,8 @@
             }
 
             .runners {
-                width: clamp(140%, 150vw, 180%);
-                margin-left: clamp(-40%, -25vw, -20%);
+                width: clamp(115%, 125vw, 140%);
+                margin-left: clamp(-20%, -12.5vw, -7.5%);
                 margin-bottom: clamp(-32px, -3.5vw, -20px);
             }
 
@@ -335,8 +335,8 @@
             }
 
             .runners {
-                width: clamp(160%, 170vw, 200%);
-                margin-left: clamp(-50%, -35vw, -30%);
+                width: clamp(125%, 135vw, 150%);
+                margin-left: clamp(-25%, -17.5vw, -12.5%);
                 margin-bottom: clamp(-24px, -2.8vw, -16px);
             }
 
