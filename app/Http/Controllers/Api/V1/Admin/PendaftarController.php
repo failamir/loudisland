@@ -1256,20 +1256,20 @@ class PendaftarController extends Controller
             }
 
             $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
-            
+
             $lines = [];
             $lines[] = 'Hai ' . ($p->name ?? 'Peserta') . ',';
             $lines[] = '';
-            $lines[] = 'Kamu sudah bisa check tiket online melalui website daftar.mandalikakorprirun.com untuk pesanan berikut:';
+            $lines[] = 'Kamu sudah bisa check tiket online melalui website untuk pesanan berikut:';
             $lines[] = '';
             $lines[] = 'ID Peserta: ' . $p->participant_id;
             $lines[] = 'Nama: ' . ($p->name ?? '-');
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
-            $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/#/dashboard';
-            
+            $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/dashboard';
+
             $text = implode("\n", $lines);
-            
+
             // Send only text message (no QR image)
             $this->sendWhatsapp($p->phone, $text);
         }
