@@ -220,4 +220,43 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             ], 500);
         }
     });
+
+
+    // Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
+    //     $request->validate([
+    //         'chatId' => 'required',
+    //         'image' => 'required|image',
+    //         'caption' => 'nullable|string',
+    //     ]);
+    //     $data = [
+    //         'chatId' => $request->input('chatId'),
+    //         'file' => [
+    //             'mimetype' => $request->file('image')->getClientMimeType(),
+    //             'filename' => $request->file()
+    //         ],
+    //         'reply_to' => null,
+    //         'caption' => $request->input('caption'),
+    //         'session' => 'FailAmir',
+    //     ];
+    //     $response = Http::withHeaders([
+    //         'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+    //     ])->attach('file', file_get_contents($request->file('image')->getRealPath()), $request->file('image')->getClientOriginalName())
+    //         ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
+
+    //     if ($response->successful()) {
+    //         return response()->json([
+    //             'status' => 'success',
+    //             'message' => 'Image sent successfully',
+    //         ], 200);
+    //     } else {
+    //         //know the error
+    //         $error = $response->json();
+
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Failed to send image',
+    //             'error' => $error,
+    //         ], 500);
+    //     }
+    // });
 });
