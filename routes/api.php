@@ -236,9 +236,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
                 $response = Http::withHeaders([
                     'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-                ])->timeout(20)
-                    ->connectTimeout(10)
-                    ->attach('file', $binary, $filename)
+                ])->timeout(60)
+                    ->connectTimeout(15)
+                    ->attach('file', $binary, $filename, ['Content-Type' => $mime])
                     ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $fields);
             } else {
                 // Case 2: public URL -> send JSON payload as before
@@ -256,11 +256,12 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
                 $response = Http::withHeaders([
                     'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-                ])->timeout(20)
-                    ->connectTimeout(10)
-                    ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
+                ])->timeout(60)
+                  ->connectTimeout(15)
+                  ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
             }
 
+            // Success
             if ($response->successful()) {
                 return response()->json([
                     'status' => 'success',
@@ -268,13 +269,13 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 ], 200);
             }
 
-            // Non-2xx from WAHA
+            // Non-2xx from WAHA. Use 200 to avoid Cloudflare masking the JSON body with a generic 502 page.
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to send image',
                 'upstream_status' => $response->status(),
                 'error' => $response->json() ?? $response->body(),
-            ], 502);
+            ], 200);
         } catch (ConnectionException $e) {
             Log::warning('WAHA sendImage timeout/connection error', [
                 'exception' => $e->getMessage(),
