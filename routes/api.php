@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Http\Client\ConnectionException;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
 use App\Http\Controllers\Api\V1\Admin\AuthController;
 use App\Http\Controllers\Api\V1\Admin\UserApiController;
@@ -184,35 +185,66 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'url' => 'required|string',
             'caption' => 'nullable|string',
         ]);
-        $data = [
+
+        $url = trim($request->input('url'));
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid image URL',
+            ], 422);
+        }
+
+        $caption = (string) $request->input('caption', '');
+        // Ensure filename is safe and ends with .jpg as WAHA expects a filename
+        $filename = trim($caption) !== '' ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) : 'image.jpg';
+        if (!preg_match('/\.(jpe?g|png|gif|webp)$/i', $filename)) {
+            $filename .= '.jpg';
+        }
+
+        $payload = [
             'chatId' => $request->input('chatId'),
             'file' => [
                 'mimetype' => 'image/jpeg',
-                'filename' => $request->input('caption'),
-                'url' => $request->input('url'),
+                'filename' => $filename,
+                'url' => $url,
             ],
             'reply_to' => null,
-            'caption' => $request->input('caption'),
+            'caption' => $caption,
             'session' => 'FailAmir',
         ];
-        $response = Http::withHeaders([
-            'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-        ])->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
 
-        if ($response->successful()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Image sent successfully',
-            ], 200);
-        } else {
-            //know the error
-            $error = $response->json();
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+            ])->timeout(20)
+              ->connectTimeout(10)
+              ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
 
+            if ($response->successful()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Image sent successfully',
+                ], 200);
+            }
+
+            // Non-2xx from WAHA
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to send image',
-                'error' => $error,
-            ], 500);
+                'upstream_status' => $response->status(),
+                'error' => $response->json() ?? $response->body(),
+            ], 502);
+        } catch (ConnectionException $e) {
+            \Log::warning('WAHA sendImage timeout/connection error', [
+                'exception' => $e->getMessage(),
+                'chatId' => $request->input('chatId'),
+                'url' => $url,
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Upstream WAHA service timeout or connection issue',
+                'hint' => 'Ensure the image URL is publicly accessible from WAHA and try again.',
+            ], 504);
         }
     });
 
