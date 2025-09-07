@@ -213,10 +213,15 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
                 // Determine extension from MIME
                 $ext = 'jpg';
-                if (strpos($mime, 'png') !== false) { $ext = 'png'; }
-                elseif (strpos($mime, 'gif') !== false) { $ext = 'gif'; }
-                elseif (strpos($mime, 'webp') !== false) { $ext = 'webp'; }
-                elseif (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) { $ext = 'jpg'; }
+                if (strpos($mime, 'png') !== false) {
+                    $ext = 'png';
+                } elseif (strpos($mime, 'gif') !== false) {
+                    $ext = 'gif';
+                } elseif (strpos($mime, 'webp') !== false) {
+                    $ext = 'webp';
+                } elseif (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) {
+                    $ext = 'jpg';
+                }
 
                 if (!preg_match('/\.(jpe?g|png|gif|webp)$/i', $filename)) {
                     $filename = preg_replace('/\.(jpe?g|png|gif|webp)$/i', '', $filename) . ".{$ext}";
@@ -230,8 +235,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 ];
 
                 $response = Http::withHeaders([
-                        'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-                    ])->timeout(20)
+                    'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+                ])->timeout(20)
                     ->connectTimeout(10)
                     ->attach('file', $binary, $filename)
                     ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $fields);
@@ -252,8 +257,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 $response = Http::withHeaders([
                     'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
                 ])->timeout(20)
-                  ->connectTimeout(10)
-                  ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
+                    ->connectTimeout(10)
+                    ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
             }
 
             if ($response->successful()) {
@@ -264,12 +269,12 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             }
 
             // Non-2xx from WAHA
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to send image',
-                'upstream_status' => $response->status(),
-                'error' => $response->json() ?? $response->body(),
-            ], 502);
+            // return response()->json([
+            //     'status' => 'error',
+            //     'message' => 'Failed to send image',
+            //     'upstream_status' => $response->status(),
+            //     'error' => $response->json() ?? $response->body(),
+            // ], 502);
         } catch (ConnectionException $e) {
             Log::warning('WAHA sendImage timeout/connection error', [
                 'exception' => $e->getMessage(),
