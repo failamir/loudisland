@@ -1,28 +1,104 @@
 import { Container } from '@/components/container';
 import { Toolbar, ToolbarHeading } from '@/layouts/demo1/toolbar';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const WithdrawalPage = () => {
   const [form, setForm] = useState({ amount: '', bank: '', accountName: '', accountNumber: '', note: '' });
   const [submitting, setSubmitting] = useState(false);
+  const [summary, setSummary] = useState({ total_income: 0, total_withdrawn: 0, available_balance: 0 });
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [list, setList] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
+  const [actionLoadingId, setActionLoadingId] = useState(null);
 
   const onChange = (e) => {
     const { name, value } = e.target;
     setForm((s) => ({ ...s, [name]: value }));
   };
 
+  const updateStatus = async (row, action) => {
+    const title =
+      action === 'approved' ? 'Setujui withdrawal ini?' :
+      action === 'paid' ? 'Tandai sebagai sudah dibayar?' :
+      action === 'rejected' ? 'Tolak withdrawal ini?' :
+      action === 'canceled' ? 'Batalkan withdrawal ini?' :
+      'Lanjutkan aksi?';
+    if (!window.confirm(title)) return;
+
+    const note = window.prompt('Catatan (opsional):', '') || undefined;
+    try {
+      setActionLoadingId(row.id);
+      await axios.patch(`${API_URL}/withdrawals/${row.id}/status`, { action, note });
+      await fetchSummary();
+      await fetchList();
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Gagal memperbarui status';
+      alert(msg);
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
+
+  const fetchSummary = async () => {
+    try {
+      setSummaryLoading(true);
+      const { data } = await axios.get(`${API_URL}/withdrawals/summary`);
+      const s = data?.data || {};
+      setSummary({
+        total_income: s.total_income || 0,
+        total_withdrawn: s.total_withdrawn || 0,
+        available_balance: s.available_balance || 0,
+      });
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const fetchList = async () => {
+    try {
+      setListLoading(true);
+      const { data } = await axios.get(`${API_URL}/withdrawals`, { params: { per_page: 20 } });
+      const rows = Array.isArray(data) ? data : data?.data?.data || data?.data || [];
+      setList(rows);
+    } finally {
+      setListLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSummary();
+    fetchList();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      // TODO: Integrate with API endpoint for withdrawal request
-      // Example:
-      // await axios.post(`${API_URL}/withdrawals`, form)
-      await new Promise((r) => setTimeout(r, 800));
-      alert('Withdrawal request submitted');
+      const payload = {
+        amount: Number.parseInt(form.amount || '0', 10),
+        bank: form.bank,
+        account_name: form.accountName,
+        account_number: form.accountNumber,
+        note: form.note || undefined,
+      };
+      await axios.post(`${API_URL}/withdrawals`, payload);
+      alert('Withdrawal berhasil diajukan');
       setForm({ amount: '', bank: '', accountName: '', accountNumber: '', note: '' });
+      // refresh summary & list
+      fetchSummary();
+      fetchList();
     } catch (err) {
-      alert('Failed to submit withdrawal');
+      const message = err?.response?.data?.message || 'Gagal mengajukan withdrawal';
+      const available = err?.response?.data?.data?.available;
+      if (available !== undefined) {
+        alert(`${message}. Saldo tersedia: ${new Intl.NumberFormat('id-ID').format(available)} IDR`);
+      } else {
+        alert(message);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -114,6 +190,142 @@ const WithdrawalPage = () => {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </Container>
+
+      <Container>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="card">
+            <div className="card-body">
+              <div className="text-gray-600">Total Pemasukan</div>
+              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_income)} IDR</div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-body">
+              <div className="text-gray-600">Total Withdrawal</div>
+              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_withdrawn)} IDR</div>
+            </div>
+          </div>
+          <div className="card">
+            <div className="card-body">
+              <div className="text-gray-600">Saldo Tersedia</div>
+              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.available_balance)} IDR</div>
+            </div>
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Riwayat Withdrawal Terbaru</h3>
+            <div className="card-header-actions">
+              <button type="button" className="btn btn-sm btn-light" onClick={() => { fetchSummary(); fetchList(); }} disabled={summaryLoading || listLoading}>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            {listLoading ? (
+              <div>Memuat...</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Tanggal</th>
+                      <th>Jumlah</th>
+                      <th>Status</th>
+                      <th>Bank</th>
+                      <th>Rekening</th>
+                      <th>Diajukan Oleh</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {list.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center text-gray-500">Belum ada data</td>
+                      </tr>
+                    )}
+                    {list.map((row) => (
+                      <tr key={row.id}>
+                        <td>{row.created_at ? new Date(row.created_at).toLocaleString() : '-'}</td>
+                        <td>{new Intl.NumberFormat('id-ID').format(row.amount || 0)}</td>
+                        <td>
+                          <span className={`badge ${row.status === 'approved' || row.status === 'paid' ? 'badge-success' : row.status === 'rejected' || row.status === 'canceled' ? 'badge-danger' : 'badge-warning'} badge-outline rounded-[30px]`}>
+                            {row.status}
+                          </span>
+                        </td>
+                        <td>{row.bank || '-'}</td>
+                        <td>{row.account_number || '-'}</td>
+                        <td>{row.created_by?.name || '-'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </Container>
+
+      <Container>
+        <div className="card">
+          <div className="card-header">
+            <h3 className="card-title">Aksi Admin</h3>
+            <div className="card-header-actions">
+              <button type="button" className="btn btn-sm btn-light" onClick={() => { fetchSummary(); fetchList(); }} disabled={summaryLoading || listLoading}>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            <div className="overflow-x-auto">
+              <table className="table">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Jumlah</th>
+                    <th>Status</th>
+                    <th>Bank</th>
+                    <th>Rekening</th>
+                    <th>Pemohon</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {list.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="text-center text-gray-500">Belum ada data</td>
+                    </tr>
+                  )}
+                  {list.map((row) => {
+                    const canApprove = row.status === 'queued';
+                    const canMarkPaid = row.status === 'approved';
+                    const canReject = row.status === 'queued' || row.status === 'approved';
+                    const canCancel = row.status === 'queued';
+                    return (
+                      <tr key={`act-${row.id}`}>
+                        <td>{row.created_at ? new Date(row.created_at).toLocaleString() : '-'}</td>
+                        <td>{new Intl.NumberFormat('id-ID').format(row.amount || 0)}</td>
+                        <td>{row.status}</td>
+                        <td>{row.bank || '-'}</td>
+                        <td>{row.account_number || '-'}</td>
+                        <td>{row.created_by?.name || '-'}</td>
+                        <td>
+                          <div className="flex flex-wrap gap-2">
+                            <button disabled={!canApprove || actionLoadingId === row.id} className="btn btn-xs btn-primary" onClick={() => updateStatus(row, 'approved')}>Approve</button>
+                            <button disabled={!canMarkPaid || actionLoadingId === row.id} className="btn btn-xs btn-success" onClick={() => updateStatus(row, 'paid')}>Mark Paid</button>
+                            <button disabled={!canReject || actionLoadingId === row.id} className="btn btn-xs btn-danger" onClick={() => updateStatus(row, 'rejected')}>Reject</button>
+                            <button disabled={!canCancel || actionLoadingId === row.id} className="btn btn-xs btn-light" onClick={() => updateStatus(row, 'canceled')}>Cancel</button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </Container>
