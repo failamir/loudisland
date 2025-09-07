@@ -269,12 +269,12 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             }
 
             // Non-2xx from WAHA
-            // return response()->json([
-            //     'status' => 'error',
-            //     'message' => 'Failed to send image',
-            //     'upstream_status' => $response->status(),
-            //     'error' => $response->json() ?? $response->body(),
-            // ], 502);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send image',
+                'upstream_status' => $response->status(),
+                'error' => $response->json() ?? $response->body(),
+            ], 502);
         } catch (ConnectionException $e) {
             Log::warning('WAHA sendImage timeout/connection error', [
                 'exception' => $e->getMessage(),
