@@ -24,7 +24,7 @@ class AuthController extends Controller
         //if email already reistered
         if (User::where('email', $request->email)->exists()) {
             return response()->json([
-                'message' => 'Email already registered',
+                'message' => 'Email sudah terdaftar',
                 'data' => null,
             ], 400);
         }
@@ -85,19 +85,19 @@ class AuthController extends Controller
             $code = $err['error']['message'] ?? '';
             if ($code === 'EMAIL_EXISTS') {
                 return response()->json([
-                    'message' => 'Email already registered on Firebase',
+                    'message' => 'Email sudah terdaftar',
                     'data' => null,
                 ], 400);
             }
             Log::warning('Firebase signUp failed: ' . $responseBody);
             return response()->json([
-                'message' => 'Firebase sign up failed',
+                'message' => 'Gagal mendaftar',
                 'data' => null,
             ], 502);
         } catch (\Throwable $e) {
             Log::warning('Firebase signUp exception: ' . $e->getMessage());
             return response()->json([
-                'message' => 'Unable to create Firebase user',
+                'message' => 'Gagal mendaftar',
                 'data' => null,
             ], 502);
         }
@@ -152,7 +152,7 @@ class AuthController extends Controller
         $userPayload = $user->only(['id', 'name', 'email', 'uid']);
 
         return response()->json([
-            'message' => 'Registered successfully',
+            'message' => 'Berhasil mendaftar',
             'token' => $token,
             'access_token' => $token,
             // 'firebaseUid' => $firebaseUid,
@@ -176,7 +176,7 @@ class AuthController extends Controller
         try {
             if (!$token = auth('api')->attempt($credentials)) {
                 return response()->json([
-                    'message' => 'Invalid credentials',
+                    'message' => 'Username atau Password salah',
                     'data' => null,
                 ], 401);
             }
@@ -192,7 +192,7 @@ class AuthController extends Controller
         $firebaseIdToken = $user->id_token;
 
         return response()->json([
-            'message' => 'Login successful',
+            'message' => 'Login berhasil',
             // 'firebaseUid' => $firebaseUid,
             // 'firebaseIdToken' => $firebaseIdToken,
             'uid' => $user->uid,
@@ -209,7 +209,7 @@ class AuthController extends Controller
         $user = auth('api')->user();
         if (!$user) {
             return response()->json([
-                'message' => 'User not authenticated',
+                'message' => 'User tidak terautentikasi',
                 'data' => null,
             ], 401);
         }
@@ -253,7 +253,7 @@ class AuthController extends Controller
         $user = User::where('uid', $uid)->first();
         if (!$user) {
             return response()->json([
-                'message' => 'User not found',
+                'message' => 'User tidak ditemukan',
                 'data' => null,
             ], 404);
         }
@@ -270,7 +270,7 @@ class AuthController extends Controller
         } catch (JWTException $e) {
             // token might already be invalid/expired
         }
-        return response()->json(['message' => 'Logged out']);
+        return response()->json(['message' => 'Logout berhasil']);
     }
 
     public function refresh(Request $request)
