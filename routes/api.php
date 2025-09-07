@@ -187,12 +187,12 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
 
         $url = trim($request->input('url'));
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid image URL',
-            ], 422);
-        }
+        // if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Invalid image URL',
+        //     ], 422);
+        // }
 
         $caption = (string) $request->input('caption', '');
         // Ensure filename is safe and ends with .jpg as WAHA expects a filename
@@ -217,8 +217,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             $response = Http::withHeaders([
                 'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
             ])->timeout(20)
-              ->connectTimeout(10)
-              ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
+                ->connectTimeout(10)
+                ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
 
             if ($response->successful()) {
                 return response()->json([
