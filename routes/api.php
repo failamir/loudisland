@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\Admin\TransaksiApiController;
 use App\Http\Controllers\Api\V1\Admin\TiketApiController;
 use App\Http\Controllers\Api\V1\Admin\PendaftarController;
 use App\Http\Controllers\Api\V1\Admin\OrderController;
+use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -60,6 +61,13 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // Simple transactions list for FE
         Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
+
+        // Withdrawals
+        Route::get('withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
+        Route::get('withdrawals/summary', [WithdrawalController::class, 'summary'])->name('withdrawals.summary');
+        Route::post('withdrawals', [WithdrawalController::class, 'store'])->name('withdrawals.store');
+        Route::get('withdrawals/{withdrawal}', [WithdrawalController::class, 'show'])->name('withdrawals.show');
+        Route::patch('withdrawals/{withdrawal}/status', [WithdrawalController::class, 'updateStatus'])->name('withdrawals.updateStatus');
 
         Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
     });
@@ -153,19 +161,6 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     });
 
     // TODO: email to ifailamir@kardusinfo.com and kardusinfo@failamir.com
-    // TODO: add withdrawal history in database
-    Route::post('withdrawals', function (\Illuminate\Http\Request $request) {
-        $request->validate([
-            'amount' => 'required|integer|min:1',
-            'destination' => 'required|string',
-        ]);
-        return response()->json([
-            'status' => 'queued',
-            'id' => uniqid('wd_'),
-            'amount' => (int) $request->input('amount'),
-            'destination' => $request->input('destination'),
-        ], 202);
-    });
 
 
     // buat api untuk hit waha
