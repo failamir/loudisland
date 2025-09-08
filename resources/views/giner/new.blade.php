@@ -168,9 +168,12 @@
         }
 
         @keyframes floatUpDown {
-            0%, 100% {
+
+            0%,
+            100% {
                 transform: translateY(0);
             }
+
             50% {
                 transform: translateY(-8px);
             }
@@ -409,7 +412,8 @@
             <!-- CTA -->
             <div class="cta" id="register">
                 @guest
-                <a href="https://daftar.mandalikakorprirun.com/" class="btn-primary">Register</a>
+                <!-- <a href="https://daftar.mandalikakorprirun.com/" class="btn-primary">Register</a> -->
+                <a href="#" class="btn-primary">REGISTRASI DAPAT DI LAKUKAN 11 SEPTEMBER 2025</a>
                 @else
                 <a href="{{ url('/') }}" class="btn-primary">Dashboard</a>
                 @endguest
