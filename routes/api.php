@@ -3,7 +3,6 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
-use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
 use App\Http\Controllers\Api\V1\Admin\AuthController;
 use App\Http\Controllers\Api\V1\Admin\UserApiController;
@@ -188,8 +187,12 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
 
         $url = trim($request->input('url'));
-        // Accept either a public URL or a data URI (base64) from Flutter
-        // If validating, ensure at least it's non-empty; detailed validation is handled below.
+        if (!filter_var($url, FILTER_VALIDATE_URL)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Invalid image URL',
+            ], 422);
+        }
 
         $caption = (string) $request->input('caption', '');
         // Ensure filename is safe and ends with .jpg as WAHA expects a filename
@@ -198,70 +201,25 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             $filename .= '.jpg';
         }
 
+        $payload = [
+            'chatId' => $request->input('chatId'),
+            'file' => [
+                'mimetype' => 'image/jpeg',
+                'filename' => $filename,
+                'url' => $url,
+            ],
+            'reply_to' => null,
+            'caption' => $caption,
+            'session' => 'FailAmir',
+        ];
+
         try {
-            // Case 1: data URI from Flutter -> send multipart with binary
-            if (preg_match('/^data:(.*?);base64,(.+)$/', $url, $m)) {
-                $mime = strtolower($m[1] ?? 'image/jpeg');
-                $dataBase64 = $m[2] ?? '';
-                $binary = base64_decode($dataBase64, true);
-                if ($binary === false) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Invalid base64 image data',
-                    ], 422);
-                }
+            $response = Http::withHeaders([
+                'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+            ])->timeout(20)
+                ->connectTimeout(10)
+                ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
 
-                // Determine extension from MIME
-                $ext = 'jpg';
-                if (strpos($mime, 'png') !== false) {
-                    $ext = 'png';
-                } elseif (strpos($mime, 'gif') !== false) {
-                    $ext = 'gif';
-                } elseif (strpos($mime, 'webp') !== false) {
-                    $ext = 'webp';
-                } elseif (strpos($mime, 'jpeg') !== false || strpos($mime, 'jpg') !== false) {
-                    $ext = 'jpg';
-                }
-
-                if (!preg_match('/\.(jpe?g|png|gif|webp)$/i', $filename)) {
-                    $filename = preg_replace('/\.(jpe?g|png|gif|webp)$/i', '', $filename) . ".{$ext}";
-                }
-
-                $fields = [
-                    'chatId' => $request->input('chatId'),
-                    'reply_to' => null,
-                    'caption' => $caption,
-                    'session' => 'FailAmir',
-                ];
-
-                $response = Http::withHeaders([
-                    'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-                ])->timeout(60)
-                    ->connectTimeout(15)
-                    ->attach('file', $binary, $filename, ['Content-Type' => $mime])
-                    ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $fields);
-            } else {
-                // Case 2: public URL -> send JSON payload as before
-                $payload = [
-                    'chatId' => $request->input('chatId'),
-                    'file' => [
-                        'mimetype' => 'image/jpeg',
-                        'filename' => $filename,
-                        'url' => $url,
-                    ],
-                    'reply_to' => null,
-                    'caption' => $caption,
-                    'session' => 'FailAmir',
-                ];
-
-                $response = Http::withHeaders([
-                    'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-                ])->timeout(60)
-                  ->connectTimeout(15)
-                  ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
-            }
-
-            // Success
             if ($response->successful()) {
                 return response()->json([
                     'status' => 'success',
@@ -269,15 +227,15 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 ], 200);
             }
 
-            // Non-2xx from WAHA. Use 200 to avoid Cloudflare masking the JSON body with a generic 502 page.
+            // Non-2xx from WAHA
             return response()->json([
                 'status' => 'error',
                 'message' => 'Failed to send image',
                 'upstream_status' => $response->status(),
                 'error' => $response->json() ?? $response->body(),
-            ], 200);
+            ], 502);
         } catch (ConnectionException $e) {
-            Log::warning('WAHA sendImage timeout/connection error', [
+            \Log::warning('WAHA sendImage timeout/connection error', [
                 'exception' => $e->getMessage(),
                 'chatId' => $request->input('chatId'),
                 'url' => $url,
@@ -285,7 +243,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             return response()->json([
                 'status' => 'error',
                 'message' => 'Upstream WAHA service timeout or connection issue',
-                'hint' => 'If sending base64, ensure it is valid. If sending URL, ensure it is reachable from WAHA.',
+                'hint' => 'Ensure the image URL is publicly accessible from WAHA and try again.',
             ], 504);
         }
     });
