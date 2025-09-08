@@ -39,7 +39,7 @@ class AuthController extends Controller
             'device_name' => 'sometimes|string|max:100',
             // client does not need to send id_token; server will create Firebase user
             'id_token' => 'sometimes|string',
-            'login_with_google' => 'sometimes|boolean',
+            'method' => 'sometimes|boolean',
         ])->validate();
 
         // Normalize email for consistency
@@ -111,7 +111,7 @@ class AuthController extends Controller
             'no_hp' => $data['no_hp'] ?? null,
             'uid' => $firebaseUid,
         ]);
-        $google = $request->input('login_with_google');
+        $google = $request->input('method');
         if ($google) {
             $user->update([
                 'password' => Hash::make($data['uid']),
@@ -180,12 +180,12 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'sometimes|string',
             'id_token' => 'sometimes|string',
-            'login_with_google' => 'sometimes|boolean',
+            'method' => 'sometimes|boolean',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
         $email = strtolower($data['email']);
-        $isGoogleLogin = $request->input('login_with_google', false);
+        $isGoogleLogin = $request->input('method', false);
 
         // Find user by email
         $user = User::where('email', $email)->first();
