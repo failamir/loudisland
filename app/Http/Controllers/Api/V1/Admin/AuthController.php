@@ -39,7 +39,7 @@ class AuthController extends Controller
             'device_name' => 'sometimes|string|max:100',
             // client does not need to send id_token; server will create Firebase user
             'id_token' => 'sometimes|string',
-            'method' => 'sometimes|boolean',
+            'login_with_google' => 'sometimes|boolean',
         ])->validate();
 
         // Normalize email for consistency
@@ -111,7 +111,7 @@ class AuthController extends Controller
             'no_hp' => $data['no_hp'] ?? null,
             'uid' => $firebaseUid,
         ]);
-        $google = $request->input('method');
+        $google = $request->input('login_with_google');
         if ($google) {
             $user->update([
                 'password' => Hash::make($data['uid']),
@@ -180,12 +180,12 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'sometimes|string',
             'id_token' => 'sometimes|string',
-            'method' => 'sometimes|boolean',
+            'login_with_google' => 'sometimes|boolean',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
         $email = strtolower($data['email']);
-        $isGoogleLogin = $request->input('method', false);
+        $isGoogleLogin = $request->input('login_with_google', false);
 
         // Find user by email
         $user = User::where('email', $email)->first();
@@ -200,107 +200,108 @@ class AuthController extends Controller
 
         if ($isGoogleLogin) {
             // Google login flow
-            if (!isset($data['id_token'])) {
-                return response()->json([
-                    'message' => 'ID token diperlukan untuk login Google',
-                    'data' => null,
-                ], 400);
-            }
+            // if (!isset($data['id_token'])) {
+            //     return response()->json([
+            //         'message' => 'ID token diperlukan untuk login Google',
+            //         'data' => null,
+            //     ], 400);
+            // }
 
-            try {
-                // Verify Google ID token with Firebase
-                $apiKey = env('FIREBASE_WEB_API_KEY');
-                if (!$apiKey) {
-                    return response()->json([
-                        'message' => 'Server misconfiguration: FIREBASE_WEB_API_KEY is not set',
-                        'data' => null,
-                    ], 500);
-                }
+            // try {
+            //     // Verify Google ID token with Firebase
+            //     $apiKey = env('FIREBASE_WEB_API_KEY');
+            //     if (!$apiKey) {
+            //         return response()->json([
+            //             'message' => 'Server misconfiguration: FIREBASE_WEB_API_KEY is not set',
+            //             'data' => null,
+            //         ], 500);
+            //     }
 
-                $client = new Client(['timeout' => 8]);
-                $verifyUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . urlencode($apiKey);
-                $resp = $client->request('POST', $verifyUrl, [
-                    'headers' => [
-                        'Content-Type' => 'application/json',
-                    ],
-                    'body' => json_encode([
-                        'idToken' => $data['id_token'],
-                    ]),
-                ]);
+            // $client = new Client(['timeout' => 8]);
+            // $verifyUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . urlencode($apiKey);
+            // $resp = $client->request('POST', $verifyUrl, [
+            //     'headers' => [
+            //         'Content-Type' => 'application/json',
+            //     ],
+            //     'body' => json_encode([
+            //         'idToken' => $data['id_token'],
+            //     ]),
+            // ]);
 
-                $body = json_decode((string) $resp->getBody(), true);
-                if (!isset($body['users'][0])) {
-                    return response()->json([
-                        'message' => 'Token Google tidak valid',
-                        'data' => null,
-                    ], 401);
-                }
+            // $body = json_decode((string) $resp->getBody(), true);
+            // if (!isset($body['users'][0])) {
+            //     return response()->json([
+            //         'message' => 'Token Google tidak valid',
+            //         'data' => null,
+            //     ], 401);
+            // }
 
-                $firebaseUser = $body['users'][0];
-                $firebaseEmail = strtolower($firebaseUser['email'] ?? '');
+            // $firebaseUser = $body['users'][0];
+            // $firebaseEmail = strtolower($firebaseUser['email'] ?? '');
 
-                // Verify email matches
-                if ($firebaseEmail !== $email) {
-                    return response()->json([
-                        'message' => 'Email tidak sesuai dengan token Google',
-                        'data' => null,
-                    ], 401);
-                }
+            // Verify email matches
+            // if ($firebaseEmail !== $email) {
+            //     return response()->json([
+            //         'message' => 'Email tidak sesuai dengan token Google',
+            //         'data' => null,
+            //     ], 401);
+            // }
 
-                // Verify UID matches
-                if ($user->uid !== $firebaseUser['localId']) {
-                    return response()->json([
-                        'message' => 'UID tidak sesuai',
-                        'data' => null,
-                    ], 401);
-                }
+            // Verify UID matches
+            // if ($user->uid !== $firebaseUser['localId']) {
+            //     return response()->json([
+            //         'message' => 'UID tidak sesuai',
+            //         'data' => null,
+            //     ], 401);
+            // }
 
-                // Generate JWT token for authenticated user
-                $token = JWTAuth::fromUser($user);
-            } catch (\GuzzleHttp\Exception\ClientException $e) {
-                $responseBody = (string) $e->getResponse()->getBody();
-                Log::warning('Firebase token verification failed: ' . $responseBody);
-                return response()->json([
-                    'message' => 'Token Google tidak valid',
-                    'data' => null,
-                ], 401);
-            } catch (\Throwable $e) {
-                Log::warning('Firebase token verification exception: ' . $e->getMessage());
-                return response()->json([
-                    'message' => 'Gagal memverifikasi token Google',
-                    'data' => null,
-                ], 502);
-            }
+            // Generate JWT token for authenticated user
+            //         $token = JWTAuth::fromUser($user);
+            //     } catch (\GuzzleHttp\Exception\ClientException $e) {
+            //         $responseBody = (string) $e->getResponse()->getBody();
+            //         Log::warning('Firebase token verification failed: ' . $responseBody);
+            //         return response()->json([
+            //             'message' => 'Token Google tidak valid',
+            //             'data' => null,
+            //         ], 401);
+            //     } catch (\Throwable $e) {
+            //         Log::warning('Firebase token verification exception: ' . $e->getMessage());
+            //         return response()->json([
+            //             'message' => 'Gagal memverifikasi token Google',
+            //             'data' => null,
+            //         ], 502);
+            //     }
+            // } else {
+            //     // Regular email/password login
+            //     if (!isset($data['password'])) {
+            //         return response()->json([
+            //             'message' => 'Password diperlukan',
+            //             'data' => null,
+            //         ], 400);
+            //     }
+
+            $credentials = ['email' => $email, 'password' => $data['uid']];
         } else {
-            // Regular email/password login
-            if (!isset($data['password'])) {
-                return response()->json([
-                    'message' => 'Password diperlukan',
-                    'data' => null,
-                ], 400);
-            }
-
             $credentials = ['email' => $email, 'password' => $data['password']];
-
-            try {
-                if (!$token = auth('api')->attempt($credentials)) {
-                    return response()->json([
-                        'message' => 'Username atau Password salah',
-                        'data' => null,
-                    ], 401);
-                }
-            } catch (JWTException $e) {
-                return response()->json(['message' => 'Could not create token'], 500);
-            }
-
-            $user = auth('api')->user();
         }
 
+        try {
+            if (!$token = auth('api')->attempt($credentials)) {
+                return response()->json([
+                    'message' => 'Username atau Password salah',
+                    'data' => null,
+                ], 401);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['message' => 'Could not create token'], 500);
+        }
+
+        $user = auth('api')->user();
         $userPayload = collect($user)->except(['password'])->all();
 
         //login to firebase
-        $firebaseUid = $user->uid;
-        $firebaseIdToken = $data['id_token'] ?? null;
+        // $firebaseUid = $user->uid;
+        // $firebaseIdToken = $data['id_token'] ?? null;
 
         return response()->json([
             'message' => 'Login berhasil',
