@@ -17,11 +17,15 @@ class WithdrawalController extends Controller
             ->orderByDesc('created_at');
 
         if ($request->filled('status')) {
-            $query->where('status', $request->string('status'));
+            $query->where('status', (string) $request->get('status'));
         }
 
+        // Return simple array for easier FE consumption
+        $limit = max(1, (int) $request->get('per_page', 20));
+        $rows = $query->take($limit)->get();
+
         return response()->json([
-            'data' => $query->paginate($request->integer('per_page', 15)),
+            'data' => $rows,
         ]);
     }
 
@@ -133,7 +137,7 @@ class WithdrawalController extends Controller
                 'acted_by_id' => $userId,
                 'amount_snapshot' => $withdrawal->amount,
                 'balance_before' => $availableBefore,
-                'balance_after' => in_array($data['action'], ['approved','paid'])
+                'balance_after' => in_array($data['action'], ['approved', 'paid'])
                     ? max(0, $availableBefore - $withdrawal->amount)
                     : $availableBefore,
                 'meta' => [
