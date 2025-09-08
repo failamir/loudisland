@@ -10,6 +10,8 @@ const WithdrawalPage = () => {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [list, setList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
+  const [listError, setListError] = useState('');
+  const [listTotal, setListTotal] = useState(0);
   const [actionLoadingId, setActionLoadingId] = useState(null);
 
   const onChange = (e) => {
@@ -40,7 +42,7 @@ const WithdrawalPage = () => {
     }
   };
 
-  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
   const fetchSummary = async () => {
     try {
@@ -60,9 +62,13 @@ const WithdrawalPage = () => {
   const fetchList = async () => {
     try {
       setListLoading(true);
+      setListError('');
       const { data } = await axios.get(`${API_URL}/withdrawals`, { params: { per_page: 20 } });
+      console.log('[withdrawals:list] raw response', data);
       const rows = Array.isArray(data) ? data : data?.data?.data || data?.data || [];
+      const total = Array.isArray(data) ? rows.length : (data?.data?.total ?? rows.length ?? 0);
       setList(rows);
+      setListTotal(total);
     } finally {
       setListLoading(false);
     }
@@ -226,6 +232,7 @@ const WithdrawalPage = () => {
             </div>
           </div>
           <div className="card-body">
+            {listError && <div className="mb-2 text-red-600">{listError}</div>}
             {listLoading ? (
               <div>Memuat...</div>
             ) : (
@@ -263,6 +270,7 @@ const WithdrawalPage = () => {
                     ))}
                   </tbody>
                 </table>
+                <div className="text-xs text-gray-500 mt-2">Total baris: {listTotal}</div>
               </div>
             )}
           </div>
