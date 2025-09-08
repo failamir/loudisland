@@ -187,15 +187,6 @@ class AuthController extends Controller
         $email = strtolower($data['email']);
         $isGoogleLogin = $request->input('method', false);
 
-        // Find user by email
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            return response()->json([
-                'message' => 'User tidak ditemukan',
-                'data' => null,
-            ], 404);
-        }
-
         $token = null;
 
         if ($isGoogleLogin) {
@@ -282,18 +273,29 @@ class AuthController extends Controller
                 ], 400);
             }
         }
+
+        // Find user by email
+        $user = User::where('email', $email)->first();
+        if (!$user) {
+            if ($isGoogleLogin) {
+                $user = User::create([
+                    'name' => $firebaseUser['displayName'],
+                    'email' => $firebaseUser['email'],
+                    'nik' => $data['nik'] ?? null,
+                    'no_hp' => $data['no_hp'] ?? null,
+                    'uid' => $firebaseUser['localId'],
+                    'password' => $firebaseUser['localId'],
+                ]);
+            }
+            return response()->json([
+                'message' => 'User tidak ditemukan',
+                'data' => null,
+            ], 404);
+        }
+        
         try {
             if (!$token = auth('api')->attempt($credentials)) {
-                if ($isGoogleLogin) {
-                    $user = User::create([
-                        'name' => $firebaseUser['displayName'],
-                        'email' => $firebaseUser['email'],
-                        'nik' => $data['nik'] ?? null,
-                        'no_hp' => $data['no_hp'] ?? null,
-                        'uid' => $firebaseUser['localId'],
-                        'password' => $firebaseUser['localId'],
-                    ]);
-                }
+
                 return response()->json([
                     'message' => 'Username atau Password salah',
                     'data' => null,
