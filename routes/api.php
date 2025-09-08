@@ -176,7 +176,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     //     },
     //     "reply_to": null,
     //     "caption": "mirip kamu",
-    //     "session": "FailAmir"
+    //     "session": "KORPRIRUN"
     //   }
 
     Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
@@ -210,7 +210,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             ],
             'reply_to' => null,
             'caption' => $caption,
-            'session' => 'FailAmir',
+            'session' => 'KORPRIRUN',
         ];
 
         try {
@@ -263,7 +263,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     //         ],
     //         'reply_to' => null,
     //         'caption' => $request->input('caption'),
-    //         'session' => 'FailAmir',
+    //         'session' => 'KORPRIRUN',
     //     ];
     //     $response = Http::withHeaders([
     //         'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',

@@ -45,7 +45,7 @@ return [
     // WAHA (WhatsApp HTTP API)
     'waha' => [
         'base_url' => env('WAHA_BASE_URL', 'https://waha-1tssjsoucdmi.cinta.sumopod.my.id'),
-        'session'  => env('WAHA_SESSION', 'FailAmir'),
+        'session'  => env('WAHA_SESSION', 'KORPRIRUN'),
         'api_key'  => env('WAHA_API_KEY', 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg'),
     ],
 ];
