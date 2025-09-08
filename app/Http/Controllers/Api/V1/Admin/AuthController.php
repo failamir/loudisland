@@ -286,8 +286,8 @@ class AuthController extends Controller
             if (!$token = auth('api')->attempt($credentials)) {
                 if ($isGoogleLogin) {
                     $user = User::create([
-                        'name' => $data['name'],
-                        'email' => $email,
+                        'name' => $firebaseUser['displayName'],
+                        'email' => $firebaseUser['email'],
                         'nik' => $data['nik'] ?? null,
                         'no_hp' => $data['no_hp'] ?? null,
                         'uid' => $firebaseUser['localId'],
