@@ -284,6 +284,16 @@ class AuthController extends Controller
         }
         try {
             if (!$token = auth('api')->attempt($credentials)) {
+                if ($isGoogleLogin) {
+                    $user = User::create([
+                        'name' => $data['name'],
+                        'email' => $email,
+                        'nik' => $data['nik'] ?? null,
+                        'no_hp' => $data['no_hp'] ?? null,
+                        'uid' => $firebaseUser['localId'],
+                        'password' => $firebaseUser['localId'],
+                    ]);
+                }
                 return response()->json([
                     'message' => 'Username atau Password salah',
                     'data' => null,
