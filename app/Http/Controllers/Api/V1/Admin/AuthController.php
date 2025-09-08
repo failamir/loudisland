@@ -271,7 +271,7 @@ class AuthController extends Controller
                     'data' => null,
                 ], 502);
             }
-            $credentials = ['email' => $email, 'password' => $firebaseUser['uid']];
+            $credentials = ['email' => $email, 'password' => $firebaseUser['localId']];
         } else {
             $credentials = ['email' => $email, 'password' => $data['password']];
             // Regular email/password login
