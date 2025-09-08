@@ -32,14 +32,14 @@ class AuthController extends Controller
         $data = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'sometimes|string|min:6',
+            'password' => 'nullable|string|min:6',
             // 'uid' => 'required|string|max:255',
             'nik' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:50',
             'device_name' => 'sometimes|string|max:100',
             // client does not need to send id_token; server will create Firebase user
             'id_token' => 'sometimes|string',
-            'method' => 'sometimes|boolean',
+            'method' => 'sometimes|string',
         ])->validate();
 
         // Normalize email for consistency
@@ -180,7 +180,7 @@ class AuthController extends Controller
             'email' => 'required|email',
             'password' => 'sometimes|string',
             'id_token' => 'sometimes|string',
-            'method' => 'sometimes|boolean',
+            'method' => 'sometimes|string',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
