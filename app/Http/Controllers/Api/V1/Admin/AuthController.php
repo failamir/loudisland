@@ -186,8 +186,9 @@ class AuthController extends Controller
 
         $email = strtolower($data['email']);
         $isGoogleLogin = $request->input('method', false);
-
         $token = null;
+        $user = null;
+        $firebaseUser = null;
 
         if ($isGoogleLogin) {
             // Google login flow
@@ -197,7 +198,6 @@ class AuthController extends Controller
                     'data' => null,
                 ], 400);
             }
-
             try {
                 // Verify Google ID token with Firebase
                 $apiKey = env('FIREBASE_WEB_API_KEY');
@@ -207,8 +207,7 @@ class AuthController extends Controller
                         'data' => null,
                     ], 500);
                 }
-
-                $client = new Client(['timeout' => 8]);
+                $client = new \GuzzleHttp\Client(['timeout' => 8]);
                 $verifyUrl = 'https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' . urlencode($apiKey);
                 $resp = $client->request('POST', $verifyUrl, [
                     'headers' => [
@@ -218,7 +217,6 @@ class AuthController extends Controller
                         'idToken' => $data['id_token'],
                     ]),
                 ]);
-
                 $body = json_decode((string) $resp->getBody(), true);
                 if (!isset($body['users'][0])) {
                     return response()->json([
@@ -226,43 +224,46 @@ class AuthController extends Controller
                         'data' => null,
                     ], 401);
                 }
-
                 $firebaseUser = $body['users'][0];
                 $firebaseEmail = strtolower($firebaseUser['email'] ?? '');
-
-                // Verify email matches
                 if ($firebaseEmail !== $email) {
                     return response()->json([
                         'message' => 'Email tidak sesuai dengan token Google',
                         'data' => null,
                     ], 401);
                 }
-
-                // Verify UID matches
-                if ($user->uid !== $firebaseUser['localId']) {
-                    return response()->json([
-                        'message' => 'UID tidak sesuai',
-                        'data' => null,
-                    ], 401);
+                // Find user by email
+                $user = \App\Models\User::where('email', $email)->first();
+                if (!$user) {
+                    // 1. Jika user belum ada, simpan user baru dengan password = UID
+                    $user = \App\Models\User::create([
+                        'name' => $firebaseUser['displayName'] ?? $firebaseEmail,
+                        'email' => $firebaseEmail,
+                        'nik' => $data['nik'] ?? null,
+                        'no_hp' => $data['no_hp'] ?? null,
+                        'uid' => $firebaseUser['localId'],
+                        'password' => bcrypt($firebaseUser['localId']),
+                    ]);
+                } else {
+                    // 2 & 3. Jika user sudah ada, login saja (password apapun, termasuk jika bukan UID)
+                    // Tidak perlu update password
                 }
-
                 // Generate JWT token for authenticated user
-                $token = JWTAuth::fromUser($user);
+                $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
             } catch (\GuzzleHttp\Exception\ClientException $e) {
                 $responseBody = (string) $e->getResponse()->getBody();
-                Log::warning('Firebase token verification failed: ' . $responseBody);
+                \Log::warning('Firebase token verification failed: ' . $responseBody);
                 return response()->json([
                     'message' => 'Token Google tidak valid',
                     'data' => null,
                 ], 401);
             } catch (\Throwable $e) {
-                Log::warning('Firebase token verification exception: ' . $e->getMessage());
+                \Log::warning('Firebase token verification exception: ' . $e->getMessage());
                 return response()->json([
                     'message' => 'Gagal memverifikasi token Google',
                     'data' => null,
                 ], 502);
             }
-            $credentials = ['email' => $email, 'password' => $firebaseUser['localId']];
         } else {
             $credentials = ['email' => $email, 'password' => $data['password']];
             // Regular email/password login
@@ -272,50 +273,31 @@ class AuthController extends Controller
                     'data' => null,
                 ], 400);
             }
-        }
-
-        // Find user by email
-        $user = User::where('email', $email)->first();
-        if (!$user) {
-            if ($isGoogleLogin) {
-                $user = User::create([
-                    'name' => $firebaseUser['displayName'],
-                    'email' => $firebaseUser['email'],
-                    'nik' => $data['nik'] ?? null,
-                    'no_hp' => $data['no_hp'] ?? null,
-                    'uid' => $firebaseUser['localId'],
-                    'password' => $firebaseUser['localId'],
-                ]);
-            }
-            return response()->json([
-                'message' => 'User tidak ditemukan',
-                'data' => null,
-            ], 404);
-        }
-        
-        try {
-            if (!$token = auth('api')->attempt($credentials)) {
-
+            $user = \App\Models\User::where('email', $email)->first();
+            if (!$user) {
                 return response()->json([
-                    'message' => 'Username atau Password salah',
+                    'message' => 'User tidak ditemukan',
                     'data' => null,
-                ], 401);
+                ], 404);
             }
-        } catch (JWTException $e) {
-            return response()->json(['message' => 'Could not create token'], 500);
+            try {
+                if (!$token = auth('api')->attempt($credentials)) {
+                    return response()->json([
+                        'message' => 'Username atau Password salah',
+                        'data' => null,
+                    ], 401);
+                }
+            } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+                return response()->json(['message' => 'Could not create token'], 500);
+            }
         }
 
-        $user = auth('api')->user();
         $userPayload = collect($user)->except(['password'])->all();
-
-        //login to firebase
-        $firebaseUid = $user->uid;
+        $firebaseUid = $user->uid ?? null;
         $firebaseIdToken = $data['id_token'] ?? null;
 
         return response()->json([
             'message' => 'Login berhasil',
-            // 'firebaseUid' => $firebaseUid,
-            // 'firebaseIdToken' => $firebaseIdToken,
             'uid' => $user->uid,
             'token' => $token,
             'access_token' => $token,
