@@ -178,9 +178,9 @@ class AuthController extends Controller
     {
         $data = Validator::make($request->all(), [
             'email' => 'required|email',
-            'password' => 'sometimes|string',
-            'id_token' => 'sometimes|string',
-            'method' => 'sometimes|string',
+            'password' => 'nullable|string',
+            'id_token' => 'nullable|string',
+            'method' => 'nullable|string',
             'revoke_others' => 'sometimes|boolean',
         ])->validate();
 
