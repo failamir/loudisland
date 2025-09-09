@@ -190,7 +190,7 @@ class AuthController extends Controller
         $user = null;
         $firebaseUser = null;
 
-        if ($isGoogleLogin) {
+        if ($isGoogleLogin == 'google') {
             // Google login flow
             if (!isset($data['id_token'])) {
                 return response()->json([
