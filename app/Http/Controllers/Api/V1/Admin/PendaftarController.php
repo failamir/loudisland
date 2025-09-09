@@ -1299,26 +1299,28 @@ class PendaftarController extends Controller
             $chatId = $this->normalizePhone($phone);
             $url = $url;
             // Check if the text contains a URL
-            // if (isset($url)) {
-            //     // Send with link preview
-            //     Http::withHeaders([
-            //         'x-api-key' => $apiKey,
-            //     ])->post($base . '/api/sendLinkPreview', [
-            //         'chatId' => $chatId,
-            //         'session' => $session,
-            //         'url' => $url,
-            //         'text' => $text,
-            //     ]);
-            // } else {
-            // Fallback to regular text message if no URL found
-            Http::withHeaders([
-                'x-api-key' => $apiKey,
-            ])->post($base . '/api/sendText', [
-                'chatId' => $chatId,
-                'session' => $session,
-                'text' => $text,
-            ]);
-            // }
+            if (isset($url)) {
+                // Send with link preview
+                $send = Http::withHeaders([
+                    'x-api-key' => $apiKey,
+                ])->post($base . '/api/sendLinkPreview', [
+                    'chatId' => $chatId,
+                    'session' => $session,
+                    'url' => $url,
+                    'text' => $text,
+                ]);
+                var_dump($send);
+                die;
+            } else {
+                // Fallback to regular text message if no URL found
+                Http::withHeaders([
+                    'x-api-key' => $apiKey,
+                ])->post($base . '/api/sendText', [
+                    'chatId' => $chatId,
+                    'session' => $session,
+                    'text' => $text,
+                ]);
+            }
         } catch (\Throwable $e) {
             // Log the error
             \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
