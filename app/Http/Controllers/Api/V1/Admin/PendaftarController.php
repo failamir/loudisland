@@ -1039,7 +1039,23 @@ class PendaftarController extends Controller
                     'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
                 ];
             }
-
+            $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com,riamakala6@gmail.com,kalisya@ayu.ku,11kexia@gmail.com'));
+            // convert to array
+            $emailTesting = array_map('trim', $emailTesting);
+            $isTesting = in_array(Auth::user()->email, $emailTesting);
+            if ($isTesting)
+                $total_payment = 1000;
+                foreach ($data['participants'] as $idx => $p) {
+                    $tid = $p['ticketId'];
+                    $itemDetails[] = [
+                        'id' => 'event-' . $tid,
+                        'price' => 1000,
+                        'quantity' => 1,
+                        'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
+                    ];
+                }
+            }
+            
             // tambah 1.7 % di amount
             $total_payment = $amount + ($amount * 0.017);
             $fee_service = $amount * 0.017;
@@ -1052,12 +1068,12 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
-            $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com,riamakala6@gmail.com,kalisya@ayu.ku,11kexia@gmail.com'));
-            // convert to array
-            $emailTesting = array_map('trim', $emailTesting);
             if (in_array(Auth::user()->email, $emailTesting)) {
                 $total_payment = 1000.00;
             }
+
+            // var_dump($total_payment);
+            // die;
 
             $payload = [
                 'transaction_details' => [
