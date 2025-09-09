@@ -1052,10 +1052,10 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
-            $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com'));
+            $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com,riamakala6@gmail.com,kalisya@ayu.ku,11kexia@gmail.com'));
             // convert to array
             $emailTesting = array_map('trim', $emailTesting);
-            if (in_array($user->email, $emailTesting)) {
+            if (in_array(Auth::user()->email, $emailTesting)) {
                 $total_payment = 1000.00;
             }
 
