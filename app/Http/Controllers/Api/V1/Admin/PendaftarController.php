@@ -1053,7 +1053,8 @@ class PendaftarController extends Controller
             ];
 
             $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com'));
-
+            // convert to array
+            $emailTesting = array_map('trim', $emailTesting);
             if (in_array($user->email, $emailTesting)) {
                 $total_payment = 1000.00;
             }
@@ -1290,7 +1291,7 @@ class PendaftarController extends Controller
                 // Send with link preview
                 Http::withHeaders([
                     'x-api-key' => $apiKey,
-                ])->post($base . '/api/sendLinkWithAutoPreview', [
+                ])->post($base . '/api/sendLinkPreview', [
                     'chatId' => $chatId,
                     'session' => $session,
                     'url' => $url,
@@ -1315,25 +1316,33 @@ class PendaftarController extends Controller
     protected function sendWhatsappImage(string $phone, string $imageUrl, string $caption = null): void
     {
         try {
+            $base = rtrim(config('services.waha.base_url'), '/');
+            $session = config('services.waha.session');
+            $apiKey = config('services.waha.api_key');
             $chatId = $this->normalizePhone($phone);
-            // Check if QR file exists before sending
+
+            // Check if the image file exists before sending
             $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
-            // var_dump($imageUrl);
-            // var_dump($qrPath);
-            // die;
+
             if (!file_exists($qrPath)) {
                 \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
                 return;
             }
 
-            $response = Http::post(url('/api/v1/waha/sendImage'), [
+            // Convert local path to full URL if it's a local file
+            if (strpos($imageUrl, 'http') !== 0) {
+                $imageUrl = url($imageUrl);
+            }
+
+            // Send image using WAHA API
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+            ])->post($base . '/api/sendImage', [
                 'chatId' => $chatId,
-                'url' => $imageUrl,
+                'session' => $session,
+                'image' => $imageUrl,
                 'caption' => $caption,
             ]);
-
-            // var_dump($response->json());
-            // die;
 
             // Log response for debugging
             \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
