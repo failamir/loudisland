@@ -1037,6 +1037,7 @@ class PendaftarController extends Controller
 
             if ($isTesting) {
                 $total_payment = 1000;
+                $amount = 1000;
                 foreach ($data['participants'] as $idx => $p) {
                     $tid = $p['ticketId'];
                     $itemDetails[] = [
@@ -1056,19 +1057,19 @@ class PendaftarController extends Controller
                         'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
                     ];
                 }
-
-                // tambah 1.7 % di amount
-                $total_payment = $amount + ($amount * 0.017);
-                $fee_service = $amount * 0.017;
-
-                //add service fee to itemDetails
-                $itemDetails[] = [
-                    'id' => 'service-fee',
-                    'price' => (int) $fee_service,
-                    'quantity' => 1,
-                    'name' => 'Service Fee',
-                ];
             }
+
+            // tambah 1.7 % di amount
+            $total_payment = $amount + ($amount * 0.017);
+            $fee_service = $amount * 0.017;
+
+            //add service fee to itemDetails
+            $itemDetails[] = [
+                'id' => 'service-fee',
+                'price' => (int) $fee_service,
+                'quantity' => 1,
+                'name' => 'Service Fee',
+            ];
 
             $payload = [
                 'transaction_details' => [
