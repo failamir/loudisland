@@ -36,10 +36,10 @@ class AuthController extends Controller
             // 'uid' => 'required|string|max:255',
             'nik' => 'nullable|string|max:50',
             'no_hp' => 'nullable|string|max:50',
-            'device_name' => 'sometimes|string|max:100',
+            'device_name' => 'nullable|string|max:100',
             // client does not need to send id_token; server will create Firebase user
-            'id_token' => 'sometimes|string',
-            'method' => 'sometimes|string',
+            'id_token' => 'nullable|string',
+            'method' => 'nullable|string',
         ])->validate();
 
         // Normalize email for consistency
