@@ -1282,15 +1282,31 @@ class PendaftarController extends Controller
             $session = config('services.waha.session');
             $apiKey = config('services.waha.api_key');
             $chatId = $this->normalizePhone($phone);
-            Http::withHeaders([
-                'x-api-key' => $apiKey,
-            ])->post($base . '/api/sendText', [
-                'chatId' => $chatId,
-                'session' => $session,
-                'text' => $text,
-            ]);
+            
+            // Check if the text contains a URL
+            if (preg_match('/https?:\/\/[^\s]+/i', $text, $matches)) {
+                $url = $matches[0];
+                // Send with link preview
+                Http::withHeaders([
+                    'x-api-key' => $apiKey,
+                ])->post($base . '/api/sendLinkWithAutoPreview', [
+                    'chatId' => $chatId,
+                    'session' => $session,
+                    'url' => $url,
+                    'text' => $text,
+                ]);
+            } else {
+                // Fallback to regular text message if no URL found
+                Http::withHeaders([
+                    'x-api-key' => $apiKey,
+                ])->post($base . '/api/sendText', [
+                    'chatId' => $chatId,
+                    'session' => $session,
+                    'text' => $text,
+                ]);
+            }
         } catch (\Throwable $e) {
-            // swallow errors; optionally log
+            // Log the error
             \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
         }
     }
