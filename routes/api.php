@@ -181,10 +181,21 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
         $request->validate([
-            'chatId' => 'required',
+            'chatId' => 'required|string',
             'url' => 'required|string',
             'caption' => 'nullable|string',
         ]);
+
+        $baseUrl = rtrim(config('services.waha.base_url'), '/');
+        $apiKey = config('services.waha.api_key');
+        $session = config('services.waha.session');
+        
+        if (!$baseUrl || !$apiKey || !$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'WAHA configuration is missing',
+            ], 500);
+        }
 
         $url = trim($request->input('url'));
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
@@ -195,30 +206,40 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         }
 
         $caption = (string) $request->input('caption', '');
-        // Ensure filename is safe and ends with .jpg as WAHA expects a filename
-        $filename = trim($caption) !== '' ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) : 'image.jpg';
-        if (!preg_match('/\.(jpe?g|png|gif|webp)$/i', $filename)) {
-            $filename .= '.jpg';
+        
+        // Ensure filename is safe and has a proper extension
+        $filename = trim($caption) !== '' 
+            ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) 
+            : 'image';
+            
+        // Add proper extension based on URL or default to jpg
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+        if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+            $extension = 'jpg';
         }
+        $filename = "$filename.$extension";
 
         $payload = [
             'chatId' => $request->input('chatId'),
             'file' => [
-                'mimetype' => 'image/jpeg',
+                'mimetype' => 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension),
                 'filename' => $filename,
                 'url' => $url,
             ],
             'reply_to' => null,
             'caption' => $caption,
-            'session' => 'KORPRIRUN',
+            'session' => $session,
         ];
 
         try {
             $response = Http::withHeaders([
-                'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-            ])->timeout(20)
-                ->connectTimeout(10)
-                ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $payload);
+                'x-api-key' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])
+            ->timeout(30)
+            ->connectTimeout(15)
+                ->post($baseUrl . '/api/sendImage', $payload);
 
             if ($response->successful()) {
                 return response()->json([
@@ -248,6 +269,100 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         }
     });
 
+
+    // Send link with custom preview (high quality) via WAHA
+    // Accepts:
+    // - chatId: string (required)
+    // - url: string (required) -> link to preview
+    // - text: string (optional) -> message text that may include the same URL
+    // - title: string (optional)
+    // - description: string (optional)
+    // - image_base64: string (optional, base64 without data URI)
+    // - image_url: string (optional, if provided we will fetch and convert to base64)
+    Route::post('waha/sendLinkPreview', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'chatId' => 'required|string',
+            'url' => 'required|string|url',
+            'text' => 'nullable|string',
+            'title' => 'nullable|string',
+            'description' => 'nullable|string',
+            'image_base64' => 'nullable|string',
+            'image_url' => 'nullable|string',
+        ]);
+
+        $baseUrl = rtrim(config('services.waha.base_url'), '/');
+        $apiKey = config('services.waha.api_key');
+        $session = config('services.waha.session');
+
+        if (!$baseUrl || !$apiKey || !$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'WAHA configuration is missing',
+            ], 500);
+        }
+
+        $imageBase64 = $request->string('image_base64');
+        $imageUrl = $request->string('image_url');
+        if (!$imageBase64 && $imageUrl) {
+            try {
+                $imgResp = Http::timeout(20)->connectTimeout(10)->get($imageUrl);
+                if ($imgResp->successful()) {
+                    $imageBase64 = base64_encode($imgResp->body());
+                }
+            } catch (\Throwable $e) {
+                // ignore image fetch failure, send without image
+            }
+        }
+
+        $payload = [
+            'session' => $session,
+            'chatId' => $request->input('chatId'),
+            'text' => $request->input('text', 'Check this out! ' . $request->input('url')),
+            'linkPreviewHighQuality' => true,
+            'preview' => [
+                'url' => $request->input('url'),
+                'title' => $request->input('title', ''),
+                'description' => $request->input('description', ''),
+            ],
+        ];
+
+        if ($imageBase64) {
+            $payload['preview']['image'] = [
+                'data' => $imageBase64,
+            ];
+        }
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->timeout(30)->connectTimeout(15)
+              ->post($baseUrl . '/api/send/link-custom-preview', $payload);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Link preview sent successfully',
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send link preview',
+                'upstream_status' => $response->status(),
+                'error' => $response->json() ?? $response->body(),
+            ], 502);
+        } catch (ConnectionException $e) {
+            \Log::warning('WAHA sendLinkPreview timeout/connection error', [
+                'exception' => $e->getMessage(),
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Upstream WAHA service timeout or connection issue',
+            ], 504);
+        }
+    });
 
     // Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
     //     $request->validate([
