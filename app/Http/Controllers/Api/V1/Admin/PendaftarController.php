@@ -1052,7 +1052,8 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
-            $emailTesting = ['lvlysunday@gmail.com', 'kezia1@gmail.com', 'ifailamir@gmail.com'];
+            $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com'));
+
             if (in_array($user->email, $emailTesting)) {
                 $total_payment = 1000.00;
             }
@@ -1282,7 +1283,7 @@ class PendaftarController extends Controller
             $session = config('services.waha.session');
             $apiKey = config('services.waha.api_key');
             $chatId = $this->normalizePhone($phone);
-            
+
             // Check if the text contains a URL
             if (preg_match('/https?:\/\/[^\s]+/i', $text, $matches)) {
                 $url = $matches[0];
