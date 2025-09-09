@@ -1030,20 +1030,12 @@ class PendaftarController extends Controller
             // Build Midtrans payload with item_details per participant
             $eventNameMap = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
             $itemDetails = [];
-            foreach ($data['participants'] as $idx => $p) {
-                $tid = $p['ticketId'];
-                $itemDetails[] = [
-                    'id' => 'event-' . $tid,
-                    'price' => (int) ($priceMap[$tid] ?? 0),
-                    'quantity' => 1,
-                    'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
-                ];
-            }
             $emailTesting = explode(',', env('EMAIL_TESTING', 'kalisya@gmail.com,kezia1@gmail.com,ifailamir@gmail.com,riamakala6@gmail.com,kalisya@ayu.ku,11kexia@gmail.com'));
             // convert to array
             $emailTesting = array_map('trim', $emailTesting);
             $isTesting = in_array(Auth::user()->email, $emailTesting);
-            if ($isTesting)
+
+            if ($isTesting) {
                 $total_payment = 1000;
                 foreach ($data['participants'] as $idx => $p) {
                     $tid = $p['ticketId'];
@@ -1054,26 +1046,29 @@ class PendaftarController extends Controller
                         'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
                     ];
                 }
+            } else {
+                foreach ($data['participants'] as $idx => $p) {
+                    $tid = $p['ticketId'];
+                    $itemDetails[] = [
+                        'id' => 'event-' . $tid,
+                        'price' => (int) ($priceMap[$tid] ?? 0),
+                        'quantity' => 1,
+                        'name' => ($eventNameMap[$tid] ?? ('Event #' . $tid)) . ' - ' . $p['name'],
+                    ];
+                }
+
+                // tambah 1.7 % di amount
+                $total_payment = $amount + ($amount * 0.017);
+                $fee_service = $amount * 0.017;
+
+                //add service fee to itemDetails
+                $itemDetails[] = [
+                    'id' => 'service-fee',
+                    'price' => (int) $fee_service,
+                    'quantity' => 1,
+                    'name' => 'Service Fee',
+                ];
             }
-            
-            // tambah 1.7 % di amount
-            $total_payment = $amount + ($amount * 0.017);
-            $fee_service = $amount * 0.017;
-
-            //add service fee to itemDetails
-            $itemDetails[] = [
-                'id' => 'service-fee',
-                'price' => (int) $fee_service,
-                'quantity' => 1,
-                'name' => 'Service Fee',
-            ];
-
-            if (in_array(Auth::user()->email, $emailTesting)) {
-                $total_payment = 1000.00;
-            }
-
-            // var_dump($total_payment);
-            // die;
 
             $payload = [
                 'transaction_details' => [
