@@ -1280,26 +1280,26 @@ class PendaftarController extends Controller
             $lines[] = 'Nama: ' . ($p->name ?? '-');
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
-            $lines[] = 'Check Dashboard kamu https://daftar.mandalikakorprirun.com/dashboard';
+            $url = 'https://daftar.mandalikakorprirun.com/dashboard';
+            $lines[] = 'Check Dashboard kamu di ' . $url;
 
             $text = implode("\n", $lines);
 
             // Send only text message (no QR image)
-            $this->sendWhatsapp($p->phone, $text);
+            $this->sendWhatsapp($p->phone, $text, $url);
         }
     }
 
-    protected function sendWhatsapp(string $phone, string $text): void
+    protected function sendWhatsapp(string $phone, string $text, string $url): void
     {
         try {
             $base = rtrim(config('services.waha.base_url'), '/');
             $session = config('services.waha.session');
             $apiKey = config('services.waha.api_key');
             $chatId = $this->normalizePhone($phone);
-
+            $url = $url;
             // Check if the text contains a URL
-            if (preg_match('/https?:\/\/[^\s]+/i', $text, $matches)) {
-                $url = $matches[0];
+            if (isset($url)) {
                 // Send with link preview
                 Http::withHeaders([
                     'x-api-key' => $apiKey,
