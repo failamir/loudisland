@@ -205,7 +205,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         //     ], 422);
         // }
 
-        $caption = (string) $request->input('caption', '');
+        $caption = (string) $request->input('caption', 'QR ID Peserta');
 
         // Ensure filename is safe and has a proper extension
         $filename = trim($caption) !== ''
@@ -242,7 +242,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 ->timeout(30)
                 ->connectTimeout(15)
                 ->post($baseUrl . '/api/sendImage', $payload);
-
+            // var_dump($response);
+            // die;
             if ($response->successful()) {
                 return response()->json([
                     'status' => 'success',
