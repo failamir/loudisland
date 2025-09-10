@@ -1425,10 +1425,15 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Participant not found'], 404);
         }
 
+        // cek apakah sudah? jika iya balikan "Anda Sudah Mengambil Racepack"
+        if ($participant->status_racepack == 'sudah') {
+            return response()->json(['message' => 'Anda Sudah Mengambil Racepack'], 400);
+        }
+
         $participant->update(['status_racepack' => 'sudah']);
 
         return response()->json([
-            'message' => 'Status racepack updated',
+            'message' => 'Racepack berhasil diambil',
             // 'invoice' => $participant->transaction->invoice
             // 'data' => $participant
         ]);
