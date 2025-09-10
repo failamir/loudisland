@@ -1,11 +1,14 @@
 export const MENU_SIDEBAR = [
-  { title: 'Dashboard', path: '/' , icon: 'home' },
+  { title: 'Dashboard', path: '/', icon: 'home' },
   // { title: 'Dark Sidebar', path: '/dark-sidebar' },
-  { title: 'Users', path: '/users' , icon: 'users' },
-  { title: 'Transactions', path: '/transactions' , icon: 'cheque' },
-  { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
-  { title: 'Withdrawal', path: '/withdrawal' , icon: 'wallet' },
-  { title: 'Order Tiket', path: '/order' , icon: 'booking' },
+  { title: 'Transactions', path: '/transactions', icon: 'cheque' },
+  // { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
+  { title: 'Racepacks', path: '/racepacks', icon: 'gift' },
+  { title: 'Withdrawal', path: '/withdrawal', icon: 'wallet' },
+  { title: 'Users', path: '/users', icon: 'users' },
+  { title: 'Roles', path: '/roles', icon: 'shield-tick' },
+  { title: 'Permissions', path: '/permissions', icon: 'lock' },
+  // { title: 'Order Tiket', path: '/order' , icon: 'booking' },
 ];
 
 export const MENU_MEGA = [{
