@@ -1325,43 +1325,43 @@ class PendaftarController extends Controller
         }
     }
 
-    protected function sendWhatsappImage(string $phone, string $imageUrl, string $caption = null): void
-    {
-        try {
-            $base = rtrim(config('services.waha.base_url'), '/');
-            $session = config('services.waha.session');
-            $apiKey = config('services.waha.api_key');
-            $chatId = $this->normalizePhone($phone);
+    // protected function sendWhatsappImage(string $phone, string $imageUrl, string $caption = null): void
+    // {
+    //     try {
+    //         $base = rtrim(config('services.waha.base_url'), '/');
+    //         $session = config('services.waha.session');
+    //         $apiKey = config('services.waha.api_key');
+    //         $chatId = $this->normalizePhone($phone);
 
-            // Check if the image file exists before sending
-            $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
+    //         // Check if the image file exists before sending
+    //         $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
 
-            if (!file_exists($qrPath)) {
-                \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
-                return;
-            }
+    //         if (!file_exists($qrPath)) {
+    //             \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
+    //             return;
+    //         }
 
-            // Convert local path to full URL if it's a local file
-            if (strpos($imageUrl, 'http') !== 0) {
-                $imageUrl = url($imageUrl);
-            }
+    //         // Convert local path to full URL if it's a local file
+    //         if (strpos($imageUrl, 'http') !== 0) {
+    //             $imageUrl = url($imageUrl);
+    //         }
 
-            // Send image using WAHA API
-            $response = Http::withHeaders([
-                'x-api-key' => $apiKey,
-            ])->post($base . '/api/sendImage', [
-                'chatId' => $chatId,
-                'session' => $session,
-                'image' => $imageUrl,
-                'caption' => $caption,
-            ]);
+    //         // Send image using WAHA API
+    //         $response = Http::withHeaders([
+    //             'x-api-key' => $apiKey,
+    //         ])->post($base . '/api/sendImage', [
+    //             'chatId' => $chatId,
+    //             'session' => $session,
+    //             'image' => $imageUrl,
+    //             'caption' => $caption,
+    //         ]);
 
-            // Log response for debugging
-            \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
-        }
-    }
+    //         // Log response for debugging
+    //         \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
+    //     } catch (\Throwable $e) {
+    //         \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
+    //     }
+    // }
 
     protected function normalizePhone(string $phone): string
     {
