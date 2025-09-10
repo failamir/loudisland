@@ -189,7 +189,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $baseUrl = rtrim(config('services.waha.base_url'), '/');
         $apiKey = config('services.waha.api_key');
         $session = config('services.waha.session');
-        
+
         if (!$baseUrl || !$apiKey || !$session) {
             return response()->json([
                 'status' => 'error',
@@ -197,21 +197,21 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             ], 500);
         }
 
-        $url = trim($request->input('url'));
-        if (!filter_var($url, FILTER_VALIDATE_URL)) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Invalid image URL',
-            ], 422);
-        }
+        // $url = trim($request->input('url'));
+        // if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        //     return response()->json([
+        //         'status' => 'error',
+        //         'message' => 'Invalid image URL',
+        //     ], 422);
+        // }
 
         $caption = (string) $request->input('caption', '');
-        
+
         // Ensure filename is safe and has a proper extension
-        $filename = trim($caption) !== '' 
-            ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) 
+        $filename = trim($caption) !== ''
+            ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption)
             : 'image';
-            
+
         // Add proper extension based on URL or default to jpg
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
         if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
@@ -237,8 +237,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])
-            ->timeout(30)
-            ->connectTimeout(15)
+                ->timeout(30)
+                ->connectTimeout(15)
                 ->post($baseUrl . '/api/sendImage', $payload);
 
             if ($response->successful()) {
@@ -338,7 +338,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'Content-Type' => 'application/json',
                 'Accept' => 'application/json',
             ])->timeout(30)->connectTimeout(15)
-              ->post($baseUrl . '/api/send/link-custom-preview', $payload);
+                ->post($baseUrl . '/api/send/link-custom-preview', $payload);
 
             if ($response->successful()) {
                 return response()->json([
