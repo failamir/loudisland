@@ -21,7 +21,7 @@ class Participant extends Model
         'province',
         'city',
         'ticket_id',
-        'status_restpack',
+        'status_racepack',
     ];
 
     public function transaction()

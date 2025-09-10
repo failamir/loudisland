@@ -31,6 +31,8 @@ use Illuminate\Support\Facades\Auth;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\Pendaftar;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\WhatsAppNotification;
 
 class PendaftarController extends Controller
 {
@@ -170,7 +172,7 @@ class PendaftarController extends Controller
                             'province' => $p['province'] ?? null,
                             'city' => $p['city'] ?? null,
                             'ticket_id' => $p['ticketId'] ?? null,
-                            'status_restpack' => $p['status_restpack'] ?? 'belum',
+                            'status_racepack' => $p['status_racepack'] ?? 'belum',
                         ]);
 
                         // Generate QR code for participant_id
@@ -215,7 +217,7 @@ class PendaftarController extends Controller
                         'province' => $p->province,
                         'city'   => $p->city,
                         'participant_id' => $p->participant_id,
-                        'status_restpack' => $p->status_restpack,
+                        'status_racepack' => $p->status_racepack,
                         'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
                     ],
                     'event'         => $ev ? [
@@ -560,7 +562,7 @@ class PendaftarController extends Controller
                         'province' => $p['province'] ?? null,
                         'city' => $p['city'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
-                        'status_restpack' => $p['status_restpack'] ?? 'belum',
+                        'status_racepack' => $p['status_racepack'] ?? 'belum',
                     ]);
 
                     // Generate QR code for participant_id
@@ -605,7 +607,7 @@ class PendaftarController extends Controller
                 'province' => $p->province,
                 'city' => $p->city,
                 'ticket_id' => $p->ticket_id,
-                'status_restpack' => $p->status_restpack,
+                'status_racepack' => $p->status_racepack,
                 'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
@@ -999,10 +1001,10 @@ class PendaftarController extends Controller
             $buyerCity = $first['city'];
             // $buyerAddress = $first['address'];
 
-            // Default each participant status_restpack to 'belum'
+            // Default each participant status_racepack to 'belum'
             $participantsAug = array_map(function ($p) {
-                if (!isset($p['status_restpack'])) {
-                    $p['status_restpack'] = 'belum';
+                if (!isset($p['status_racepack'])) {
+                    $p['status_racepack'] = 'belum';
                 }
                 return $p;
             }, $data['participants']);
@@ -1163,7 +1165,7 @@ class PendaftarController extends Controller
             $data_transaction->update([
                 'status' => 'success'
             ]);
-            // Post-success processing: assign participant IDs, ensure status_restpack, and send WA
+            // Post-success processing: assign participant IDs, ensure status_racepack, and send WA
             $this->postPaymentSuccessActions($data_transaction);
         } elseif ($transaction == 'pending') {
 
@@ -1227,7 +1229,7 @@ class PendaftarController extends Controller
                         'email' => $p['email'] ?? null,
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
-                        'status_restpack' => $p['status_restpack'] ?? 'belum',
+                        'status_racepack' => $p['status_racepack'] ?? 'belum',
                     ]);
 
                     // Generate QR code for participant_id
@@ -1287,6 +1289,39 @@ class PendaftarController extends Controller
 
             // Send only text message (no QR image)
             $this->sendWhatsapp($p->phone, $text, $url);
+
+            // Also send email notification (SMTP2GO) to participant and your email
+            try {
+                $recipients = array_values(array_filter([
+                    $p->email ?? null,
+                    'ifailamir@gmail.com',
+                ]));
+                if (!empty($recipients)) {
+                    $emailData = [
+                        'chatId' => $this->normalizePhone($p->phone),
+                        'url' => $url,
+                        'text' => $text,
+                        'participant' => [
+                            'id' => $p->participant_id,
+                            'name' => $p->name,
+                            'email' => $p->email,
+                            'phone' => $p->phone,
+                            'ticket' => $jenis,
+                        ],
+                        'transaction' => [
+                            'invoice' => $trx->invoice,
+                            'amount' => $trx->amount,
+                            'status' => $trx->status,
+                        ],
+                    ];
+                    Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
+                    'error' => $e->getMessage(),
+                    'participant' => $p->participant_id ?? null,
+                ]);
+            }
         }
     }
 
@@ -1372,24 +1407,30 @@ class PendaftarController extends Controller
     }
 
     /**
-     * Update status_restpack to 'sudah' for a participant by participant_id only
+     * Update status_racepack to 'sudah' for a participant by participant_id only
      */
-    public function restpack(Request $request)
+    public function racepack(Request $request)
     {
         $request->validate([
             'participant_id' => 'required|string',
         ]);
+
+        //cek apakah ada x-api-key dan benar
+        if ($request->header('x-api-key') != env('X_API_KEY')) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
 
         $participant = Participant::where('participant_id', $request->input('participant_id'))->first();
         if (!$participant) {
             return response()->json(['message' => 'Participant not found'], 404);
         }
 
-        $participant->update(['status_restpack' => 'sudah']);
+        $participant->update(['status_racepack' => 'sudah']);
 
         return response()->json([
-            'message' => 'Status restpack updated',
-            'invoice' => $participant->transaction->invoice
+            'message' => 'Status racepack updated',
+            // 'invoice' => $participant->transaction->invoice
+            // 'data' => $participant
         ]);
     }
 

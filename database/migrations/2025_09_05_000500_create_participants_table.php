@@ -14,7 +14,7 @@ return new class extends Migration {
             $table->string('name')->nullable();
             $table->string('phone')->nullable();
             $table->unsignedBigInteger('ticket_id')->nullable();
-            $table->string('status_restpack')->default('belum');
+            $table->string('status_racepack')->default('belum');
             $table->timestamps();
 
             $table->foreign('transaction_id')->references('id')->on('transactions')->onDelete('cascade');
