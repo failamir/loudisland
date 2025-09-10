@@ -212,6 +212,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption)
             : 'image';
 
+        $url = $request->input('url', 'https://gooogle.com');
+
         // Add proper extension based on URL or default to jpg
         $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
         if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
