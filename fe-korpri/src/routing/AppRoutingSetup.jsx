@@ -18,6 +18,9 @@ import TransactionDetailPage from '@/pages/transactions/TransactionDetailPage';
 import NomorPunggungListPage from '@/pages/NomorPunggungListPage';
 import NomorPunggungPairPage from '@/pages/nomor-punggung/NomorPunggungPairPage';
 import WithdrawalPage from '@/pages/withdrawal/WithdrawalPage';
+import PermissionsListPage from '@/pages/permissions/PermissionsListPage';
+import RolesListPage from '@/pages/roles/RolesListPage';
+import RacepackListPage from '@/pages/racepacks/RacepackListPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -29,6 +32,9 @@ const AppRoutingSetup = () => {
           <Route path="/order" element={<OrderWizardModal />} />
           <Route path="/order/success" element={<OrderSuccessPage />} />
           <Route path="/withdrawal" element={<WithdrawalPage />} />
+          <Route path="/racepacks" element={<RacepackListPage />} />
+          <Route path="/permissions" element={<PermissionsListPage />} />
+          <Route path="/roles" element={<RolesListPage />} />
           <Route path="/public-profile/profiles/default" element={<ProfileDefaultPage />} />
           <Route path="/public-profile/profiles/creator" element={<ProfileCreatorPage />} />
           <Route path="/public-profile/profiles/company" element={<ProfileCompanyPage />} />

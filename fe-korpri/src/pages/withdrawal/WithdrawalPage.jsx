@@ -22,10 +22,10 @@ const WithdrawalPage = () => {
   const updateStatus = async (row, action) => {
     const title =
       action === 'approved' ? 'Setujui withdrawal ini?' :
-      action === 'paid' ? 'Tandai sebagai sudah dibayar?' :
-      action === 'rejected' ? 'Tolak withdrawal ini?' :
-      action === 'canceled' ? 'Batalkan withdrawal ini?' :
-      'Lanjutkan aksi?';
+        action === 'paid' ? 'Tandai sebagai sudah dibayar?' :
+          action === 'rejected' ? 'Tolak withdrawal ini?' :
+            action === 'canceled' ? 'Batalkan withdrawal ini?' :
+              'Lanjutkan aksi?';
     if (!window.confirm(title)) return;
 
     const note = window.prompt('Catatan (opsional):', '') || undefined;
@@ -199,7 +199,7 @@ const WithdrawalPage = () => {
           </div>
         </div>
       </Container>
-
+      <br />
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <div className="card">
