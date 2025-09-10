@@ -148,7 +148,7 @@
             width: clamp(96%, 102vw, 108%);
             margin-left: clamp(-6%, -3.5vw, -1%);
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
-            margin-bottom: clamp(-44px, -4.2vw, -28px);
+            margin-bottom: clamp(-18px, -2.4vw, -10px);
             pointer-events: none;
             opacity: .98;
             /* vignette halus agar tepi tidak "kotak" */
@@ -223,12 +223,14 @@
         /* Countdown */
         .countdown {
             /* perkecil jarak atas agar lebih dekat ke gambar */
-            margin: clamp(-52px, -6.2vw, -18px) auto 10px;
+            margin: clamp(2px, 1.2vw, 18px) auto 10px;
             display: grid;
             grid-auto-flow: column;
             gap: clamp(10px, 3vw, 28px);
             align-items: end;
             justify-content: center;
+            position: relative;
+            z-index: 3;
         }
 
         .cd-item {
@@ -303,7 +305,7 @@
             .runners {
                 width: clamp(104%, 110vw, 120%);
                 margin-left: clamp(-10%, -6vw, -4%);
-                margin-bottom: clamp(-32px, -3.5vw, -20px);
+                margin-bottom: clamp(-14px, -2vw, -8px);
             }
 
             .frame::before {
@@ -340,7 +342,7 @@
             .runners {
                 width: clamp(108%, 118vw, 128%);
                 margin-left: clamp(-12%, -8vw, -6%);
-                margin-bottom: clamp(-24px, -2.8vw, -16px);
+                margin-bottom: clamp(-10px, -1.6vw, -6px);
             }
 
             /* offset sedikit lebih kecil di layar kecil */
@@ -366,12 +368,12 @@
                 <img src="{{ asset('giner-assets/img/logo.png') }}" alt="Logo">
             </a>
             <nav class="nav-links">
-                <a href="#home">Home</a>
+                <!-- <a href="#home">Home</a>
                 <a href="#about">About Us</a>
                 <a href="#schedule">Schedule</a>
                 <a href="#location">Location</a>
                 <a href="#register">Register</a>
-                <a href="#news">News</a>
+                <a href="#news">News</a> -->
             </nav>
         </div>
     </header>
