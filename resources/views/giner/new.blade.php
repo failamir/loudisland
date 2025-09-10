@@ -144,9 +144,9 @@
             position: relative;
             perspective: 600px;
             /* pastikan kontainer punya tinggi agar layout tidak collapse */
-            height: clamp(180px, 28vw, 420px);
-            width: clamp(105%, 115vw, 125%);
-            margin-left: clamp(-12%, -7.5vw, -2.5%);
+            height: clamp(160px, 24vw, 360px);
+            width: clamp(100%, 108vw, 115%);
+            margin-left: clamp(-8%, -5vw, -2%);
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
             margin-bottom: clamp(-44px, -4.2vw, -28px);
             pointer-events: none;
@@ -301,8 +301,8 @@
             }
 
             .runners {
-                width: clamp(115%, 125vw, 140%);
-                margin-left: clamp(-20%, -12.5vw, -7.5%);
+                width: clamp(108%, 115vw, 128%);
+                margin-left: clamp(-14%, -9vw, -6%);
                 margin-bottom: clamp(-32px, -3.5vw, -20px);
             }
 
@@ -338,8 +338,8 @@
             }
 
             .runners {
-                width: clamp(125%, 135vw, 150%);
-                margin-left: clamp(-25%, -17.5vw, -12.5%);
+                width: clamp(115%, 125vw, 135%);
+                margin-left: clamp(-18%, -12vw, -8%);
                 margin-bottom: clamp(-24px, -2.8vw, -16px);
             }
 
@@ -412,8 +412,8 @@
             <!-- CTA -->
             <div class="cta" id="register">
                 @guest
-                <!-- <a href="https://daftar.mandalikakorprirun.com/" class="btn-primary">Register</a> -->
-                <a href="#" class="btn-primary">REGISTRASI DAPAT DI LAKUKAN 11 SEPTEMBER 2025</a>
+                <a href="https://daftar.mandalikakorprirun.com/" class="btn-primary">Register</a>
+                <!-- <a href="#" class="btn-primary">REGISTRASI DAPAT DI LAKUKAN 11 SEPTEMBER 2025</a> -->
                 @else
                 <a href="{{ url('/') }}" class="btn-primary">Dashboard</a>
                 @endguest
