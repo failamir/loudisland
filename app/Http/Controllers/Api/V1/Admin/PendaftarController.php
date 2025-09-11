@@ -162,20 +162,20 @@ class PendaftarController extends Controller
         }
 
         // Prefer direct lookup by peserta_id = user id, only successful transactions
-        $trx = Transaksi::where('peserta_id', $authUser->id)
-            ->where('status', 'success')
+        $trx = Participant::where('peserta_id', $authUser->email)
+            // ->where('status', 'success')
             ->orderByDesc('created_at')
             ->get();
 
         // Fallbacks if nothing found: try by uid or email (if such data was stored)
-        if ($trx->isEmpty()) {
-            $trx = Transaksi::query()
-                ->when(!empty($authUser->uid), fn($q) => $q->orWhere('uid', $authUser->uid))
-                ->when(!empty($authUser->email), fn($q) => $q->orWhere('email', $authUser->email))
-                ->where('status', 'success')
-                ->orderByDesc('created_at')
-                ->get();
-        }
+        // if ($trx->isEmpty()) {
+        //     $trx = Transaksi::query()
+        //         ->when(!empty($authUser->uid), fn($q) => $q->orWhere('uid', $authUser->uid))
+        //         ->when(!empty($authUser->email), fn($q) => $q->orWhere('email', $authUser->email))
+        //         ->where('status', 'success')
+        //         ->orderByDesc('created_at')
+        //         ->get();
+        // }
 
         // Build flattened tickets list from successful transactions
         $tickets = [];
