@@ -44,6 +44,31 @@ class PendaftarController extends Controller
         \Midtrans\Config::$isSanitized  = config('services.midtrans.isSanitized');
         \Midtrans\Config::$is3ds        = config('services.midtrans.is3ds');
     }
+
+    /**
+     * Simple staff list for racepack dropdown, derived from participants table
+     * GET /api/v1/staffs
+     * Optional query: search
+     */
+    public function staffList(Request $request)
+    {
+        $q = Participant::query()
+            ->whereNotNull('racepack_by')
+            ->select(['staff_user_id','racepack_by'])
+            ->groupBy('staff_user_id','racepack_by')
+            ->orderBy('racepack_by');
+        if ($request->filled('search')) {
+            $term = '%' . $request->input('search') . '%';
+            $q->where('racepack_by', 'like', $term);
+        }
+        $items = $q->get()->map(function ($row) {
+            return [
+                'id' => $row->staff_user_id,
+                'name' => $row->racepack_by,
+            ];
+        })->values();
+        return response()->json($items);
+    }
     use MediaUploadingTrait;
     use CsvImportTrait;
 
@@ -1414,10 +1439,16 @@ class PendaftarController extends Controller
         $request->validate([
             'participant_id' => 'required|string',
         ]);
-
+        
         //cek apakah ada x-api-key dan benar
         if ($request->header('x-api-key') != env('X_API_KEY')) {
             return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        //get user by bearer token
+        $user = auth('api')->user();
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         $participant = Participant::where('participant_id', $request->input('participant_id'))->first();
@@ -1430,91 +1461,90 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Anda Sudah Mengambil Racepack'], 400);
         }
 
-        $participant->update(['status_racepack' => 'sudah']);
+        $participant->update([
+            'status_racepack' => 'sudah',
+            'staff_user_id' => $user->id ?? null,
+            'racepack_by' => $user->name ?? null,
+            'racepack_at' => now(),
+        ]);
 
         return response()->json([
             'message' => 'Racepack berhasil diambil',
-            // 'invoice' => $participant->transaction->invoice
-            // 'data' => $participant
-        ]);
+            'staff' => $user->name ?? null,
+            'participant' => $participant->name ?? null,
+        ], 200);
     }
 
-    public function store(StorePendaftarRequest $request)
+    /**
+     * List participants' racepack status with filters and pagination
+     * GET /api/v1/racepacks
+     * Query params:
+     * - status: 'sudah' | 'belum' (optional)
+     * - staff_id: int (optional)
+     * - staff_name: string (optional, matches racepack_by like)
+     * - search: string (optional, matches participant_id, name, email, phone)
+     * - date_from, date_to: Y-m-d (optional) filter by racepack_at range
+     * - per_page: int (optional) default 10
+     */
+    public function racepackList(Request $request)
     {
-        $u = (int)$request->input('total_bayar');
+        $perPage = (int) $request->input('per_page', 10);
+        $status = $request->input('status');
+        $staffId = $request->input('staff_id');
+        $staffName = $request->input('staff_name');
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
 
-        for (
-            $u = 0;
-            $u < $request->input('total_bayar');
-            $u++
-        ) {
-            $no_tiket = '0' . Pendaftar::orderBy('no_tiket', 'DESC')->first()->no_tiket + 1;
-            // $pendaftar->no_tiket = '0' . Pendaftar::latest()->first()->nama;
-            $total_bayar = Event::find($request->input('event_id'))->harga;
-            $pendaftar = Pendaftar::create(array_merge($request->all(), [
-                'no_tiket' => $no_tiket,
-                'total_bayar' => $total_bayar,
-            ]));
-            if ($media = $request->input('ck-media', false)) {
-                Media::whereIn('id', $media)->update(['model_id' => $pendaftar->id]);
-            }
+        // Build a base filter (without status) to compute totals and list
+        $base = Participant::with(['staff:id,name'])
+            ->select(['id','transaction_id','participant_id','name','email','phone','province','city','ticket_id','status_racepack','staff_user_id','racepack_by','racepack_at']);
+
+        if ($staffId) {
+            $base->where('staff_user_id', $staffId);
+        }
+        if ($staffName) {
+            $base->where('racepack_by', 'like', "%{$staffName}%");
+        }
+        if ($search) {
+            $base->where(function($q) use ($search) {
+                $q->where('participant_id', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        if ($dateFrom) {
+            $base->whereDate('racepack_at', '>=', $dateFrom);
+        }
+        if ($dateTo) {
+            $base->whereDate('racepack_at', '<=', $dateTo);
         }
 
-        return redirect()->route('admin.pendaftars.index');
-    }
+        // Compute totals regardless of status filter
+        $totalSudah = (clone $base)->where('status_racepack', 'sudah')->count();
+        $totalBelum = (clone $base)->where('status_racepack', 'belum')->count();
 
-    public function edit(Pendaftar $pendaftar)
-    {
-        abort_if(Gate::denies('pendaftar_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
+        // Apply status for the listing (if provided)
+        $listQuery = clone $base;
+        if (in_array($status, ['sudah','belum'], true)) {
+            $listQuery->where('status_racepack', $status);
+        }
 
-        $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
+        $listQuery->orderByDesc('racepack_at')->orderByDesc('id');
+        $paginator = $listQuery->paginate($perPage);
 
-        $pendaftar->load('event');
-
-        return view('admin.pendaftars.edit', compact('events', 'pendaftar'));
-    }
-
-    public function update(UpdatePendaftarRequest $request, Pendaftar $pendaftar)
-    {
-        $pendaftar->update($request->all());
-
-        return redirect()->route('admin.pendaftars.index');
-    }
-
-    public function show(Pendaftar $pendaftar)
-    {
-        abort_if(Gate::denies('pendaftar_show'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $pendaftar->load('event');
-
-        return view('admin.pendaftars.show', compact('pendaftar'));
-    }
-
-    public function destroy(Pendaftar $pendaftar)
-    {
-        abort_if(Gate::denies('pendaftar_delete'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $pendaftar->delete();
-
-        return back();
-    }
-
-    public function massDestroy(MassDestroyPendaftarRequest $request)
-    {
-        Pendaftar::whereIn('id', request('ids'))->delete();
-
-        return response(null, Response::HTTP_NO_CONTENT);
-    }
-
-    public function storeCKEditorImages(Request $request)
-    {
-        abort_if(Gate::denies('pendaftar_create') && Gate::denies('pendaftar_edit'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
-        $model         = new Pendaftar();
-        $model->id     = $request->input('crud_id', 0);
-        $model->exists = true;
-        $media         = $model->addMediaFromRequest('upload')->toMediaCollection('ck-media');
-
-        return response()->json(['id' => $media->id, 'url' => $media->getUrl()], Response::HTTP_CREATED);
+        return response()->json([
+            'data' => $paginator->items(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'total_sudah' => $totalSudah,
+                'total_belum' => $totalBelum,
+            ],
+        ]);
     }
 }
+            
