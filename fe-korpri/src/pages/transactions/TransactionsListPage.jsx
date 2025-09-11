@@ -113,10 +113,10 @@ const TransactionsListPage = () => {
             s === 'success'
               ? 'badge-success'
               : s === 'pending'
-              ? 'badge-warning'
-              : s === 'failed' || s === 'cancel'
-              ? 'badge-danger'
-              : 'badge-secondary';
+                ? 'badge-warning'
+                : s === 'failed' || s === 'cancel'
+                  ? 'badge-danger'
+                  : 'badge-secondary';
           return <span className={`badge ${cls} badge-outline rounded-[30px]`}>{row.original.status || '-'}</span>;
         },
         meta: { headerClassName: 'min-w-[140px]' },
