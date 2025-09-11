@@ -22,10 +22,22 @@ class Participant extends Model
         'city',
         'ticket_id',
         'status_racepack',
+        'staff_user_id',
+        'racepack_by',
+        'racepack_at',
+    ];
+
+    protected $casts = [
+        'racepack_at' => 'datetime',
     ];
 
     public function transaction()
     {
         return $this->belongsTo(Transaksi::class, 'transaction_id');
+    }
+
+    public function staff()
+    {
+        return $this->belongsTo(User::class, 'staff_user_id');
     }
 }
