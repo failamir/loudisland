@@ -31,6 +31,27 @@ class TransaksiApiController extends Controller
         if ($invoice = $request->query('invoice')) {
             $query->where('invoice', 'like', "%$invoice%");
         }
+        // Generic keyword: search by invoice or peserta name
+        if ($keyword = $request->query('keyword')) {
+            $kw = "%$keyword%";
+            $query->where(function ($q) use ($kw) {
+                $q->where('invoice', 'like', $kw)
+                  ->orWhereHas('peserta', function ($p) use ($kw) {
+                      $p->where('name', 'like', $kw);
+                  });
+            });
+        }
+        // Date filtering on created_at
+        if ($from = $request->query('date_from')) {
+            try {
+                $query->whereDate('created_at', '>=', \Carbon\Carbon::parse($from)->startOfDay());
+            } catch (\Throwable $e) {}
+        }
+        if ($to = $request->query('date_to')) {
+            try {
+                $query->whereDate('created_at', '<=', \Carbon\Carbon::parse($to)->endOfDay());
+            } catch (\Throwable $e) {}
+        }
 
         $perPage = max(1, (int) $request->query('per_page', 20));
 
@@ -40,6 +61,7 @@ class TransaksiApiController extends Controller
         // Compute summary counts
         $totalAll  = Transaksi::count();
         $totalSucc = Transaksi::where('status', 'success')->count();
+        $sumSucc   = (int) Transaksi::where('status', 'success')->sum('amount');
         $totalPend = Transaksi::where('status', 'pending')->count();
         $totalExp  = Transaksi::where('status', 'expired')->count();
 
@@ -50,6 +72,7 @@ class TransaksiApiController extends Controller
                     'success' => (int) $totalSucc,
                     'pending' => (int) $totalPend,
                     'expired' => (int) $totalExp,
+                    'success_amount' => $sumSucc,
                 ],
             ]);
     }

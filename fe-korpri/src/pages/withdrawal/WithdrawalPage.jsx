@@ -2,6 +2,7 @@ import { Container } from '@/components/container';
 import { Toolbar, ToolbarHeading } from '@/layouts/demo1/toolbar';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { getAuth } from '@/auth';
 
 const WithdrawalPage = () => {
   const [form, setForm] = useState({ amount: '', bank: '', accountName: '', accountNumber: '', note: '' });
@@ -31,7 +32,12 @@ const WithdrawalPage = () => {
     const note = window.prompt('Catatan (opsional):', '') || undefined;
     try {
       setActionLoadingId(row.id);
-      await axios.patch(`${API_URL}/withdrawals/${row.id}/status`, { action, note });
+      const auth = getAuth();
+      await axios.patch(
+        `${API_URL}/withdrawals/${row.id}/status`,
+        { action, note },
+        { headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined }
+      );
       await fetchSummary();
       await fetchList();
     } catch (err) {
@@ -47,13 +53,22 @@ const WithdrawalPage = () => {
   const fetchSummary = async () => {
     try {
       setSummaryLoading(true);
-      const { data } = await axios.get(`${API_URL}/withdrawals/summary`);
+      const auth = getAuth();
+      const { data } = await axios.get(`${API_URL}/withdrawals/summary`, {
+        headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined,
+      });
       const s = data?.data || {};
       setSummary({
         total_income: s.total_income || 0,
         total_withdrawn: s.total_withdrawn || 0,
         available_balance: s.available_balance || 0,
       });
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err?.message || 'Gagal mengambil ringkasan';
+      console.error('[withdrawals:summary] error', status, msg, err?.response?.data);
+      alert(`Gagal mengambil ringkasan${status ? ` (${status})` : ''}: ${msg}`);
+      setSummary({ total_income: 0, total_withdrawn: 0, available_balance: 0 });
     } finally {
       setSummaryLoading(false);
     }
@@ -63,12 +78,23 @@ const WithdrawalPage = () => {
     try {
       setListLoading(true);
       setListError('');
-      const { data } = await axios.get(`${API_URL}/withdrawals`, { params: { per_page: 20 } });
+      const auth = getAuth();
+      const { data } = await axios.get(`${API_URL}/withdrawals`, {
+        params: { per_page: 20 },
+        headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined,
+      });
       console.log('[withdrawals:list] raw response', data);
       const rows = Array.isArray(data) ? data : data?.data?.data || data?.data || [];
       const total = Array.isArray(data) ? rows.length : (data?.data?.total ?? rows.length ?? 0);
       setList(rows);
       setListTotal(total);
+    } catch (err) {
+      const status = err?.response?.status;
+      const msg = err?.response?.data?.message || err?.message || 'Gagal mengambil daftar withdrawal';
+      console.error('[withdrawals:list] error', status, msg, err?.response?.data);
+      setListError(`${msg}${status ? ` (status ${status})` : ''}`);
+      setList([]);
+      setListTotal(0);
     } finally {
       setListLoading(false);
     }
@@ -91,7 +117,10 @@ const WithdrawalPage = () => {
         account_number: form.accountNumber,
         note: form.note || undefined,
       };
-      await axios.post(`${API_URL}/withdrawals`, payload);
+      const auth = getAuth();
+      await axios.post(`${API_URL}/withdrawals`, payload, {
+        headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined,
+      });
       alert('Withdrawal berhasil diajukan');
       setForm({ amount: '', bank: '', accountName: '', accountNumber: '', note: '' });
       // refresh summary & list

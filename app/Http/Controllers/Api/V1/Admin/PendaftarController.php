@@ -54,8 +54,8 @@ class PendaftarController extends Controller
     {
         $q = Participant::query()
             ->whereNotNull('racepack_by')
-            ->select(['staff_user_id','racepack_by'])
-            ->groupBy('staff_user_id','racepack_by')
+            ->select(['staff_user_id', 'racepack_by'])
+            ->groupBy('staff_user_id', 'racepack_by')
             ->orderBy('racepack_by');
         if ($request->filled('search')) {
             $term = '%' . $request->input('search') . '%';
@@ -182,39 +182,39 @@ class PendaftarController extends Controller
         foreach ($trx as $t) {
             // Get participants from participants table, backfill if needed
             $participants = $t->participants();
-            if ($participants->count() == 0 && !empty($t->getAttributes()['participants'])) {
-                $decoded = json_decode($t->getAttributes()['participants'], true);
-                if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                    foreach ($decoded as $i => $p) {
-                        $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
-                        Participant::create([
-                            'transaction_id' => $t->id,
-                            'participant_id' => $pid,
-                            'name' => $p['name'] ?? null,
-                            'nik' => $p['nik'] ?? null,
-                            'email' => $p['email'] ?? null,
-                            'phone' => $p['phone'] ?? null,
-                            'province' => $p['province'] ?? null,
-                            'city' => $p['city'] ?? null,
-                            'ticket_id' => $p['ticketId'] ?? null,
-                            'status_racepack' => $p['status_racepack'] ?? 'belum',
-                        ]);
+            // if ($participants->count() == 0 && !empty($t->getAttributes()['participants'])) {
+            //     $decoded = json_decode($t->getAttributes()['participants'], true);
+            //     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            //         foreach ($decoded as $i => $p) {
+            //             $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
+            //             Participant::create([
+            //                 'transaction_id' => $t->id,
+            //                 'participant_id' => $pid,
+            //                 'name' => $p['name'] ?? null,
+            //                 'nik' => $p['nik'] ?? null,
+            //                 'email' => $p['email'] ?? null,
+            //                 'phone' => $p['phone'] ?? null,
+            //                 'province' => $p['province'] ?? null,
+            //                 'city' => $p['city'] ?? null,
+            //                 'ticket_id' => $p['ticketId'] ?? null,
+            //                 'status_racepack' => $p['status_racepack'] ?? 'belum',
+            //             ]);
 
-                        // Generate QR code for participant_id
-                        $qrDir = public_path('qrcodes/participants');
-                        if (!file_exists($qrDir)) {
-                            mkdir($qrDir, 0755, true);
-                        }
-                        $qrPath = $qrDir . '/' . $pid . '.png';
-                        if (!file_exists($qrPath)) {
-                            QrCode::format('png')->size(300)->generate($pid, $qrPath);
-                        }
-                    }
-                    $participants = $t->participants()->get();
-                }
-            } else {
-                $participants = $participants->get();
-            }
+            //             // Generate QR code for participant_id
+            //             $qrDir = public_path('qrcodes/participants');
+            //             if (!file_exists($qrDir)) {
+            //                 mkdir($qrDir, 0755, true);
+            //             }
+            //             $qrPath = $qrDir . '/' . $pid . '.png';
+            //             if (!file_exists($qrPath)) {
+            //                 QrCode::format('png')->size(300)->generate($pid, $qrPath);
+            //             }
+            //         }
+            //         $participants = $t->participants()->get();
+            //     }
+            // } else {
+            $participants = $participants->get();
+            // }
             // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
             if (json_last_error() !== JSON_ERROR_NONE) {
@@ -248,7 +248,7 @@ class PendaftarController extends Controller
                     'event'         => $ev ? [
                         'id'         => $ev->id,
                         'nama_event' => $ev->nama_event,
-                        'harga'      => (double)$ev->harga,
+                        'harga'      => (float)$ev->harga,
                         'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
                     ] : null,
                 ];
@@ -572,39 +572,39 @@ class PendaftarController extends Controller
 
         // Get participants from participants table, backfill if needed
         $participants = $trx->participants();
-        if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
-            $decoded = json_decode($trx->getAttributes()['participants'], true);
-            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                foreach ($decoded as $i => $p) {
-                    $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
-                    Participant::create([
-                        'transaction_id' => $trx->id,
-                        'participant_id' => $pid,
-                        'name' => $p['name'] ?? null,
-                        'nik' => $p['nik'] ?? null,
-                        'email' => $p['email'] ?? null,
-                        'phone' => $p['phone'] ?? null,
-                        'province' => $p['province'] ?? null,
-                        'city' => $p['city'] ?? null,
-                        'ticket_id' => $p['ticketId'] ?? null,
-                        'status_racepack' => $p['status_racepack'] ?? 'belum',
-                    ]);
+        // if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
+        //     $decoded = json_decode($trx->getAttributes()['participants'], true);
+        //     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+        //         foreach ($decoded as $i => $p) {
+        //             $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
+        //             Participant::create([
+        //                 'transaction_id' => $trx->id,
+        //                 'participant_id' => $pid,
+        //                 'name' => $p['name'] ?? null,
+        //                 'nik' => $p['nik'] ?? null,
+        //                 'email' => $p['email'] ?? null,
+        //                 'phone' => $p['phone'] ?? null,
+        //                 'province' => $p['province'] ?? null,
+        //                 'city' => $p['city'] ?? null,
+        //                 'ticket_id' => $p['ticketId'] ?? null,
+        //                 'status_racepack' => $p['status_racepack'] ?? 'belum',
+        //             ]);
 
-                    // Generate QR code for participant_id
-                    $qrDir = public_path('participants');
-                    if (!file_exists($qrDir)) {
-                        mkdir($qrDir, 0755, true);
-                    }
-                    $qrPath = $qrDir . '/' . $pid . '.png';
-                    if (!file_exists($qrPath)) {
-                        QrCode::format('png')->size(300)->generate($pid, $qrPath);
-                    }
-                }
-                $participants = $trx->participants()->get();
-            }
-        } else {
-            $participants = $participants->get();
-        }
+        //             // Generate QR code for participant_id
+        //             $qrDir = public_path('participants');
+        //             if (!file_exists($qrDir)) {
+        //                 mkdir($qrDir, 0755, true);
+        //             }
+        //             $qrPath = $qrDir . '/' . $pid . '.png';
+        //             if (!file_exists($qrPath)) {
+        //                 QrCode::format('png')->size(300)->generate($pid, $qrPath);
+        //             }
+        //         }
+        //         $participants = $trx->participants()->get();
+        //     }
+        // } else {
+        $participants = $participants->get();
+        // }
 
         return response()->json([
             'invoice' => $trx->invoice,
@@ -1373,7 +1373,7 @@ class PendaftarController extends Controller
             try {
                 $recipients = array_values(array_filter([
                     $p->email ?? null,
-                    'ifailamir@gmail.com',
+                    // 'ifailamir@gmail.com',
                 ]));
                 if (!empty($recipients)) {
                     $emailData = [
@@ -1493,7 +1493,7 @@ class PendaftarController extends Controller
         $request->validate([
             'participant_id' => 'required|string',
         ]);
-        
+
         //cek apakah ada x-api-key dan benar
         if ($request->header('x-api-key') != env('X_API_KEY')) {
             return response()->json(['message' => 'Unauthorized'], 401);
@@ -1552,7 +1552,7 @@ class PendaftarController extends Controller
 
         // Build a base filter (without status) to compute totals and list
         $base = Participant::with(['staff:id,name'])
-            ->select(['id','transaction_id','participant_id','name','email','phone','province','city','ticket_id','status_racepack','staff_user_id','racepack_by','racepack_at']);
+            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'province', 'city', 'ticket_id', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at']);
 
         if ($staffId) {
             $base->where('staff_user_id', $staffId);
@@ -1561,11 +1561,11 @@ class PendaftarController extends Controller
             $base->where('racepack_by', 'like', "%{$staffName}%");
         }
         if ($search) {
-            $base->where(function($q) use ($search) {
+            $base->where(function ($q) use ($search) {
                 $q->where('participant_id', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
             });
         }
         if ($dateFrom) {
@@ -1581,7 +1581,7 @@ class PendaftarController extends Controller
 
         // Apply status for the listing (if provided)
         $listQuery = clone $base;
-        if (in_array($status, ['sudah','belum'], true)) {
+        if (in_array($status, ['sudah', 'belum'], true)) {
             $listQuery->where('status_racepack', $status);
         }
 
@@ -1601,4 +1601,3 @@ class PendaftarController extends Controller
         ]);
     }
 }
-            

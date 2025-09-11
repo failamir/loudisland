@@ -165,11 +165,23 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
     });
 
+    //get all participants
+    Route::get('participants', function () {
+        $query = \App\Models\Participant::all();
+        return response()->json([
+            'data' => $query,
+            'total' => count($query)
+        ]);
+    });
+
     // Admin utilities
     Route::get('total-income', function () {
         $testingEmail = env('EMAIL_TESTING');
 
-        $query = \App\Models\Transaksi::query()->where('status', 'success');
+        $query = \App\Models\Transaksi::query()
+            ->where('status', 'success')
+            ->whereHas('participants');
+
         if (!empty($testingEmail)) {
             $query->where(function ($q) use ($testingEmail) {
                 $q->where('amount', '>=', 175000)

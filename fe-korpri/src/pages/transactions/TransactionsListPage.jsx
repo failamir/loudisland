@@ -12,10 +12,13 @@ const TransactionsListPage = () => {
   const { currentLayout } = useLayout();
   const [transactions, setTransactions] = useState([]);
   const [meta, setMeta] = useState({ total: 0 });
-  const [summary, setSummary] = useState({ total: 0, success: 0, pending: 0, expired: 0 });
+  const [summary, setSummary] = useState({ total: 0, success: 0, pending: 0, expired: 0, success_amount: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(null);
@@ -26,7 +29,15 @@ const TransactionsListPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const res = await axios.get(`${API_URL}/transactions`, { params });
+      // Merge current filters with incoming params
+      const finalParams = {
+        status: statusFilter || undefined,
+        date_from: dateFrom || undefined,
+        date_to: dateTo || undefined,
+        keyword: search || undefined,
+        ...params,
+      };
+      const res = await axios.get(`${API_URL}/transactions`, { params: finalParams });
       const data = Array.isArray(res.data) ? res.data : res.data.data;
       setTransactions(data || []);
       const pagination = res?.data?.meta || res?.data?.pagination;
@@ -38,6 +49,7 @@ const TransactionsListPage = () => {
         success: Number(sum.success ?? 0),
         pending: Number(sum.pending ?? 0),
         expired: Number(sum.expired ?? 0),
+        success_amount: Number(sum.success_amount ?? 0),
       });
     } catch (e) {
       setError('Gagal mengambil data transaksi.');
@@ -163,35 +175,67 @@ const TransactionsListPage = () => {
 
   const ToolbarContent = () => (
     <div className="card-header flex-wrap gap-2 border-b-0 px-5 w-full">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
+        {/* Keyword: invoice or participant name */}
         <label className="input input-sm">
           <KeenIcon icon="magnifier" />
           <input
             type="text"
-            placeholder="Cari invoice..."
+            placeholder="Cari invoice / nama peserta..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') fetchData({ invoice: e.currentTarget.value || undefined });
+              if (e.key === 'Enter') fetchData();
             }}
           />
         </label>
-        <button className="btn btn-sm btn-primary" onClick={() => fetchData({ invoice: search || undefined })} disabled={loading}>
+
+        {/* Status filter */}
+        <select
+          className="select select-sm"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="">Semua Status</option>
+          <option value="success">Success</option>
+          <option value="pending">Pending</option>
+          <option value="expired">Expired</option>
+          <option value="failed">Failed</option>
+          <option value="cancel">Cancel</option>
+        </select>
+
+        {/* Date range */}
+        <input
+          type="date"
+          className="input input-sm"
+          value={dateFrom}
+          onChange={(e) => setDateFrom(e.target.value)}
+        />
+        <span className="text-gray-500">s/d</span>
+        <input
+          type="date"
+          className="input input-sm"
+          value={dateTo}
+          onChange={(e) => setDateTo(e.target.value)}
+        />
+
+        <button className="btn btn-sm btn-primary" onClick={() => fetchData()} disabled={loading}>
           <KeenIcon icon="magnifier" />
           Cari
         </button>
-        {search && (
-          <button
-            className="btn btn-sm btn-light"
-            onClick={() => {
-              setSearch('');
-              fetchData({ invoice: undefined });
-            }}
-            disabled={loading}
-          >
-            Clear
-          </button>
-        )}
+        <button
+          className="btn btn-sm btn-light"
+          onClick={() => {
+            setSearch('');
+            setStatusFilter('');
+            setDateFrom('');
+            setDateTo('');
+            fetchData({ status: undefined, date_from: undefined, date_to: undefined, keyword: undefined, invoice: undefined });
+          }}
+          disabled={loading}
+        >
+          Clear
+        </button>
       </div>
     </div>
   );
@@ -213,7 +257,11 @@ const TransactionsListPage = () => {
                   <span className="text-md text-gray-700">Pending:</span>
                   <span className="badge badge-light-warning font-medium me-2">{summary.pending}</span>
                   <span className="text-md text-gray-700">Expired:</span>
-                  <span className="badge badge-light-danger font-medium">{summary.expired}</span>
+                  <span className="badge badge-light-danger font-medium me-3">{summary.expired}</span>
+                  <span className="text-md text-gray-700">Total Amount Success:</span>
+                  <span className="font-semibold">
+                    {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(summary.success_amount || 0)}
+                  </span>
                 </div>
               </ToolbarDescription>
             </ToolbarHeading>

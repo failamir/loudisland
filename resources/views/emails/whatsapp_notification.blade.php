@@ -58,8 +58,8 @@
 
         <h3>Summary</h3>
         <dl class="kv">
-            <dt>Chat ID</dt>
-            <dd>{{ $data['chatId'] ?? '—' }}</dd>
+            <!-- <dt>Chat ID</dt>
+            <dd>{{ $data['chatId'] ?? '—' }}</dd> -->
 
             @if($type === 'sendImage')
             <dt>Image URL</dt>
@@ -67,9 +67,9 @@
             <dt>Caption</dt>
             <dd class="pre">{{ $data['caption'] ?? '—' }}</dd>
             @else
-            <dt>Link</dt>
+            <!-- <dt>Link</dt> -->
             <dd><a href="{{ $data['url'] ?? '#' }}">{{ $data['url'] ?? '—' }}</a></dd>
-            <dt>Text</dt>
+            <!-- <dt>Text</dt> -->
             <dd class="pre">{{ $data['text'] ?? '—' }}</dd>
             @if(!empty($data['title']))
             <dt>Title</dt>
@@ -95,7 +95,7 @@
         @endif
 
         <hr />
-        <p class="muted">This email was triggered automatically after a WAHA API call from the application.</p>
+        <!-- <p class="muted">This email was triggered automatically after a WhatsApp API call from the application.</p> -->
     </div>
 </body>
 
