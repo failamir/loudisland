@@ -78,8 +78,8 @@ const EventAnalytics = () => {
       const ev = t?.event;
       if (ev?.event_code) {
         const code = String(ev.event_code).toUpperCase();
-        if (code.includes('ASN')) label = 'ASN';
-        else if (code.includes('UMUM')) label = 'Umum';
+        if (code === 'ASN') label = 'ASN';
+        else if (code === 'UMUM') label = 'Umum';
         else label = ev?.nama_event || code;
       } else if (ev?.nama_event) {
         label = ev.nama_event;

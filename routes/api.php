@@ -71,9 +71,6 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::get('qrcodes', [QrCodeApiController::class, 'index'])->name('qrcodes.index');
         Route::get('qrcodes/download-all', [QrCodeApiController::class, 'downloadAll'])->name('qrcodes.downloadAll');
 
-        // Simple transactions list for FE
-        Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
-
         // Withdrawals
         Route::get('withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
         Route::get('withdrawals/summary', [WithdrawalController::class, 'summary'])->name('withdrawals.summary');
@@ -93,6 +90,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('updateprofile', [PendaftarController::class, 'updateprofile'])->name('updateprofile');
     Route::get('transaksi', [PendaftarController::class, 'transaksi'])->name('transaksi');
     Route::get('transactions', [PendaftarController::class, 'transaksi'])->name('transactions');
+    // Simple transactions list for FE
+    Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
     Route::get('tiket', [PendaftarController::class, 'tiket'])->name('tiket');
     Route::post('notification', [PendaftarController::class, 'notificationHandler'])->name('notification');
     // New simplified registration that creates ticket and returns Midtrans URL
@@ -168,8 +167,31 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     // Admin utilities
     Route::get('total-income', function () {
-        $sum = (int) \App\Models\Transaksi::where('status', 'success')->sum('amount');
-        return response()->json(['total_income' => $sum]);
+        $testingEmail = env('EMAIL_TESTING');
+
+        $query = \App\Models\Transaksi::query()->where('status', 'success');
+        if (!empty($testingEmail)) {
+            $query->where(function ($q) use ($testingEmail) {
+                $q->where('amount', '>=', 175000)
+                    ->orWhereNull('email')
+                    ->orWhere('email', '!=', $testingEmail);
+            });
+        }
+
+        $count = (clone $query)->count();
+        $grossSum = (int) (clone $query)->sum('amount');
+        $profit = (int) ($count * 5000 + floor($grossSum * 0.01));
+        $netIncome = max(0, $grossSum - $profit);
+
+        return response()->json([
+            'total_income' => $netIncome,
+            'summary' => [
+                'gross_sum' => $grossSum,
+                'count' => $count,
+                'profit' => $profit,
+                'net_income' => $netIncome,
+            ],
+        ]);
     });
 
     // TODO: email to ifailamir@kardusinfo.com and kardusinfo@failamir.com

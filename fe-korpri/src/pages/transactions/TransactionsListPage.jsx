@@ -12,6 +12,7 @@ const TransactionsListPage = () => {
   const { currentLayout } = useLayout();
   const [transactions, setTransactions] = useState([]);
   const [meta, setMeta] = useState({ total: 0 });
+  const [summary, setSummary] = useState({ total: 0, success: 0, pending: 0, expired: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -31,6 +32,13 @@ const TransactionsListPage = () => {
       const pagination = res?.data?.meta || res?.data?.pagination;
       if (pagination) setMeta({ total: pagination.total ?? data?.length ?? 0 });
       else setMeta({ total: data?.length ?? 0 });
+      const sum = res?.data?.summary;
+      if (sum) setSummary({
+        total: Number(sum.total ?? 0),
+        success: Number(sum.success ?? 0),
+        pending: Number(sum.pending ?? 0),
+        expired: Number(sum.expired ?? 0),
+      });
     } catch (e) {
       setError('Gagal mengambil data transaksi.');
     } finally {
@@ -199,6 +207,13 @@ const TransactionsListPage = () => {
                 <div className="flex items-center flex-wrap gap-1.5 font-medium">
                   <span className="text-md text-gray-700">Total Transaksi:</span>
                   <span className="text-md text-gray-800 font-medium me-2">{meta.total}</span>
+                  <span className="hidden md:inline text-md text-gray-600">|</span>
+                  <span className="text-md text-gray-700 ms-1">Success:</span>
+                  <span className="badge badge-light-success font-medium me-2">{summary.success}</span>
+                  <span className="text-md text-gray-700">Pending:</span>
+                  <span className="badge badge-light-warning font-medium me-2">{summary.pending}</span>
+                  <span className="text-md text-gray-700">Expired:</span>
+                  <span className="badge badge-light-danger font-medium">{summary.expired}</span>
                 </div>
               </ToolbarDescription>
             </ToolbarHeading>

@@ -11,6 +11,47 @@ use Illuminate\Support\Facades\DB;
 
 class WithdrawalController extends Controller
 {
+    /**
+     * Calculate net income from successful transactions with business rules:
+     * - Exclude transactions where (amount < 175000) AND (email == EMAIL_TESTING)
+     * - totalSuccess = all remaining success transactions
+     * - TotalProfitKita = (count(totalSuccess) * 5000) + (sum(totalSuccess) * 0.01)
+     * - Total Pemasukan (net income) = sum(totalSuccess) - TotalProfitKita
+     *
+     * @return array{gross_sum:int,count:int,profit:int,net_income:int}
+     */
+    private function calculateNetIncome(): array
+    {
+        $testingEmail = env('EMAIL_TESTING');
+
+        $query = Transaksi::query()->where('status', 'success');
+
+        // Apply exclusion ONLY if testing email is configured
+        if (!empty($testingEmail)) {
+            // Keep rows that do NOT satisfy (amount < 175000 AND email == testingEmail)
+            $query->where(function ($q) use ($testingEmail) {
+                $q->where('amount', '>=', 175000)
+                    ->orWhereNull('email')
+                    ->orWhere('email', '!=', $testingEmail);
+            });
+        }
+
+        // Clone queries to avoid re-building
+        $count = (clone $query)->count();
+        $grossSum = (int) (clone $query)->sum('amount');
+
+        // Profit: per-success fee + 1% of gross sum (floor to int)
+        $profit = (int) ($count * 5000 + floor($grossSum * 0.01));
+        $netIncome = max(0, $grossSum - $profit);
+
+        return [
+            'gross_sum'  => (int) $grossSum,
+            'count'      => (int) $count,
+            'profit'     => (int) $profit,
+            'net_income' => (int) $netIncome,
+        ];
+    }
+
     public function index(Request $request)
     {
         $query = Withdrawal::with(['created_by'])
@@ -31,7 +72,8 @@ class WithdrawalController extends Controller
 
     public function summary()
     {
-        $totalIncome = (int) Transaksi::where('status', 'success')->sum('amount');
+        $incomeCalc = $this->calculateNetIncome();
+        $totalIncome = (int) $incomeCalc['net_income'];
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
         $available = max(0, $totalIncome - $totalWithdrawn);
 
@@ -54,8 +96,9 @@ class WithdrawalController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        // Recalculate available balance before allowing
-        $totalIncome = (int) Transaksi::where('status', 'success')->sum('amount');
+        // Recalculate available balance before allowing using new income rules
+        $incomeCalc = $this->calculateNetIncome();
+        $totalIncome = (int) $incomeCalc['net_income'];
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
         $available = max(0, $totalIncome - $totalWithdrawn);
 
@@ -119,8 +162,9 @@ class WithdrawalController extends Controller
 
         $userId = optional($request->user())->id;
 
-        // recompute balances snapshot
-        $totalIncome = (int) Transaksi::where('status', 'success')->sum('amount');
+        // recompute balances snapshot using new income rules
+        $incomeCalc = $this->calculateNetIncome();
+        $totalIncome = (int) $incomeCalc['net_income'];
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])
             ->where('id', '!=', $withdrawal->id)
             ->sum('amount');

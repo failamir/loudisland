@@ -16,11 +16,42 @@ class TransaksiApiController extends Controller
 {
     use MediaUploadingTrait;
 
-    public function index()
+    public function index(Request $request)
     {
         // abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
 
-        return new TransaksiResource(Transaksi::with(['event', 'tiket', 'peserta', 'created_by'])->get());
+        $query = Transaksi::query()
+            ->with(['event', 'tiket', 'peserta', 'created_by'])
+            ->orderBy('id', 'desc');
+
+        // Optional filters
+        if ($status = $request->query('status')) {
+            $query->where('status', $status);
+        }
+        if ($invoice = $request->query('invoice')) {
+            $query->where('invoice', 'like', "%$invoice%");
+        }
+
+        $perPage = max(1, (int) $request->query('per_page', 20));
+
+        // Use paginator to include meta & links in API response
+        $paginator = $query->paginate($perPage);
+
+        // Compute summary counts
+        $totalAll  = Transaksi::count();
+        $totalSucc = Transaksi::where('status', 'success')->count();
+        $totalPend = Transaksi::where('status', 'pending')->count();
+        $totalExp  = Transaksi::where('status', 'expired')->count();
+
+        return TransaksiResource::collection($paginator)
+            ->additional([
+                'summary' => [
+                    'total'   => (int) $totalAll,
+                    'success' => (int) $totalSucc,
+                    'pending' => (int) $totalPend,
+                    'expired' => (int) $totalExp,
+                ],
+            ]);
     }
 
     public function store(StoreTransaksiRequest $request)
