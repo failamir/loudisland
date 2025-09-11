@@ -162,7 +162,7 @@ class PendaftarController extends Controller
         }
 
         // Prefer direct lookup by peserta_id = user id, only successful transactions
-        $trx = Participant::where('peserta_id', $authUser->email)
+        $trx = Participant::where('email', $authUser->email)
             // ->where('status', 'success')
             ->orderByDesc('created_at')
             ->get();
