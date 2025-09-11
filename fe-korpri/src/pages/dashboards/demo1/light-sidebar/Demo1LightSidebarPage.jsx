@@ -40,12 +40,12 @@ const Demo1LightSidebarPage = () => {
       <Toolbar>
         <ToolbarHeading title="Dashboard" description="Central Hub for Personal Customization" />
         <ToolbarActions>
-          <div className="flex items-center gap-2 me-2">
+          {/* <div className="flex items-center gap-2 me-2">
             <span className="text-gray-600 text-sm">Total Income</span>
             <span className="font-extrabold text-lg badge badge-light-success">
               {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
             </span>
-          </div>
+          </div> */}
           <Link to="/withdrawal" className="btn btn-sm btn-primary">
             <KeenIcon icon="wallet" className="me-1" />
             Withdrawal
