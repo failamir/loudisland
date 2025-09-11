@@ -1166,9 +1166,25 @@ class PendaftarController extends Controller
         $payload      = $request->getContent();
         $notification = json_decode($payload);
 
+        // Log incoming webhook summary for debugging
+        \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
+            'order_id' => $notification->order_id ?? null,
+            'transaction_status' => $notification->transaction_status ?? null,
+            'payment_type' => $notification->payment_type ?? null,
+            'fraud_status' => $notification->fraud_status ?? null,
+            'status_code' => $notification->status_code ?? null,
+        ]);
+
         $validSignatureKey = hash('sha512', $notification->order_id . $notification->status_code . $notification->gross_amount . config('services.midtrans.serverKey'));
 
         if ($notification->signature_key != $validSignatureKey) {
+            \Illuminate\Support\Facades\Log::warning('Midtrans invalid signature', [
+                'order_id' => $notification->order_id ?? null,
+                'provided_signature' => $notification->signature_key ?? null,
+                'computed_signature' => $validSignatureKey,
+                'gross_amount' => $notification->gross_amount ?? null,
+                'status_code' => $notification->status_code ?? null,
+            ]);
             return response(['message' => 'Invalid signature'], 403);
         }
 
@@ -1179,6 +1195,12 @@ class PendaftarController extends Controller
 
         // find transaction by invoice
         $data_transaction = Transaksi::where('invoice', $orderId)->first();
+        if (!$data_transaction) {
+            \Illuminate\Support\Facades\Log::warning('Midtrans webhook: transaction not found for order_id', [
+                'order_id' => $orderId,
+            ]);
+            return response()->json(['message' => 'Order not found'], 404);
+        }
 
         if ($transaction == 'capture') {
 
