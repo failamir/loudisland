@@ -1201,6 +1201,11 @@ class PendaftarController extends Controller
                     $data_transaction->update([
                         'status' => 'success'
                     ]);
+                    // Trigger post-success actions for non-challenged credit card capture
+                    \Illuminate\Support\Facades\Log::info('Midtrans capture success (non-challenge) -> postPaymentSuccessActions', [
+                        'invoice' => $orderId,
+                    ]);
+                    $this->postPaymentSuccessActions($data_transaction);
                 }
             }
         } elseif ($transaction == 'settlement') {
@@ -1212,6 +1217,9 @@ class PendaftarController extends Controller
                 'status' => 'success'
             ]);
             // Post-success processing: assign participant IDs, ensure status_racepack, and send WA
+            \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
+                'invoice' => $orderId,
+            ]);
             $this->postPaymentSuccessActions($data_transaction);
         } elseif ($transaction == 'pending') {
 
