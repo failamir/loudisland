@@ -11,7 +11,7 @@ class TransactionsListController extends Controller
     // GET /api/v1/transactions/simple?status=success|pending|failed&per_page=20&page=1
     public function index(Request $request)
     {
-        $query = Transaksi::query()->orderByDesc('created_at');
+        $query = Transaksi::query()->orderBy('id', 'desc');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
