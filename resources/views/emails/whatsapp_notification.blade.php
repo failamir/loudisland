@@ -53,7 +53,7 @@
 
 <body>
     <div class="container">
-        <h2>WhatsApp Notification Sent</h2>
+        <h2>Payment Success Notification</h2>
         <p class="muted">Type: <span class="badge">{{ $type }}</span></p>
 
         <h3>Summary</h3>
@@ -81,6 +81,18 @@
             @endif
             @endif
         </dl>
+
+        @if($type === 'paymentSuccess' && !empty($data['participant']['id']))
+        <h3>E-ticket QR</h3>
+        <p class="muted">Tunjukkan QR ini saat check-in.</p>
+        <p>
+            <img src="{{ url('/storage/participants/' . $data['participant']['id'] . '.png') }}" alt="QR Code"
+                 style="max-width:260px;border:1px solid #e5e7eb;padding:8px;border-radius:8px;" />
+        </p>
+        <p>
+            <a href="{{ url('/storage/participants/' . $data['participant']['id'] . '.png') }}" target="_blank">Unduh QR</a>
+        </p>
+        @endif
 
         <hr />
         <p class="muted">This email was triggered automatically after a WAHA API call from the application.</p>
