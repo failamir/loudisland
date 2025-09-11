@@ -74,7 +74,16 @@ const EventAnalytics = () => {
   const { ticketLabels, ticketTypeSeries } = useMemo(() => {
     const counts = new Map();
     for (const t of transactions) {
-      const label = t?.event?.nama_event || 'Tidak diketahui';
+      let label = 'Tidak diketahui';
+      const ev = t?.event;
+      if (ev?.event_code) {
+        const code = String(ev.event_code).toUpperCase();
+        if (code === 'ASN') label = 'ASN';
+        else if (code === 'UMUM') label = 'Umum';
+        else label = ev?.nama_event || code;
+      } else if (ev?.nama_event) {
+        label = ev.nama_event;
+      }
       counts.set(label, (counts.get(label) || 0) + 1);
     }
     const labels = Array.from(counts.keys());
@@ -105,7 +114,8 @@ const EventAnalytics = () => {
       axisBorder: { show: false }, axisTicks: { show: false }
     },
     yaxis: {
-      labels: { style: { colors: 'var(--tw-gray-500)', fontSize: '12px' },
+      labels: {
+        style: { colors: 'var(--tw-gray-500)', fontSize: '12px' },
         formatter: (val) => new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(val)
       }
     },
