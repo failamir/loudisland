@@ -1108,9 +1108,9 @@ class PendaftarController extends Controller
             }
 
             // tambah 1.7 % di amount
-            $total_payment = $amount + ($amount * 0.017);
-            $fee_service = $amount * 0.017;
-
+            $total_payment = $amount + ($amount * 0.01);
+            $fee_service = $amount * 0.01;
+            $fee_service = $fee_service * count($itemDetails);
             //add service fee to itemDetails
             $itemDetails[] = [
                 'id' => 'service-fee',
