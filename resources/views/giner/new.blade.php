@@ -107,7 +107,9 @@
             padding: 28px 0 0;
             min-height: 100vh;
             /* isi viewport agar divider bisa nempel di bawah layar */
-            overflow: hidden;
+            /* allow horizontal overflow so runners not cropped on X */
+            overflow-x: visible;
+            overflow-y: hidden;
         }
 
         .hero-inner {
@@ -148,12 +150,12 @@
             width: clamp(96%, 102vw, 108%);
             margin-left: clamp(-6%, -3.5vw, -1%);
             /* tarik konten berikutnya (counter) sedikit lebih dekat */
-            margin-bottom: clamp(-18px, -2.4vw, -10px);
+            margin-bottom: clamp(8px, 1.8vw, 22px);
             pointer-events: none;
             opacity: .98;
-            /* vignette halus agar tepi tidak "kotak" */
-            -webkit-mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%);
-            mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%);
+            /* matikan vignette agar tidak terlihat seperti terpotong */
+            /* -webkit-mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%); */
+            /* mask-image: radial-gradient(118% 92% at 50% 52%, #000 72%, transparent 100%); */
         }
 
         .runners img {
@@ -223,7 +225,7 @@
         /* Countdown */
         .countdown {
             /* perkecil jarak atas agar lebih dekat ke gambar */
-            margin: clamp(2px, 1.2vw, 18px) auto 10px;
+            margin: clamp(30px, 4vw, 46px) auto 12px;
             display: grid;
             grid-auto-flow: column;
             gap: clamp(10px, 3vw, 28px);
@@ -303,9 +305,10 @@
             }
 
             .runners {
+                height: clamp(120px, 18vw, 240px);
                 width: clamp(104%, 110vw, 120%);
                 margin-left: clamp(-10%, -6vw, -4%);
-                margin-bottom: clamp(-14px, -2vw, -8px);
+                margin-bottom: clamp(16px, 2.4vw, 32px);
             }
 
             .frame::before {
@@ -318,6 +321,22 @@
             .cta {
                 margin: 16px 0 22px;
             }
+
+            /* push countdown further down on tablets (iPad) */
+            .countdown {
+                margin: clamp(48px, 6vw, 72px) auto 14px;
+            }
+
+            /* reduce float amplitude on tablets to avoid visual overlap */
+            .runners img {
+                animation: floatUpDownTablet 4.2s ease-in-out infinite;
+            }
+        }
+
+        /* smaller float for tablets */
+        @keyframes floatUpDownTablet {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-4px); }
         }
 
         @media (max-width: 640px) {
