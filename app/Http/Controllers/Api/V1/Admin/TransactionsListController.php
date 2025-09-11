@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Transaksi;
+use App\Models\Event;
 
 class TransactionsListController extends Controller
 {
     // GET /api/v1/transactions/simple?status=success|pending|failed&per_page=20&page=1
     public function index(Request $request)
     {
-        $query = Transaksi::query()->orderBy('id', 'desc');
+        $query = Transaksi::query()->with('event')->orderBy('id', 'desc');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -26,6 +27,21 @@ class TransactionsListController extends Controller
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
         $data = $paginator->getCollection()->map(function ($trx) {
+            // Resolve event: prefer relation; if null, infer from `events` payload
+            $ev = $trx->event;
+            if (!$ev && !empty($trx->events)) {
+                $decoded = json_decode($trx->events, true);
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $maybe = @unserialize($trx->events);
+                    $decoded = $maybe !== false ? $maybe : $trx->events;
+                }
+                $eventIds = collect(is_array($decoded) ? $decoded : [$decoded])->filter()->values();
+                $firstId = $eventIds->first();
+                if ($firstId) {
+                    $ev = Event::find($firstId);
+                }
+            }
+
             return [
                 'id' => $trx->id,
                 'invoice' => $trx->invoice,
@@ -33,6 +49,11 @@ class TransactionsListController extends Controller
                 'amount' => (int) $trx->amount,
                 'payment_type' => $trx->payment_type,
                 'created_at' => $trx->created_at,
+                'event' => $ev ? [
+                    'id' => $ev->id,
+                    'nama_event' => $ev->nama_event,
+                    'event_code' => $ev->event_code,
+                ] : null,
             ];
         })->all();
 
