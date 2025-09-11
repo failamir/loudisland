@@ -1308,7 +1308,8 @@ class PendaftarController extends Controller
             $lines[] = 'Jenis Tiket: ' . $jenis;
             $lines[] = '';
             $url = 'https://daftar.mandalikakorprirun.com/dashboard';
-            $lines[] = 'Check Dashboard kamu di ' . $url;
+            // $lines[] = 'Check Dashboard kamu di ' . $url;
+            $lines[] = 'Cek Email untuk mengunduh E-tiket Anda ';
 
             $text = implode("\n", $lines);
 
