@@ -4,7 +4,7 @@ export const MENU_SIDEBAR = [
   { title: 'Transactions', path: '/transactions', icon: 'cheque' },
   // { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
   { title: 'Racepacks', path: '/racepacks', icon: 'gift' },
-  { title: 'Withdrawal', path: '/withdrawal', icon: 'wallet' },
+  // { title: 'Withdrawal', path: '/withdrawal', icon: 'wallet' },
   { title: 'Users', path: '/users', icon: 'users' },
   { title: 'Roles', path: '/roles', icon: 'shield-tick' },
   { title: 'Permissions', path: '/permissions', icon: 'lock' },
