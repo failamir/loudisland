@@ -248,7 +248,7 @@ class PendaftarController extends Controller
                     'event'         => $ev ? [
                         'id'         => $ev->id,
                         'nama_event' => $ev->nama_event,
-                        'harga'      => (int) $ev->harga,
+                        'harga'      => $ev->harga,
                         'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
                     ] : null,
                 ];
@@ -882,24 +882,45 @@ class PendaftarController extends Controller
      */
     public function transaksi()
     {
-        $request = $_GET['uid'];
-        $user = User::where(
-            'uid',
-            $request
-            // 'password' => $request->input( 'no_hp' ),
-        )->first();
-        $user = Transaksi::where(
-            'peserta_id',
-            $user->id
-            // 'password' => $request->input( 'no_hp' ),
-        )->get();
-        // $user->assignRole( 'User' );
-        // $user->roles()->sync( 2 );
+        // Optional filter by uid; if not provided, return recent transactions
+        $uid = $_GET['uid'] ?? null;
 
-        $data = new stdClass();
-        $data->message = 'success';
-        $data->data = $user;
-        return response()->json($data);
+        $query = Transaksi::query()->with(['event']);
+        if ($uid) {
+            $user = User::where('uid', $uid)->first();
+            if ($user) {
+                $query->where('peserta_id', $user->id);
+            } else {
+                // if uid not found, return empty result
+                return response()->json((object) [
+                    'message' => 'success',
+                    'data' => [],
+                ]);
+            }
+        } else {
+            // No uid -> limit to latest 200 records for dashboard usage
+            $query->orderByDesc('created_at')->limit(200);
+        }
+
+        $items = $query->get()->map(function ($t) {
+            return [
+                'id' => $t->id,
+                'invoice' => $t->invoice,
+                'status' => $t->status,
+                'amount' => (int) $t->amount,
+                'created_at' => optional($t->created_at)->toDateTimeString(),
+                'event' => $t->event ? [
+                    'id' => $t->event->id,
+                    'nama_event' => $t->event->nama_event,
+                    'event_code' => $t->event->event_code,
+                ] : null,
+            ];
+        });
+
+        $resp = new stdClass();
+        $resp->message = 'success';
+        $resp->data = $items;
+        return response()->json($resp);
     }
 
     /**
