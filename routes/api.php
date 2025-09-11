@@ -167,10 +167,11 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     //get all participants
     Route::get('participants', function () {
-        $query = \App\Models\Participant::all();
+        $query = \App\Models\Participant::where('status', '1')->get();
         return response()->json([
             'data' => $query,
-            'total' => count($query)
+            'total' => count($query),
+            'total_income' => $query->sum('amount'),
         ]);
     });
 
@@ -410,6 +411,47 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'message' => 'Upstream WAHA service timeout or connection issue',
             ], 504);
         }
+    });
+
+    //buat api untuk menerima csv midtrans transaction yg settlement
+    //lalu mencarinya di tabel transactions lalu update status menjadi success
+    //lalu mengupdate di tabel participant status menjadi success
+    //isi kolomnya Date & time,Order ID,Channel,Transaction type,Amount,Transaction status,Transaction ID,Transaction time,Customer e-mail,Note
+
+    Route::post('midtrans/settlement', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        // Store on the public disk so the file resides under storage/app/public/midtrans
+        $path = $file->store('public/midtrans');
+        // Read back using the absolute storage path (avoid double 'public/' prefix)
+        $data = array_map('str_getcsv', file(storage_path('app/' . $path)));
+        $header = array_shift($data);
+
+        foreach ($data as $row) {
+            $trx = \App\Models\Transaksi::where('invoice', $row[1])->first();
+            if ($trx) {
+                $trx->status = 'success';
+                $trx->save();
+                // Participants are attached to the transaction via relation; avoid JSON attribute collision
+                $participants = $trx->participants()->get();
+                // Normalize amount from CSV (strip non-digits)
+                $amount = isset($row[4]) ? (int) preg_replace('/[^0-9]/', '', $row[4]) : null;
+                foreach ($participants as $p) {
+                    $p->status = '1';
+                    if (!is_null($amount)) {
+                        $p->amount = $amount;
+                    }
+                    $p->save();
+                }
+            }
+        }
+
+        return response()->json([
+            'message' => 'Midtrans settlement processed successfully',
+        ]);
     });
 
     // Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
