@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
+use App\Http\Controllers\Api\V1\Admin\RoleApiController;
+use App\Http\Controllers\Api\V1\Admin\PermissionApiController;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
 use App\Http\Controllers\Api\V1\Admin\AuthController;
 use App\Http\Controllers\Api\V1\Admin\UserApiController;
@@ -35,7 +37,15 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::post('users', [UserApiController::class, 'store']);
         Route::put('users/{user}', [UserApiController::class, 'update']);
         Route::delete('users/{user}', [UserApiController::class, 'destroy']);
-        Route::get('roles', [UserApiController::class, 'roles']);
+
+        // Roles & Permissions CRUD for FE admin
+        Route::apiResource('roles', RoleApiController::class);
+        Route::apiResource('permissions', PermissionApiController::class);
+
+        // Racepack listing (filterable)
+        Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
+        // Staff list for racepack dropdown
+        Route::get('staffs', [PendaftarController::class, 'staffList'])->name('racepacks.staffs');
 
         // Orders (create ticket + transaction via Midtrans)
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
@@ -54,6 +64,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::get('pairings', [PendaftarController::class, 'listPairing'])->name('pairings');
 
         //partisipan tukar id partisipan racepack
+        Route::get('racepack', [PendaftarController::class, 'listRacepack'])->name('racepack');
         Route::post('racepack', [PendaftarController::class, 'racepack'])->name('racepack');
 
         // QR Codes API for FE consumption (protected)
