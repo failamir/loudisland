@@ -248,7 +248,7 @@ class PendaftarController extends Controller
                     'event'         => $ev ? [
                         'id'         => $ev->id,
                         'nama_event' => $ev->nama_event,
-                        'harga'      => $ev->harga,
+                        'harga'      => (double)$ev->harga,
                         'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
                     ] : null,
                 ];
