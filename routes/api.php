@@ -197,10 +197,18 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         }
 
         $count = (clone $query)->count();
+        // print('total_tiket: ');
+        // var_dump($count);
         $grossSum = (int) (clone $query)->sum('amount');
-        $profit = (int) ($count * 5000 + floor($grossSum * 0.01));
+        // print('total_masuk: ');
+        // var_dump($grossSum);
+        $profit = (int) ($count * 5000) + (floor($grossSum * 0.01));
+        // print('profit: ');
+        // var_dump($profit);
         $netIncome = max(0, $grossSum - $profit);
-        $netIncome = $netIncome - 8119;
+        // print('netIncome : ');
+        // var_dump($netIncome);
+        // $netIncome = $netIncome - 8119;
 
         return response()->json([
             'total_income' => $netIncome,
