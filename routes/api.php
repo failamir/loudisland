@@ -66,6 +66,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         //partisipan tukar id partisipan racepack
         Route::get('racepack', [PendaftarController::class, 'listRacepack'])->name('racepack');
         Route::post('racepack', [PendaftarController::class, 'racepack'])->name('racepack');
+        Route::post('reset-racepack', [PendaftarController::class, 'resetRacepack'])->name('reset-racepack');
 
         // QR Codes API for FE consumption (protected)
         Route::get('qrcodes', [QrCodeApiController::class, 'index'])->name('qrcodes.index');
@@ -177,24 +178,28 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     // Admin utilities
     Route::get('total-income', function () {
-        $testingEmail = env('EMAIL_TESTING');
+        // $testingEmail = env('EMAIL_TESTING');
 
-        $query = \App\Models\Transaksi::query()
-            ->where('status', 'success')
-            ->whereHas('participants');
+        // $query = \App\Models\Transaksi::query()
+        //     ->where('status', 'success')
+        //     ->whereHas('participants');
+
+        $query = \App\Models\Participant::query()
+            ->where('status', '1');
+        // ->whereHas('participants');
 
         //where status in participant table = 1
-        $query->whereHas('participants', function ($q) {
-            $q->where('status', '1');
-        });
+        // $query->whereHas('participants', function ($q) {
+        //     $q->where('status', '1');
+        // });
 
-        if (!empty($testingEmail)) {
-            $query->where(function ($q) use ($testingEmail) {
-                $q->where('amount', '>=', 175000)
-                    ->orWhereNull('email')
-                    ->orWhere('email', '!=', $testingEmail);
-            });
-        }
+        // if (!empty($testingEmail)) {
+        //     $query->where(function ($q) use ($testingEmail) {
+        //         $q->where('amount', '>=', 175000)
+        //             ->orWhereNull('email')
+        //             ->orWhere('email', '!=', $testingEmail);
+        //     });
+        // }
 
         $count = (clone $query)->count();
         // print('total_tiket: ');
