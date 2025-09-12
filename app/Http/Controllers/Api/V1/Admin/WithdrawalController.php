@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaksi;
 use App\Models\Withdrawal;
 use App\Models\WithdrawalHistory;
+use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -72,14 +73,22 @@ class WithdrawalController extends Controller
 
     public function summary()
     {
-        $incomeCalc = $this->calculateNetIncome();
-        $totalIncome = (int) $incomeCalc['net_income'];
+        // Use participants-based net income logic (same as Dashboard):
+        // gross = sum(participants.amount) where status = '1'
+        // profit = count * 5000 + floor(gross * 0.01)
+        // net_income = max(0, gross - profit)
+        $participantsQuery = Participant::query()->where('status', '1');
+        $count = (int) (clone $participantsQuery)->count();
+        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $netIncome = max(0, $grossSum - $profit);
+
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
-        $available = max(0, $totalIncome - $totalWithdrawn);
+        $available = max(0, $netIncome - $totalWithdrawn);
 
         return response()->json([
             'data' => [
-                'total_income' => $totalIncome,
+                'total_income' => $netIncome,
                 'total_withdrawn' => $totalWithdrawn,
                 'available_balance' => $available,
             ],
@@ -96,11 +105,15 @@ class WithdrawalController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        // Recalculate available balance before allowing using new income rules
-        $incomeCalc = $this->calculateNetIncome();
-        $totalIncome = (int) $incomeCalc['net_income'];
+        // recompute balances snapshot using participants-based net income
+        $participantsQuery = Participant::query()->where('status', '1');
+        $count = (int) (clone $participantsQuery)->count();
+        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $netIncome = max(0, $grossSum - $profit);
+
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
-        $available = max(0, $totalIncome - $totalWithdrawn);
+        $available = max(0, $netIncome - $totalWithdrawn);
 
         if ($data['amount'] > $available) {
             return response()->json([
@@ -115,7 +128,7 @@ class WithdrawalController extends Controller
         $userId = optional($request->user())->id;
 
         $withdrawal = null;
-        DB::transaction(function () use (&$withdrawal, $data, $userId, $totalIncome, $totalWithdrawn, $available) {
+        DB::transaction(function () use (&$withdrawal, $data, $userId, $netIncome, $totalWithdrawn, $available) {
             $withdrawal = Withdrawal::create([
                 'amount' => $data['amount'],
                 'bank' => $data['bank'],
@@ -135,7 +148,7 @@ class WithdrawalController extends Controller
                 'balance_before' => $available,
                 'balance_after' => $available - $withdrawal->amount,
                 'meta' => [
-                    'total_income' => $totalIncome,
+                    'total_income' => $netIncome,
                     'total_withdrawn' => $totalWithdrawn,
                 ],
             ]);
@@ -162,16 +175,20 @@ class WithdrawalController extends Controller
 
         $userId = optional($request->user())->id;
 
-        // recompute balances snapshot using new income rules
-        $incomeCalc = $this->calculateNetIncome();
-        $totalIncome = (int) $incomeCalc['net_income'];
+        // recompute balances snapshot using participants-based net income
+        $participantsQuery = Participant::query()->where('status', '1');
+        $count = (int) (clone $participantsQuery)->count();
+        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $netIncome = max(0, $grossSum - $profit);
+
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])
             ->where('id', '!=', $withdrawal->id)
             ->sum('amount');
 
-        $availableBefore = max(0, $totalIncome - $totalWithdrawn);
+        $availableBefore = max(0, $netIncome - $totalWithdrawn);
 
-        DB::transaction(function () use ($data, $withdrawal, $userId, $totalIncome, $totalWithdrawn, $availableBefore) {
+        DB::transaction(function () use ($data, $withdrawal, $userId, $netIncome, $totalWithdrawn, $availableBefore) {
             $withdrawal->update(['status' => $data['action']]);
 
             WithdrawalHistory::create([
