@@ -1107,10 +1107,10 @@ class PendaftarController extends Controller
                 }
             }
 
-            // tambah 1.7 % di amount
-            $total_payment = $amount + ($amount * 0.01);
-            $fee_service = $amount * 0.01;
-            $fee_service = $fee_service * count($itemDetails);
+            // tambah 1.5 % di amount
+            $fee_service = $amount * 0.015;
+            // $fee_service = $fee_service * count($itemDetails);
+            $total_payment = $amount + $fee_service;
             //add service fee to itemDetails
             $itemDetails[] = [
                 'id' => 'service-fee',
@@ -1306,6 +1306,7 @@ class PendaftarController extends Controller
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_racepack' => $p['status_racepack'] ?? 'belum',
+                        // 'amount' => $trx->amount,
                     ]);
 
                     // Generate QR code for participant_id
