@@ -53,15 +53,20 @@ const WithdrawalPage = () => {
   const fetchSummary = async () => {
     try {
       setSummaryLoading(true);
-      const auth = getAuth();
-      const { data } = await axios.get(`${API_URL}/withdrawals/summary`, {
-        headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined,
-      });
-      const s = data?.data || {};
+      // Align total income source with Dashboard: use /total-income
+      const [incomeRes, summaryRes] = await Promise.all([
+        axios.get(`${API_URL}/total-income`),
+        axios.get(`${API_URL}/withdrawals/summary`),
+      ]);
+      const incomeVal = incomeRes?.data?.total_income ?? 0;
+      const s = summaryRes?.data?.data || {};
+      const totalIncome = Number(incomeVal) || 0;
+      const totalWithdrawn = Number(s.total_withdrawn || 0);
+      const available = Math.max(0, totalIncome - totalWithdrawn);
       setSummary({
-        total_income: s.total_income || 0,
-        total_withdrawn: s.total_withdrawn || 0,
-        available_balance: s.available_balance || 0,
+        total_income: totalIncome,
+        total_withdrawn: totalWithdrawn,
+        available_balance: available,
       });
     } catch (err) {
       const status = err?.response?.status;
@@ -170,15 +175,26 @@ const WithdrawalPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="form-label">Bank</label>
-                  <input
-                    type="text"
+                  <select
                     name="bank"
                     value={form.bank}
                     onChange={onChange}
                     className="input"
-                    placeholder="cth: BCA / BRI / Mandiri"
                     required
-                  />
+                  >
+                    <option value="">Pilih Bank</option>
+                    <option value="BCA">BCA</option>
+                    <option value="BRI">BRI</option>
+                    <option value="BNI">BNI</option>
+                    <option value="Mandiri">Mandiri</option>
+                    <option value="CIMB Niaga">CIMB Niaga</option>
+                    <option value="Danamon">Danamon</option>
+                    <option value="Permata">Permata</option>
+                    <option value="BTN">BTN</option>
+                    <option value="Maybank">Maybank</option>
+                    <option value="OCBC NISP">OCBC NISP</option>
+                    <option value="Lainnya">Lainnya</option>
+                  </select>
                 </div>
                 <div>
                   <label className="form-label">Nomor Rekening</label>
@@ -231,24 +247,27 @@ const WithdrawalPage = () => {
       <br />
       <Container>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="card">
+          {/* <div className="card">
             <div className="card-body">
               <div className="text-gray-600">Total Pemasukan</div>
               <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_income)} IDR</div>
             </div>
-          </div>
-          <div className="card">
-            <div className="card-body">
-              <div className="text-gray-600">Total Withdrawal</div>
-              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_withdrawn)} IDR</div>
-            </div>
-          </div>
+          </div> */}
+
           <div className="card">
             <div className="card-body">
               <div className="text-gray-600">Saldo Tersedia</div>
               <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.available_balance)} IDR</div>
             </div>
           </div>
+
+          <div className="card">
+            <div className="card-body">
+              <div className="text-gray-600">Total Withdrawal</div>
+              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_withdrawn)} IDR</div>
+            </div>
+          </div>
+
         </div>
 
         <div className="card">
@@ -289,7 +308,7 @@ const WithdrawalPage = () => {
                         <td>{new Intl.NumberFormat('id-ID').format(row.amount || 0)}</td>
                         <td>
                           <span className={`badge ${row.status === 'approved' || row.status === 'paid' ? 'badge-success' : row.status === 'rejected' || row.status === 'canceled' ? 'badge-danger' : 'badge-warning'} badge-outline rounded-[30px]`}>
-                            {row.status}
+                            {row.status === 'approved' ? 'inprogress' : row.status}
                           </span>
                         </td>
                         <td>{row.bank || '-'}</td>
