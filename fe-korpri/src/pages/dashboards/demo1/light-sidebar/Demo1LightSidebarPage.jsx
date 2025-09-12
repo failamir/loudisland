@@ -17,7 +17,7 @@ const Demo1LightSidebarPage = () => {
   const [totalIncome, setTotalIncome] = useState(null);
   const [totalProfit, setTotalProfit] = useState(null);
   const [incomeLoading, setIncomeLoading] = useState(false);
-  const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
   useEffect(() => {
     let ignore = false;
