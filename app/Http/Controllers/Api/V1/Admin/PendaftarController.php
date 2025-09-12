@@ -1306,7 +1306,8 @@ class PendaftarController extends Controller
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_racepack' => $p['status_racepack'] ?? 'belum',
-                        // 'amount' => $trx->amount,
+                        'amount' => $trx->amount,
+                        'status' => 1,
                     ]);
 
                     // Generate QR code for participant_id
@@ -1526,7 +1527,28 @@ class PendaftarController extends Controller
         return response()->json([
             'message' => 'Racepack berhasil diambil',
             'staff' => $user->name ?? null,
-            'participant' => $participant->name ?? null,
+            'participant' => $participant ?? null,
+        ], 200);
+    }
+
+    public function resetRacepack(Request $request)
+    {
+        $request->validate([
+            'participant_id' => 'required|string',
+        ]);
+        $reset = Participant::where('participant_id', $request->input('participant_id'))->first();
+        if (!$reset) {
+            return response()->json(['message' => 'Participant not found'], 404);
+        }
+        $reset->update([
+            'status_racepack' => 'belum',
+            'staff_user_id' => null,
+            'racepack_by' => null,
+            'racepack_at' => null,
+        ]);
+        return response()->json([
+            'message' => 'Racepack berhasil direset',
+            'participant' => $reset ?? null,
         ], 200);
     }
 
