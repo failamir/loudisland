@@ -1,10 +1,12 @@
 import { Container } from '@/components/container';
 import { Toolbar, ToolbarHeading } from '@/layouts/demo1/toolbar';
 import { useEffect, useState } from 'react';
+import { useAuthContext } from '@/auth';
 import axios from 'axios';
 import { getAuth } from '@/auth';
 
 const WithdrawalPage = () => {
+  const { currentUser } = useAuthContext();
   const [form, setForm] = useState({ amount: '', bank: '', accountName: '', accountNumber: '', note: '' });
   const [submitting, setSubmitting] = useState(false);
   const [summary, setSummary] = useState({ total_income: 0, total_withdrawn: 0, available_balance: 0 });
@@ -325,19 +327,20 @@ const WithdrawalPage = () => {
         </div>
       </Container>
 
-      <Container>
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">Aksi Admin</h3>
-            <div className="card-header-actions">
-              <button type="button" className="btn btn-sm btn-light" onClick={() => { fetchSummary(); fetchList(); }} disabled={summaryLoading || listLoading}>
-                Refresh
-              </button>
+      {currentUser?.email === 'admin@superadmin.com' && (
+        <Container>
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Aksi Admin</h3>
+              <div className="card-header-actions">
+                <button type="button" className="btn btn-sm btn-light" onClick={() => { fetchSummary(); fetchList(); }} disabled={summaryLoading || listLoading}>
+                  Refresh
+                </button>
+              </div>
             </div>
-          </div>
-          <div className="card-body">
-            <div className="overflow-x-auto">
-              <table className="table">
+            <div className="card-body">
+              <div className="overflow-x-auto">
+                <table className="table">
                 <thead>
                   <tr>
                     <th>Tanggal</th>
@@ -380,11 +383,12 @@ const WithdrawalPage = () => {
                     );
                   })}
                 </tbody>
-              </table>
+                </table>
+              </div>
             </div>
           </div>
-        </div>
-      </Container>
+        </Container>
+      )}
     </>
   );
 };
