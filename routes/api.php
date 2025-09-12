@@ -183,6 +183,11 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             ->where('status', 'success')
             ->whereHas('participants');
 
+        //where status in participant table = 1
+        $query->whereHas('participants', function ($q) {
+            $q->where('status', '1');
+        });
+
         if (!empty($testingEmail)) {
             $query->where(function ($q) use ($testingEmail) {
                 $q->where('amount', '>=', 175000)
@@ -195,6 +200,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $grossSum = (int) (clone $query)->sum('amount');
         $profit = (int) ($count * 5000 + floor($grossSum * 0.01));
         $netIncome = max(0, $grossSum - $profit);
+        $netIncome = $netIncome - 8119;
 
         return response()->json([
             'total_income' => $netIncome,
@@ -437,12 +443,14 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 $trx->save();
                 // Participants are attached to the transaction via relation; avoid JSON attribute collision
                 $participants = $trx->participants()->get();
+                // var_dump($participants);
+                // die;
                 // Normalize amount from CSV (strip non-digits)
                 $amount = isset($row[4]) ? (int) preg_replace('/[^0-9]/', '', $row[4]) : null;
                 foreach ($participants as $p) {
                     $p->status = '1';
                     if (!is_null($amount)) {
-                        $p->amount = $amount;
+                        $p->amount = \App\Models\Event::where('id', $p->ticket_id)->first()->harga;
                     }
                     $p->save();
                 }
