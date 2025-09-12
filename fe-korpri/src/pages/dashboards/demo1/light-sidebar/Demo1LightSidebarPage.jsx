@@ -15,6 +15,7 @@ const Demo1LightSidebarPage = () => {
     to: addDays(new Date(2025, 0, 20), 20)
   });
   const [totalIncome, setTotalIncome] = useState(null);
+  const [totalProfit, setTotalProfit] = useState(null);
   const [incomeLoading, setIncomeLoading] = useState(false);
   const API_URL = import.meta.env.VITE_APP_API_URL || 'https://mandalikakorprirun.com/api/v1';
 
@@ -26,7 +27,9 @@ const Demo1LightSidebarPage = () => {
       .then((res) => {
         if (ignore) return;
         const val = res?.data?.total_income ?? 0;
+        const profit = res?.data?.summary?.profit ?? 0;
         setTotalIncome(Number(val));
+        setTotalProfit(Number(profit));
       })
       .finally(() => {
         if (!ignore) setIncomeLoading(false);
@@ -44,6 +47,12 @@ const Demo1LightSidebarPage = () => {
             <span className="text-gray-600 text-sm">Total Income</span>
             <span className="font-extrabold text-lg badge badge-light-success">
               {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 me-2">
+            <span className="text-gray-600 text-sm">Total Profit</span>
+            <span className="font-extrabold text-lg badge badge-light-warning">
+              {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalProfit ?? 0)}
             </span>
           </div>
           <Link to="/withdrawal" className="btn btn-sm btn-primary">
