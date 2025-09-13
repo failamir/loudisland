@@ -86,11 +86,11 @@
         <h3>E-ticket QR</h3>
         <p class="muted">Tunjukkan QR ini saat check-in.</p>
         <p>
-            <img src="{{ url('/participants/' . $data['participant']['id'] . '.png') }}" alt="QR Code"
+            <img src="{{ url('/storage/participants/' . $data['participant']['id'] . '.png') }}" alt="QR Code"
                 style="max-width:260px;border:1px solid #e5e7eb;padding:8px;border-radius:8px;" />
         </p>
         <p>
-            <a href="{{ url('/participants/' . $data['participant']['id'] . '.png') }}" target="_blank">Unduh QR</a>
+            <a href="{{ url('/storage/participants/' . $data['participant']['id'] . '.png') }}" target="_blank">Unduh QR</a>
         </p>
         @endif
 
