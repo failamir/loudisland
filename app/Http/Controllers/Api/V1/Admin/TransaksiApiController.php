@@ -22,6 +22,7 @@ class TransaksiApiController extends Controller
 
         $query = Transaksi::query()
             ->with(['event', 'tiket', 'peserta', 'created_by'])
+            ->where('amount', '>', 10000)
             ->orderBy('id', 'desc');
 
         // Optional filters
@@ -53,7 +54,7 @@ class TransaksiApiController extends Controller
             } catch (\Throwable $e) {}
         }
 
-        $perPage = max(1, (int) $request->query('per_page', 20));
+        $perPage = max(1, (int) $request->query('per_page', 200));
 
         // Use paginator to include meta & links in API response
         $paginator = $query->paginate($perPage);
