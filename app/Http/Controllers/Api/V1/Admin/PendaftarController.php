@@ -181,7 +181,7 @@ class PendaftarController extends Controller
         $tickets = [];
         foreach ($trx as $t) {
             // Get participants from participants table, backfill if needed
-            $participants = $t->participants();
+            $participants = $t->participants()->where('status', 1);
 
             //             // Generate QR code for participant_id
             //             $qrDir = public_path('qrcodes/participants');
