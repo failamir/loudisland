@@ -168,9 +168,9 @@ class PendaftarController extends Controller
             ->get();
 
         //cek apakah sudah kirim notifikasi
-        if ($trx->notifikasi == 0 && $trx->status == 'success') {
-            $this->postPaymentSuccessActions($trx);
-        }
+        // if ($trx->notifikasi == 0 && $trx->status == 'success') {
+        //     $this->postPaymentSuccessActions($trx);
+        // }
 
         // Fallbacks if nothing found: try by uid or email (if such data was stored)
         if ($trx->isEmpty()) {
@@ -550,7 +550,6 @@ class PendaftarController extends Controller
         //cek apakah sudah kirim notifikasi
         if ($trx->notifikasi == 0 && $trx->status == 'success') {
             $this->postPaymentSuccessActions($trx);
-            $trx->update(['notifikasi' => 1]);
         }
 
         // events may be serialized or JSON/plain; keep legacy behavior
