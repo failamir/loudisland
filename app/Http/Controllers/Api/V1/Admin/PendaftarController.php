@@ -1681,12 +1681,17 @@ class PendaftarController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        //kecualikan yg emailnya ada di array env EMAIL_TESTING
+        // Define the emails to exclude from the query
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
 
+        // Perform the database query
         $base = Participant::with(['staff:id,name'])
-            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'province', 'city', 'ticket_id', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at'])
+            ->select([
+                'id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'province', 'city',
+                'ticket_id', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at'
+            ])
             ->where('status', '1')
-            ->where('email', '!=', in_array(env('EMAIL_TESTING')));
+            ->whereNotIn('email', $excluded_emails);
 
         if ($staffId) {
             $base->where('staff_user_id', $staffId);
