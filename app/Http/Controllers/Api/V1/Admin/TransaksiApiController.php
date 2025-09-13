@@ -29,16 +29,18 @@ class TransaksiApiController extends Controller
 
         // Optional filters
         if ($status = $request->query('status')) {
-            $query->where('status', $status);
+            $query->where('status', $status)->where('amount', '>', 10000)
+                ->whereNotIn('email', $excluded_emails);
         }
         if ($invoice = $request->query('invoice')) {
-            $query->where('invoice', 'like', "%$invoice%");
+            $query->where('invoice', 'like', "%$invoice%")->where('amount', '>', 10000)
+                ->whereNotIn('email', $excluded_emails);
         }
         // Generic keyword: search by invoice or peserta name
         if ($keyword = $request->query('keyword')) {
             $kw = "%$keyword%";
             $query->where(function ($q) use ($kw) {
-                $q->where('invoice', 'like', $kw)
+                $q->where('invoice', 'like', $kw)->where('amount', '>', 10000)
                   ->orWhereHas('peserta', function ($p) use ($kw) {
                       $p->where('name', 'like', $kw);
                   });
@@ -62,11 +64,11 @@ class TransaksiApiController extends Controller
         $paginator = $query->paginate($perPage);
 
         // Compute summary counts
-        $totalAll  = Transaksi::whereNotIn('email', $excluded_emails)->count();
-        $totalSucc = Transaksi::where('status', 'success')->whereNotIn('email', $excluded_emails)->count();
+        $totalAll  = Transaksi::where('amount', '>', 10000)->whereNotIn('email', $excluded_emails)->count();
+        $totalSucc = Transaksi::where('status', 'success')->where('amount', '>', 10000)->whereNotIn('email', $excluded_emails)->count();
         $sumSucc   = (int) Participant::where('status', 1)->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
-        $totalPend = Transaksi::where('status', 'pending')->whereNotIn('email', $excluded_emails)->count();
-        $totalExp  = Transaksi::where('status', 'expired')->whereNotIn('email', $excluded_emails)->count();
+        $totalPend = Transaksi::where('status', 'pending')->where('amount', '>', 10000)->whereNotIn('email', $excluded_emails)->count();
+        $totalExp  = Transaksi::where('status', 'expired')->where('amount', '>', 10000)->whereNotIn('email', $excluded_emails)->count();
 
         return TransaksiResource::collection($paginator)
             ->additional([
