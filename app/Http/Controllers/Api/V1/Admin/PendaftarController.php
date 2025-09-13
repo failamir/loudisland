@@ -182,23 +182,6 @@ class PendaftarController extends Controller
         foreach ($trx as $t) {
             // Get participants from participants table, backfill if needed
             $participants = $t->participants();
-            // if ($participants->count() == 0 && !empty($t->getAttributes()['participants'])) {
-            //     $decoded = json_decode($t->getAttributes()['participants'], true);
-            //     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-            //         foreach ($decoded as $i => $p) {
-            //             $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
-            //             Participant::create([
-            //                 'transaction_id' => $t->id,
-            //                 'participant_id' => $pid,
-            //                 'name' => $p['name'] ?? null,
-            //                 'nik' => $p['nik'] ?? null,
-            //                 'email' => $p['email'] ?? null,
-            //                 'phone' => $p['phone'] ?? null,
-            //                 'province' => $p['province'] ?? null,
-            //                 'city' => $p['city'] ?? null,
-            //                 'ticket_id' => $p['ticketId'] ?? null,
-            //                 'status_racepack' => $p['status_racepack'] ?? 'belum',
-            //             ]);
 
             //             // Generate QR code for participant_id
             //             $qrDir = public_path('qrcodes/participants');
@@ -213,7 +196,7 @@ class PendaftarController extends Controller
             //         $participants = $t->participants()->get();
             //     }
             // } else {
-            $participants = $participants->get();
+            // $participants = $participants->get();
             // }
             // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
@@ -239,8 +222,8 @@ class PendaftarController extends Controller
                         'nik'    => $p->nik,
                         'email'  => $p->email,
                         'phone'  => $p->phone,
-                        'province' => $p->province,
-                        'city'   => $p->city,
+                        'province' => $p->province ?? '',
+                        'city'   => $p->city ?? '',
                         'participant_id' => $p->participant_id,
                         'status_racepack' => $p->status_racepack,
                         'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
@@ -899,7 +882,8 @@ class PendaftarController extends Controller
             }
         } else {
             // No uid -> limit to latest 200 records for dashboard usage
-            $query->orderByDesc('created_at')->limit(200);
+            $query->where('amount' > 10000);
+            $query->orderByDesc('created_at')->get();
         }
 
         $items = $query->get()->map(function ($t) {
@@ -1173,6 +1157,7 @@ class PendaftarController extends Controller
             'payment_type' => $notification->payment_type ?? null,
             'fraud_status' => $notification->fraud_status ?? null,
             'status_code' => $notification->status_code ?? null,
+            'raw_len' => strlen($payload),
         ]);
 
         $validSignatureKey = hash('sha512', $notification->order_id . $notification->status_code . $notification->gross_amount . config('services.midtrans.serverKey'));
@@ -1192,6 +1177,13 @@ class PendaftarController extends Controller
         $type         = $notification->payment_type;
         $orderId      = $notification->order_id;
         $fraud        = $notification->fraud_status;
+
+        \Illuminate\Support\Facades\Log::debug('Midtrans parsed fields', [
+            'order_id' => $orderId,
+            'transaction' => $transaction,
+            'type' => $type,
+            'fraud' => $fraud,
+        ]);
 
         // find transaction by invoice
         $data_transaction = Transaksi::where('invoice', $orderId)->first();
@@ -1288,8 +1280,15 @@ class PendaftarController extends Controller
      */
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
+        \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
+            'trx_id' => $trx->id,
+            'invoice' => $trx->invoice,
+        ]);
         // Check if participants already exist in table
         $participants = $trx->participants();
+        \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
+            'count' => $participants->count(),
+        ]);
 
         // If no participants in table but JSON exists, backfill
         if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
@@ -1308,6 +1307,14 @@ class PendaftarController extends Controller
                         'status_racepack' => $p['status_racepack'] ?? 'belum',
                         'amount' => $trx->amount,
                         'status' => 1,
+                        'province' => $p['province'] ?? null,
+                        'city' => $p['city'] ?? null,
+                        // 'address' => $p['address'] ?? null,
+                        // 'postal_code' => $p['postal_code'] ?? null,
+                        // 'country' => $p['country'] ?? null,
+                        // 'latitude' => $p['latitude'] ?? null,
+                        // 'longitude' => $p['longitude'] ?? null,
+                        // 'created_by' => $trx->created_by,
                     ]);
 
                     // Generate QR code for participant_id
@@ -1326,12 +1333,19 @@ class PendaftarController extends Controller
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
+                \Illuminate\Support\Facades\Log::debug('participants after backfill from JSON', [
+                    'count' => $participants->count(),
+                ]);
             }
         } else {
             $participants = $participants->get();
         }
 
         if ($participants->isEmpty()) {
+            \Illuminate\Support\Facades\Log::warning('No participants found for transaction, skipping notifications', [
+                'trx_id' => $trx->id,
+                'invoice' => $trx->invoice,
+            ]);
             return; // nothing to do
         }
 
@@ -1368,7 +1382,11 @@ class PendaftarController extends Controller
 
             $text = implode("\n", $lines);
 
-            // Send only text message (no QR image)
+            \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
+                'participant_id' => $p->participant_id,
+                'phone' => $p->phone,
+            ]);
+            // Send WA synchronously
             $this->sendWhatsapp($p->phone, $text, $url);
 
             // Also send email notification (SMTP2GO) to participant and your email
@@ -1378,6 +1396,11 @@ class PendaftarController extends Controller
                     // 'ifailamir@gmail.com',
                 ]));
                 if (!empty($recipients)) {
+                    \Illuminate\Support\Facades\Log::info('Sending paymentSuccess email', [
+                        'to' => $recipients,
+                        'participant_id' => $p->participant_id,
+                        'invoice' => $trx->invoice,
+                    ]);
                     $emailData = [
                         'chatId' => $this->normalizePhone($p->phone),
                         'url' => $url,
