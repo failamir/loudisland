@@ -1151,25 +1151,25 @@ class PendaftarController extends Controller
         $notification = json_decode($payload);
 
         // Log incoming webhook summary for debugging
-        \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
-            'order_id' => $notification->order_id ?? null,
-            'transaction_status' => $notification->transaction_status ?? null,
-            'payment_type' => $notification->payment_type ?? null,
-            'fraud_status' => $notification->fraud_status ?? null,
-            'status_code' => $notification->status_code ?? null,
-            'raw_len' => strlen($payload),
-        ]);
+        // \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
+        //     'order_id' => $notification->order_id ?? null,
+        //     'transaction_status' => $notification->transaction_status ?? null,
+        //     'payment_type' => $notification->payment_type ?? null,
+        //     'fraud_status' => $notification->fraud_status ?? null,
+        //     'status_code' => $notification->status_code ?? null,
+        //     'raw_len' => strlen($payload),
+        // ]);
 
         $validSignatureKey = hash('sha512', $notification->order_id . $notification->status_code . $notification->gross_amount . config('services.midtrans.serverKey'));
 
         if ($notification->signature_key != $validSignatureKey) {
-            \Illuminate\Support\Facades\Log::warning('Midtrans invalid signature', [
-                'order_id' => $notification->order_id ?? null,
-                'provided_signature' => $notification->signature_key ?? null,
-                'computed_signature' => $validSignatureKey,
-                'gross_amount' => $notification->gross_amount ?? null,
-                'status_code' => $notification->status_code ?? null,
-            ]);
+            // \Illuminate\Support\Facades\Log::warning('Midtrans invalid signature', [
+            //     'order_id' => $notification->order_id ?? null,
+            //     'provided_signature' => $notification->signature_key ?? null,
+            //     'computed_signature' => $validSignatureKey,
+            //     'gross_amount' => $notification->gross_amount ?? null,
+            //     'status_code' => $notification->status_code ?? null,
+            // ]);
             return response(['message' => 'Invalid signature'], 403);
         }
 
@@ -1178,19 +1178,19 @@ class PendaftarController extends Controller
         $orderId      = $notification->order_id;
         $fraud        = $notification->fraud_status;
 
-        \Illuminate\Support\Facades\Log::debug('Midtrans parsed fields', [
-            'order_id' => $orderId,
-            'transaction' => $transaction,
-            'type' => $type,
-            'fraud' => $fraud,
-        ]);
+        // \Illuminate\Support\Facades\Log::debug('Midtrans parsed fields', [
+        //     'order_id' => $orderId,
+        //     'transaction' => $transaction,
+        //     'type' => $type,
+        //     'fraud' => $fraud,
+        // ]);
 
         // find transaction by invoice
         $data_transaction = Transaksi::where('invoice', $orderId)->first();
         if (!$data_transaction) {
-            \Illuminate\Support\Facades\Log::warning('Midtrans webhook: transaction not found for order_id', [
-                'order_id' => $orderId,
-            ]);
+            // \Illuminate\Support\Facades\Log::warning('Midtrans webhook: transaction not found for order_id', [
+            //     'order_id' => $orderId,
+            // ]);
             return response()->json(['message' => 'Order not found'], 404);
         }
 
@@ -1216,9 +1216,9 @@ class PendaftarController extends Controller
                         'status' => 'success'
                     ]);
                     // Trigger post-success actions for non-challenged credit card capture
-                    \Illuminate\Support\Facades\Log::info('Midtrans capture success (non-challenge) -> postPaymentSuccessActions', [
-                        'invoice' => $orderId,
-                    ]);
+                    // \Illuminate\Support\Facades\Log::info('Midtrans capture success (non-challenge) -> postPaymentSuccessActions', [
+                    //     'invoice' => $orderId,
+                    // ]);
                     $this->postPaymentSuccessActions($data_transaction);
                 }
             }
@@ -1231,9 +1231,9 @@ class PendaftarController extends Controller
                 'status' => 'success'
             ]);
             // Post-success processing: assign participant IDs, ensure status_racepack, and send WA
-            \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
-                'invoice' => $orderId,
-            ]);
+            // \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
+            //     'invoice' => $orderId,
+            // ]);
             $this->postPaymentSuccessActions($data_transaction);
         } elseif ($transaction == 'pending') {
 
@@ -1280,15 +1280,15 @@ class PendaftarController extends Controller
      */
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
-        \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
-            'trx_id' => $trx->id,
-            'invoice' => $trx->invoice,
-        ]);
+        // \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
+        //     'trx_id' => $trx->id,
+        //     'invoice' => $trx->invoice,
+        // ]);
         // Check if participants already exist in table
         $participants = $trx->participants();
-        \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
-            'count' => $participants->count(),
-        ]);
+        // \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
+        //     'count' => $participants->count(),
+        // ]);
 
         // If no participants in table but JSON exists, backfill
         if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
@@ -1333,19 +1333,19 @@ class PendaftarController extends Controller
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
-                \Illuminate\Support\Facades\Log::debug('participants after backfill from JSON', [
-                    'count' => $participants->count(),
-                ]);
+                // \Illuminate\Support\Facades\Log::debug('participants after backfill from JSON', [
+                //     'count' => $participants->count(),
+                // ]);
             }
         } else {
             $participants = $participants->get();
         }
 
         if ($participants->isEmpty()) {
-            \Illuminate\Support\Facades\Log::warning('No participants found for transaction, skipping notifications', [
-                'trx_id' => $trx->id,
-                'invoice' => $trx->invoice,
-            ]);
+            // \Illuminate\Support\Facades\Log::warning('No participants found for transaction, skipping notifications', [
+            //     'trx_id' => $trx->id,
+            //     'invoice' => $trx->invoice,
+            // ]);
             return; // nothing to do
         }
 
@@ -1382,10 +1382,10 @@ class PendaftarController extends Controller
 
             $text = implode("\n", $lines);
 
-            \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
-                'participant_id' => $p->participant_id,
-                'phone' => $p->phone,
-            ]);
+            // \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
+            //     'participant_id' => $p->participant_id,
+            //     'phone' => $p->phone,
+            // ]);
             // Send WA synchronously
             $this->sendWhatsapp($p->phone, $text, $url);
 
@@ -1396,11 +1396,11 @@ class PendaftarController extends Controller
                     // 'ifailamir@gmail.com',
                 ]));
                 if (!empty($recipients)) {
-                    \Illuminate\Support\Facades\Log::info('Sending paymentSuccess email', [
-                        'to' => $recipients,
-                        'participant_id' => $p->participant_id,
-                        'invoice' => $trx->invoice,
-                    ]);
+                    // \Illuminate\Support\Facades\Log::info('Sending paymentSuccess email', [
+                    //     'to' => $recipients,
+                    //     'participant_id' => $p->participant_id,
+                    //     'invoice' => $trx->invoice,
+                    // ]);
                     $emailData = [
                         'chatId' => $this->normalizePhone($p->phone),
                         'url' => $url,
@@ -1421,10 +1421,10 @@ class PendaftarController extends Controller
                     Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
                 }
             } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
-                    'error' => $e->getMessage(),
-                    'participant' => $p->participant_id ?? null,
-                ]);
+                // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
+                //     'error' => $e->getMessage(),
+                //     'participant' => $p->participant_id ?? null,
+                // ]);
             }
         }
     }
@@ -1460,7 +1460,7 @@ class PendaftarController extends Controller
             // }
         } catch (\Throwable $e) {
             // Log the error
-            \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
+            // \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
         }
     }
 
