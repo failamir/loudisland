@@ -1158,11 +1158,6 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Invalid content type'], 400);
         }
 
-        // $signature = $request->header('X-Midtrans-Signature');
-        // if (!$signature) {
-        //     return response()->json(['message' => 'Missing signature'], 400);
-        // }
-
         $payload      = $request->getContent();
         $notification = json_decode($payload);
 
@@ -1243,14 +1238,16 @@ class PendaftarController extends Controller
             /**
              *   update invoice to success
              */
-            $data_transaction->update([
+            $update = $data_transaction->update([
                 'status' => 'success'
             ]);
             // Post-success processing: assign participant IDs, ensure status_racepack, and send WA
             // \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
             //     'invoice' => $orderId,
             // ]);
+            if($update){
             $this->postPaymentSuccessActions($data_transaction);
+            }
         } elseif ($transaction == 'pending') {
 
             /**
@@ -1518,6 +1515,11 @@ class PendaftarController extends Controller
                     ];
                     Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
                 }
+
+                // // update status to success
+                // $trx->update([
+                //     'notifikasi' => 1,
+                // ]);
             } catch (\Throwable $e) {
                 // If sending email fails for this participant, log and continue with the next
                 // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
