@@ -1255,8 +1255,12 @@ class PendaftarController extends Controller
             // \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
             //     'invoice' => $orderId,
             // ]);
-            if($update){
-            $this->postPaymentSuccessActions($data_transaction);
+            // if($update){
+            // $this->postPaymentSuccessActions($data_transaction);
+            // }
+            //cek apakah sudah kirim notifikasi
+            if ($data_transaction->notifikasi == 0 && $data_transaction->status == 'success') {
+                $this->postPaymentSuccessActions($data_transaction);
             }
         } elseif ($transaction == 'pending') {
 
