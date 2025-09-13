@@ -7,6 +7,7 @@ use App\Http\Controllers\Traits\MediaUploadingTrait;
 use App\Http\Requests\StoreTransaksiRequest;
 use App\Http\Requests\UpdateTransaksiRequest;
 use App\Http\Resources\Admin\TransaksiResource;
+use App\Models\Participant;
 use App\Models\Transaksi;
 use Gate;
 use Illuminate\Http\Request;
@@ -19,10 +20,11 @@ class TransaksiApiController extends Controller
     public function index(Request $request)
     {
         // abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
-
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $query = Transaksi::query()
             ->with(['event', 'tiket', 'peserta', 'created_by'])
             ->where('amount', '>', 10000)
+            ->whereNotIn('email', $excluded_emails)
             ->orderBy('id', 'desc');
 
         // Optional filters
@@ -60,11 +62,11 @@ class TransaksiApiController extends Controller
         $paginator = $query->paginate($perPage);
 
         // Compute summary counts
-        $totalAll  = Transaksi::count();
-        $totalSucc = Transaksi::where('status', 'success')->count();
-        $sumSucc   = (int) Transaksi::where('status', 'success')->sum('amount');
-        $totalPend = Transaksi::where('status', 'pending')->count();
-        $totalExp  = Transaksi::where('status', 'expired')->count();
+        $totalAll  = Transaksi::whereNotIn('email', $excluded_emails)->count();
+        $totalSucc = Transaksi::where('status', 'success')->whereNotIn('email', $excluded_emails)->count();
+        $sumSucc   = (int) Participant::where('status', 1)->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
+        $totalPend = Transaksi::where('status', 'pending')->whereNotIn('email', $excluded_emails)->count();
+        $totalExp  = Transaksi::where('status', 'expired')->whereNotIn('email', $excluded_emails)->count();
 
         return TransaksiResource::collection($paginator)
             ->additional([
