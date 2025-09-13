@@ -196,7 +196,7 @@ class PendaftarController extends Controller
             //         $participants = $t->participants()->get();
             //     }
             // } else {
-            // $participants = $participants->get();
+            $participants = $participants->get();
             // }
             // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
@@ -1151,14 +1151,14 @@ class PendaftarController extends Controller
         $notification = json_decode($payload);
 
         // Log incoming webhook summary for debugging
-        // \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
-        //     'order_id' => $notification->order_id ?? null,
-        //     'transaction_status' => $notification->transaction_status ?? null,
-        //     'payment_type' => $notification->payment_type ?? null,
-        //     'fraud_status' => $notification->fraud_status ?? null,
-        //     'status_code' => $notification->status_code ?? null,
-        //     'raw_len' => strlen($payload),
-        // ]);
+        \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
+            'order_id' => $notification->order_id ?? null,
+            'transaction_status' => $notification->transaction_status ?? null,
+            'payment_type' => $notification->payment_type ?? null,
+            'fraud_status' => $notification->fraud_status ?? null,
+            'status_code' => $notification->status_code ?? null,
+            'raw_len' => strlen($payload),
+        ]);
 
         $validSignatureKey = hash('sha512', $notification->order_id . $notification->status_code . $notification->gross_amount . config('services.midtrans.serverKey'));
 
@@ -1280,16 +1280,15 @@ class PendaftarController extends Controller
      */
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
-        // \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
-        //     'trx_id' => $trx->id,
-        //     'invoice' => $trx->invoice,
-        // ]);
+        \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
+            'trx_id' => $trx->id,
+            'invoice' => $trx->invoice,
+        ]);
         // Check if participants already exist in table
         $participants = $trx->participants();
-
-        // \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
-        //     'count' => $participants->count(),
-        // ]);
+        \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
+            'count' => $participants->count(),
+        ]);
 
         // If no participants in table but JSON exists, backfill
         if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
@@ -1383,10 +1382,10 @@ class PendaftarController extends Controller
 
             $text = implode("\n", $lines);
 
-            // \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
-            //     'participant_id' => $p->participant_id,
-            //     'phone' => $p->phone,
-            // ]);
+            \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
+                'participant_id' => $p->participant_id,
+                'phone' => $p->phone,
+            ]);
             // Send WA synchronously
             $this->sendWhatsapp($p->phone, $text, $url);
 
@@ -1397,11 +1396,11 @@ class PendaftarController extends Controller
                     // 'ifailamir@gmail.com',
                 ]));
                 if (!empty($recipients)) {
-                    // \Illuminate\Support\Facades\Log::info('Sending paymentSuccess email', [
-                    //     'to' => $recipients,
-                    //     'participant_id' => $p->participant_id,
-                    //     'invoice' => $trx->invoice,
-                    // ]);
+                    \Illuminate\Support\Facades\Log::info('Sending paymentSuccess email', [
+                        'to' => $recipients,
+                        'participant_id' => $p->participant_id,
+                        'invoice' => $trx->invoice,
+                    ]);
                     $emailData = [
                         'chatId' => $this->normalizePhone($p->phone),
                         'url' => $url,
