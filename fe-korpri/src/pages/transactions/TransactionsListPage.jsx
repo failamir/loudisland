@@ -78,6 +78,36 @@ const TransactionsListPage = () => {
     }
   };
 
+  // Open detail by invoice using payment status endpoint, includes participants
+  const openInvoiceDetail = async (invoice) => {
+    try {
+      setDetailOpen(true);
+      setDetailLoading(true);
+      setDetailError(null);
+      setDetail(null);
+      const res = await axios.get(`${API_URL}/payment/${invoice}`);
+      // Shape into similar structure with participants support
+      const p = res?.data;
+      if (p) {
+        setDetail({
+          id: undefined,
+          invoice: p.invoice,
+          status: p.status,
+          amount: p.amount,
+          created_at: undefined,
+          peserta: p.user ? { name: p.user.nama, email: p.user.email } : null,
+          participants: Array.isArray(p.participants) ? p.participants : [],
+        });
+      } else {
+        setDetail(null);
+      }
+    } catch (e) {
+      setDetailError('Gagal mengambil detail transaksi.');
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
   const ColumnInputFilter = ({ column }) => (
     <Input
       placeholder="Filter..."
@@ -107,9 +137,9 @@ const TransactionsListPage = () => {
         cell: ({ row }) => {
           const inv = row.original.invoice;
           return inv ? (
-            <a href={`${API_URL}/payment/${inv}`} target="_blank" rel="noreferrer" className="text-primary">
+            <button type="button" className="text-primary underline" onClick={() => openInvoiceDetail(inv)}>
               {inv}
-            </a>
+            </button>
           ) : '-';
         },
         meta: { headerClassName: 'min-w-[160px]' },
@@ -258,10 +288,10 @@ const TransactionsListPage = () => {
                   <span className="badge badge-light-warning font-medium me-2">{summary.pending}</span>
                   <span className="text-md text-gray-700">Expired:</span>
                   <span className="badge badge-light-danger font-medium me-3">{summary.expired}</span>
-                  <span className="text-md text-gray-700">Total Amount Success:</span>
+                  {/* <span className="text-md text-gray-700">Total Amount Success:</span>
                   <span className="font-semibold">
                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(summary.success_amount || 0)}
-                  </span>
+                  </span> */}
                 </div>
               </ToolbarDescription>
             </ToolbarHeading>
@@ -297,13 +327,35 @@ const TransactionsListPage = () => {
             {detailLoading && <div>Memuat...</div>}
             {detailError && <div className="text-red-600">{detailError}</div>}
             {!detailLoading && !detailError && (
-              <div className="space-y-2">
-                <div className="flex justify-between"><span className="text-gray-600">Invoice:</span><span className="font-medium">{detail?.invoice || '-'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Status:</span><span className="font-medium">{detail?.status || '-'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Jumlah:</span><span className="font-medium">{new Intl.NumberFormat('id-ID').format(detail?.amount || 0)}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Tipe Pembayaran:</span><span className="font-medium">{detail?.payment_type || '-'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{detail?.created_at || '-'}</span></div>
-                <div className="flex justify-between"><span className="text-gray-600">Peserta:</span><span className="font-medium">{detail?.peserta?.name || '-'}</span></div>
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="flex justify-between"><span className="text-gray-600">Invoice:</span><span className="font-medium">{detail?.invoice || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Status:</span><span className="font-medium">{detail?.status || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Jumlah:</span><span className="font-medium">{new Intl.NumberFormat('id-ID').format(detail?.amount || 0)}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{detail?.created_at || '-'}</span></div>
+                  <div className="flex justify-between col-span-2"><span className="text-gray-600">Pemesan:</span><span className="font-medium">{detail?.peserta?.name || '-'}</span></div>
+                </div>
+
+                {Array.isArray(detail?.participants) && detail.participants.length > 0 && (
+                  <div>
+                    <div className="font-semibold mb-1">Participants</div>
+                    <div className="border rounded-md divide-y">
+                      {detail.participants.map((p, idx) => (
+                        <div key={idx} className="p-2 text-sm space-y-1">
+                          <div className="flex justify-between"><span className="text-gray-600">Nama</span><span className="font-medium">{p.name || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">NIK</span><span>{p.nik || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Email</span><span>{p.email || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Phone</span><span>{p.phone || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Ticket ID</span><span>{p.ticket_id || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Status Racepack</span><span>{p.status_racepack || '-'}</span></div>
+                          {p.qr_url && (
+                            <div className="flex items-center gap-2"><span className="text-gray-600">QR</span><a className="text-primary underline" href={p.qr_url} target="_blank" rel="noreferrer">Lihat</a></div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </ModalBody>
