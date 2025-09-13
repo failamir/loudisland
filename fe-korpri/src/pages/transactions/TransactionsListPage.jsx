@@ -7,8 +7,10 @@ import { useLayout } from '@/providers';
 import { DataGrid, DataGridColumnHeader, DataGridRowSelect, DataGridRowSelectAll, KeenIcon } from '@/components';
 import { Modal, ModalBody, ModalContent, ModalHeader, ModalTitle } from '@/components/modal';
 import { Input } from '@/components/ui/input';
+import { useAuthContext } from '@/auth';
 
 const TransactionsListPage = () => {
+  const { currentUser } = useAuthContext();
   const { currentLayout } = useLayout();
   const [transactions, setTransactions] = useState([]);
   const [meta, setMeta] = useState({ total: 0 });
@@ -288,10 +290,14 @@ const TransactionsListPage = () => {
                   <span className="badge badge-light-warning font-medium me-2">{summary.pending}</span>
                   <span className="text-md text-gray-700">Expired:</span>
                   <span className="badge badge-light-danger font-medium me-3">{summary.expired}</span>
-                  {/* <span className="text-md text-gray-700">Total Amount Success:</span>
+                  {currentUser?.email === 'admin@superadmin.com' && (
+                    <>
+                      <span className="text-md text-gray-700">Total Amount Success:</span>
                   <span className="font-semibold">
                     {new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(summary.success_amount || 0)}
-                  </span> */}
+                      </span>
+                    </>
+                  )}
                 </div>
               </ToolbarDescription>
             </ToolbarHeading>
