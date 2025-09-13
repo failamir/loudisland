@@ -1158,10 +1158,10 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Invalid content type'], 400);
         }
 
-        $signature = $request->header('X-Midtrans-Signature');
-        if (!$signature) {
-            return response()->json(['message' => 'Missing signature'], 400);
-        }
+        // $signature = $request->header('X-Midtrans-Signature');
+        // if (!$signature) {
+        //     return response()->json(['message' => 'Missing signature'], 400);
+        // }
 
         $payload      = $request->getContent();
         $notification = json_decode($payload);
