@@ -1507,11 +1507,12 @@ class PendaftarController extends Controller
                     Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
                 }
             } catch (\Throwable $e) {
+                // If sending email fails for this participant, log and continue with the next
                 // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
                 //     'error' => $e->getMessage(),
                 //     'participant' => $p->participant_id ?? null,
                 // ]);
-                return;
+                continue;
             }
         }
     }
