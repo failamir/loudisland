@@ -22,6 +22,7 @@ class Participant extends Model
         'city',
         'ticket_id',
         'status_racepack',
+        'status',
         'staff_user_id',
         'racepack_by',
         'racepack_at',

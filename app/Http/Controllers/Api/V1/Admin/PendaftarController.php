@@ -226,6 +226,7 @@ class PendaftarController extends Controller
                         'city'   => $p->city ?? '',
                         'participant_id' => $p->participant_id,
                         'status_racepack' => $p->status_racepack,
+                        'status' => $p->status,
                         'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
                     ],
                     'event'         => $ev ? [
@@ -1036,6 +1037,9 @@ class PendaftarController extends Controller
                 if (!isset($p['status_racepack'])) {
                     $p['status_racepack'] = 'belum';
                 }
+                if (!isset($p['status'])) {
+                    $p['status'] = 0;
+                }
                 return $p;
             }, $data['participants']);
 
@@ -1342,11 +1346,93 @@ class PendaftarController extends Controller
         }
 
         if ($participants->isEmpty()) {
-            // \Illuminate\Support\Facades\Log::warning('No participants found for transaction, skipping notifications', [
+            // \Illuminate\Support\Facades\Log::warning('No participants found for transaction, attempting fallback via user/no_tiket', [
             //     'trx_id' => $trx->id,
             //     'invoice' => $trx->invoice,
             // ]);
-            return; // nothing to do
+
+            // Fallback: try to find single user by no_tiket stored in events
+            $noTiket = @unserialize($trx->events);
+            if ($noTiket === false) {
+                $noTiket = $trx->events; // could be plain string
+            }
+
+            $user = $noTiket ? \App\Models\User::where('no_tiket', $noTiket)->first() : null;
+
+            if ($user) {
+                // Determine event name for message context
+                $jenis = 'Tiket';
+                if (!empty($user->event_id)) {
+                    $ev = Event::where('id', $user->event_id)->first();
+                    if ($ev) {
+                        $jenis = $ev->nama_event ?? ('Event #' . $ev->id);
+                    }
+                } elseif (!empty($trx->event_id)) {
+                    $ev = Event::where('id', $trx->event_id)->first();
+                    if ($ev) {
+                        $jenis = $ev->nama_event ?? ('Event #' . $ev->id);
+                    }
+                }
+
+                // Build message (align with participants flow)
+                $lines = [];
+                $lines[] = 'Hai ' . ($user->name ?? 'Peserta') . ',';
+                $lines[] = '';
+                $lines[] = 'Kamu sudah bisa check tiket online melalui website untuk pesanan berikut:';
+                $lines[] = '';
+                $lines[] = 'ID Peserta: ' . ($noTiket ?? '-');
+                $lines[] = 'Nama: ' . ($user->name ?? '-');
+                $lines[] = 'Jenis Tiket: ' . $jenis;
+                $lines[] = '';
+                $url = 'https://daftar.mandalikakorprirun.com/dashboard';
+                // $lines[] = 'Check Dashboard kamu di ' . $url;
+                $lines[] = 'Cek Email untuk mengunduh E-tiket Anda ';
+                $lines[] = 'Jika ada masalah, silahkan hubungi kami di nomor wa ini';
+                $lines[] = 'Terima kasih';
+
+                $text = implode("\n", $lines);
+
+                // Send WA if phone exists
+                if (!empty($user->no_hp)) {
+                    $this->sendWhatsapp($user->no_hp, $text, $url);
+                }
+
+                // Send Email if email exists
+                try {
+                    $recipients = array_values(array_filter([
+                        $user->email ?? null,
+                    ]));
+                    if (!empty($recipients)) {
+                        $emailData = [
+                            'chatId' => $this->normalizePhone($user->no_hp ?? ''),
+                            'url' => $url,
+                            'text' => $text,
+                            'participant' => [
+                                'id' => (string) ($noTiket ?? ''),
+                                'name' => $user->name ?? null,
+                                'email' => $user->email ?? null,
+                                'phone' => $user->no_hp ?? null,
+                                'ticket' => $jenis,
+                            ],
+                            'transaction' => [
+                                'invoice' => $trx->invoice,
+                                'amount' => $trx->amount,
+                                'status' => $trx->status,
+                            ],
+                        ];
+                        Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
+                    }
+                } catch (\Throwable $e) {
+                    // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email (fallback user)', [
+                    //     'error' => $e->getMessage(),
+                    //     'invoice' => $trx->invoice,
+                    // ]);
+                }
+
+                return; // done via fallback
+            }
+
+            return; // nothing to do (no user fallback)
         }
 
         // Build map: ticket_id => event name for message
@@ -1425,6 +1511,7 @@ class PendaftarController extends Controller
                 //     'error' => $e->getMessage(),
                 //     'participant' => $p->participant_id ?? null,
                 // ]);
+                return;
             }
         }
     }
@@ -1463,44 +1550,6 @@ class PendaftarController extends Controller
             // \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
         }
     }
-
-    // protected function sendWhatsappImage(string $phone, string $imageUrl, string $caption = null): void
-    // {
-    //     try {
-    //         $base = rtrim(config('services.waha.base_url'), '/');
-    //         $session = config('services.waha.session');
-    //         $apiKey = config('services.waha.api_key');
-    //         $chatId = $this->normalizePhone($phone);
-
-    //         // Check if the image file exists before sending
-    //         $qrPath = storage_path('app/public/participants/' . basename(parse_url($imageUrl, PHP_URL_PATH)));
-
-    //         if (!file_exists($qrPath)) {
-    //             \Illuminate\Support\Facades\Log::warning("QR file not found: {$qrPath}");
-    //             return;
-    //         }
-
-    //         // Convert local path to full URL if it's a local file
-    //         if (strpos($imageUrl, 'http') !== 0) {
-    //             $imageUrl = url($imageUrl);
-    //         }
-
-    //         // Send image using WAHA API
-    //         $response = Http::withHeaders([
-    //             'x-api-key' => $apiKey,
-    //         ])->post($base . '/api/sendImage', [
-    //             'chatId' => $chatId,
-    //             'session' => $session,
-    //             'image' => $imageUrl,
-    //             'caption' => $caption,
-    //         ]);
-
-    //         // Log response for debugging
-    //         \Illuminate\Support\Facades\Log::info('WA image response: ' . json_encode($response->json()));
-    //     } catch (\Throwable $e) {
-    //         \Illuminate\Support\Facades\Log::warning('WA image send failed: ' . $e->getMessage());
-    //     }
-    // }
 
     protected function normalizePhone(string $phone): string
     {
