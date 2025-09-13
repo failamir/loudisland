@@ -1151,6 +1151,18 @@ class PendaftarController extends Controller
      */
     public function notificationHandler(Request $request)
     {
+
+        //content type application/json
+        $contentType = $request->header('Content-Type');
+        if ($contentType !== 'application/json') {
+            return response()->json(['message' => 'Invalid content type'], 400);
+        }
+
+        $signature = $request->header('X-Midtrans-Signature');
+        if (!$signature) {
+            return response()->json(['message' => 'Missing signature'], 400);
+        }
+
         $payload      = $request->getContent();
         $notification = json_decode($payload);
 
