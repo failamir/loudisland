@@ -900,7 +900,9 @@ class PendaftarController extends Controller
             }
         } else {
             // No uid -> limit to latest 200 records for dashboard usage
-            $query->where('amount' > 10000);
+            $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+            $query->where('amount' > 100000);
+            $query->whereNotIn('email', $excluded_emails);
             $query->orderByDesc('created_at')->get();
         }
 
