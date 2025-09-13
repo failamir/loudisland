@@ -1681,10 +1681,11 @@ class PendaftarController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
 
-        // Build a base filter (without status) to compute totals and list
+        //kecualikan yg email testing di env EMAIL_TESTING
         $base = Participant::with(['staff:id,name'])
             ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'province', 'city', 'ticket_id', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at'])
-            ->where('status', '1');
+            ->where('status', '1')
+            ->whereNot('email', env('EMAIL_TESTING'));
 
         if ($staffId) {
             $base->where('staff_user_id', $staffId);
