@@ -61,7 +61,7 @@ class Transaksi extends Model implements HasMedia
         'no_hp',
         'nik',
         'email',
-        // 'uid',
+        'notifikasi',
         'participants',
     ];
 
