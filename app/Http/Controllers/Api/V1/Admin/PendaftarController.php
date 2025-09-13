@@ -550,6 +550,7 @@ class PendaftarController extends Controller
         //cek apakah sudah kirim notifikasi
         if ($trx->notifikasi == 0 && $trx->status == 'success') {
             $this->postPaymentSuccessActions($trx);
+            $trx->update(['notifikasi' => 1]);
         }
 
         // events may be serialized or JSON/plain; keep legacy behavior
