@@ -547,15 +547,22 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
 
+        // Cache attributes needed for response before any side-effects
+        // to avoid losing values if the model instance state changes
+        $invoiceVal = $trx->invoice;
+        $statusVal  = $trx->status;
+        $amountVal  = $trx->amount;
+        $eventsVal  = $trx->events;
+
         //cek apakah sudah kirim notifikasi
         if ($trx->notifikasi == 0 && $trx->status == 'success') {
             $this->postPaymentSuccessActions($trx);
         }
 
         // events may be serialized or JSON/plain; keep legacy behavior
-        $noTiket = @unserialize($trx->events);
+        $noTiket = @unserialize($eventsVal);
         if ($noTiket === false) {
-            $noTiket = $trx->events;
+            $noTiket = $eventsVal;
         }
 
         $userDetail = User::where('id', $trx->peserta_id)->first();
@@ -601,9 +608,9 @@ class PendaftarController extends Controller
         // }
 
         return response()->json([
-            'invoice' => $trx->invoice,
-            'status' => $trx->status,
-            'amount' => $trx->amount,
+            'invoice' => $invoiceVal,
+            'status' => $statusVal,
+            'amount' => $amountVal,
             'no_tiket' => $noTiket,
             'qr_url' => $qrUrl,
             'user' => $userDetail ? [
