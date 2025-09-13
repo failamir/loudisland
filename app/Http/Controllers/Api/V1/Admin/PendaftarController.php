@@ -167,6 +167,11 @@ class PendaftarController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
+        //cek apakah sudah kirim notifikasi
+        if ($trx->notifikasi == 0 && $trx->status == 'success') {
+            $this->postPaymentSuccessActions($trx);
+        }
+
         // Fallbacks if nothing found: try by uid or email (if such data was stored)
         if ($trx->isEmpty()) {
             $trx = Transaksi::query()
@@ -540,6 +545,11 @@ class PendaftarController extends Controller
         $trx = Transaksi::where('invoice', $invoice)->first();
         if (!$trx) {
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
+        }
+
+        //cek apakah sudah kirim notifikasi
+        if ($trx->notifikasi == 0 && $trx->status == 'success') {
+            $this->postPaymentSuccessActions($trx);
         }
 
         // events may be serialized or JSON/plain; keep legacy behavior
@@ -1516,10 +1526,10 @@ class PendaftarController extends Controller
                     Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
                 }
 
-                // // update status to success
-                // $trx->update([
-                //     'notifikasi' => 1,
-                // ]);
+                // update status to success
+                $trx->update([
+                    'notifikasi' => 1,
+                ]);
             } catch (\Throwable $e) {
                 // If sending email fails for this participant, log and continue with the next
                 // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
