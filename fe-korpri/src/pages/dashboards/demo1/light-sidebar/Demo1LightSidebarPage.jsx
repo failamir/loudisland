@@ -9,11 +9,13 @@ import { cn } from '@/lib/utils';
 import { KeenIcon } from '@/components/keenicons';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuthContext } from '@/auth';
 const Demo1LightSidebarPage = () => {
   const [date, setDate] = useState({
     from: new Date(2025, 0, 20),
     to: addDays(new Date(2025, 0, 20), 20)
   });
+  const { currentUser } = useAuthContext();
   const [totalIncome, setTotalIncome] = useState(null);
   const [totalProfit, setTotalProfit] = useState(null);
   const [incomeLoading, setIncomeLoading] = useState(false);
@@ -43,22 +45,28 @@ const Demo1LightSidebarPage = () => {
       <Toolbar>
         <ToolbarHeading title="Dashboard" description="Central Hub for Personal Customization" />
         <ToolbarActions>
-          {/* <div className="flex items-center gap-2 me-2">
-            <span className="text-gray-600 text-sm">Total Income</span>
-            <span className="font-extrabold text-lg badge badge-light-success">
-              {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 me-2">
-            <span className="text-gray-600 text-sm">Total Profit</span>
-            <span className="font-extrabold text-lg badge badge-light-warning">
-              {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalProfit ?? 0)}
-            </span>
-          </div> */}
-          <Link to="/withdrawal" className="btn btn-sm btn-primary">
+
+          {currentUser?.email === 'admin@superadmin.com' && (
+            <>
+              <div className="flex items-center gap-2 me-2">
+                <span className="text-gray-600 text-sm">Total Income</span>
+                <span className="font-extrabold text-lg badge badge-light-success">
+                  {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
+                </span>
+              </div>
+              <div className="flex items-center gap-2 me-2">
+                <span className="text-gray-600 text-sm">Total Profit</span>
+                <span className="font-extrabold text-lg badge badge-light-warning">
+                  {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalProfit ?? 0)}
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* <Link to="/withdrawal" className="btn btn-sm btn-primary">
             <KeenIcon icon="wallet" className="me-1" />
             Withdrawal
-          </Link>
+          </Link> */}
           <Popover>
             <PopoverTrigger asChild>
               <button id="date" className={cn('btn btn-sm btn-light data-[state=open]:bg-light-active', !date && 'text-gray-400')}>
