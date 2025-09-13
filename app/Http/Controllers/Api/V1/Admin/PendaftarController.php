@@ -181,7 +181,7 @@ class PendaftarController extends Controller
         $tickets = [];
         foreach ($trx as $t) {
             // Get participants from participants table, backfill if needed
-            // $participants = $t->participants();
+            $participants = $t->participants();
 
             //             // Generate QR code for participant_id
             //             $qrDir = public_path('qrcodes/participants');
@@ -196,7 +196,7 @@ class PendaftarController extends Controller
             //         $participants = $t->participants()->get();
             //     }
             // } else {
-            $participants = $participants->get();
+            // $participants = $participants->get();
             // }
             // decode events (list of event IDs)
             $eventsDecoded = json_decode($t->events, true);
