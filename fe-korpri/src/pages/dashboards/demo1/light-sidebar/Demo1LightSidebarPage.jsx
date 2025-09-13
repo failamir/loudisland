@@ -63,10 +63,10 @@ const Demo1LightSidebarPage = () => {
             </>
           )}
 
-          {/* <Link to="/withdrawal" className="btn btn-sm btn-primary">
+          <Link to="/withdrawal" className="btn btn-sm btn-primary">
             <KeenIcon icon="wallet" className="me-1" />
             Withdrawal
-          </Link> */}
+          </Link>
           <Popover>
             <PopoverTrigger asChild>
               <button id="date" className={cn('btn btn-sm btn-light data-[state=open]:bg-light-active', !date && 'text-gray-400')}>
