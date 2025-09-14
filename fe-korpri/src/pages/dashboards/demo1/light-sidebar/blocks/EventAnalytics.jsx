@@ -18,6 +18,7 @@ const EventAnalytics = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [participants, setParticipants] = useState([]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -38,6 +39,23 @@ const EventAnalytics = () => {
         setError(e?.message || 'Failed to load');
       })
       .finally(() => { if (!ignore) setLoading(false); });
+    return () => { ignore = true; controller.abort(); };
+  }, [API_URL]);
+
+  // Fetch participants for per-participant event composition
+  useEffect(() => {
+    const controller = new AbortController();
+    let ignore = false;
+    fetch(`${API_URL}/participants`, { signal: controller.signal, headers: { 'Accept': 'application/json' } })
+      .then(async (res) => {
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        if (ignore) return;
+        const rows = Array.isArray(json?.data) ? json.data : (Array.isArray(json) ? json : []);
+        setParticipants(rows);
+      })
+      .catch(() => {})
+      .finally(() => {});
     return () => { ignore = true; controller.abort(); };
   }, [API_URL]);
 
@@ -73,29 +91,33 @@ const EventAnalytics = () => {
     };
   }, [transactions]);
 
-  // Build ticket/event composition (by event.nama_event)
+  // Build ticket/event composition PER PARTICIPANT
   const { ticketLabels, ticketTypeSeries } = useMemo(() => {
-    const counts = new Map();
+    // Build a quick map eventId -> event name based on transactions' loaded events (best-effort)
+    const eventNameMap = new Map();
     for (const t of transactions) {
-      // Only include successful transactions in event composition
-      const status = (t?.status || '').toLowerCase();
-      if (status !== 'success') continue;
-      let label = 'Tidak diketahui';
       const ev = t?.event;
-      if (ev?.event_code) {
-        const code = String(ev.event_code).toUpperCase();
-        if (code === 'ASN') label = 'ASN';
-        else if (code === 'UMUM') label = 'Umum';
-        else label = ev?.nama_event || code;
-      } else if (ev?.nama_event) {
-        label = ev.nama_event;
+      if (ev?.id) {
+        const name = ev?.nama_event || ev?.name || ev?.judul || `Event #${ev.id}`;
+        if (!eventNameMap.has(ev.id)) eventNameMap.set(ev.id, name);
+      }
+    }
+
+    const counts = new Map();
+    for (const p of participants) {
+      // Only count active/paid participants when status === '1' if provided
+      if (String(p?.status ?? '') !== '1') continue;
+      const eid = p?.ticket_id ?? null;
+      let label = 'Tidak diketahui';
+      if (eid != null) {
+        label = eventNameMap.get(eid) || `Event #${eid}`;
       }
       counts.set(label, (counts.get(label) || 0) + 1);
     }
     const labels = Array.from(counts.keys());
     const series = labels.map((l) => counts.get(l));
     return { ticketLabels: labels, ticketTypeSeries: series };
-  }, [transactions]);
+  }, [participants, transactions]);
 
   // Build status distribution
   const statusSeries = useMemo(() => {
