@@ -120,6 +120,26 @@ export default function RacepackListPage() {
         meta: { headerClassName: 'min-w-[260px]' },
       },
       {
+        accessorKey: 'province',
+        id: 'province',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Province" filter={<ColumnInputFilter column={column} />} column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => row.original.province || '-',
+        meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
+        accessorKey: 'city',
+        id: 'city',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="City" filter={<ColumnInputFilter column={column} />} column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => row.original.city || '-',
+        meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
         accessorKey: 'status_racepack',
         id: 'status_racepack',
         header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
