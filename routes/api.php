@@ -94,6 +94,10 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     // Simple transactions list for FE
     Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
     Route::get('tiket', [PendaftarController::class, 'tiket'])->name('tiket');
+    // List success transactions without participant rows
+    Route::get('participants/missing', [PendaftarController::class, 'missingParticipants'])->name('participants.missing');
+    // Generate/backfill participants for a transaction
+    Route::post('participants/generate', [PendaftarController::class, 'generateParticipants'])->name('participants.generate');
     Route::post('notification', [PendaftarController::class, 'notificationHandler'])->name('notification');
     // New simplified registration that creates ticket and returns Midtrans URL
     Route::post('register-ticket', [PendaftarController::class, 'registerTicket'])->name('register-ticket');
@@ -451,29 +455,89 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $data = array_map('str_getcsv', file(storage_path('app/' . $path)));
         $header = array_shift($data);
 
+        // foreach ($data as $row) {
+        //     $trx = \App\Models\Transaksi::where('invoice', $row[1])->first();
+        //     if ($trx) {
+        //         $trx->status = 'success';
+        //         $trx->save();
+        //         // Participants are attached to the transaction via relation; avoid JSON attribute collision
+        //         $participants = $trx->participants()->get();
+        //         // var_dump($participants);
+        //         // die;
+        //         // Normalize amount from CSV (strip non-digits)
+        //         $amount = isset($row[4]) ? (int) preg_replace('/[^0-9]/', '', $row[4]) : null;
+        //         foreach ($participants as $p) {
+        //             $p->status = '1';
+        //             if (!is_null($amount)) {
+        //                 $p->amount = \App\Models\Event::where('id', $p->ticket_id)->first()->harga;
+        //             }
+        //             $p->save();
+        //         }
+        //     }
+        // }
+
+        // update status semua transaction sesuai dari csv
+        // kalo ga ada di csv update status nya jadi pending
+        $trx = \App\Models\Transaksi::all();
+        foreach ($trx as $row) {
+            $row->status = 'pending';
+            $row->save();
+        }
+
+        // update status participant semua jadi 0
+        $participants = \App\Models\Participant::all();
+        foreach ($participants as $row) {
+            $row->status = '0';
+            $row->save();
+        }
+
         foreach ($data as $row) {
             $trx = \App\Models\Transaksi::where('invoice', $row[1])->first();
             if ($trx) {
-                $trx->status = 'success';
+                // Normalisasi status dari CSV (kolom 6 / index 5)
+                $csvStatus = isset($row[5]) ? strtolower(trim($row[5])) : '';
+                // Map settlement -> success; yang lain biarkan apa adanya
+                $mappedStatus = $csvStatus === 'settlement' ? 'success' : $csvStatus;
+
+                $trx->status = $mappedStatus ?: $trx->status;
                 $trx->save();
-                // Participants are attached to the transaction via relation; avoid JSON attribute collision
-                $participants = $trx->participants()->get();
-                // var_dump($participants);
-                // die;
-                // Normalize amount from CSV (strip non-digits)
-                $amount = isset($row[4]) ? (int) preg_replace('/[^0-9]/', '', $row[4]) : null;
-                foreach ($participants as $p) {
-                    $p->status = '1';
-                    if (!is_null($amount)) {
-                        $p->amount = \App\Models\Event::where('id', $p->ticket_id)->first()->harga;
+
+                // HANYA update participant jika transaksi SUCCESS
+                if ($trx->status === 'success') {
+                    $participants = $trx->participants()->get();
+                    foreach ($participants as $p) {
+                        $event = \App\Models\Event::where('id', $p->ticket_id)->first();
+                        if ($event) {
+                            $p->amount = $event->harga;
+                        }
+                        $p->status = '1';
+                        $p->save();
                     }
-                    $p->save();
                 }
+
+                // jika tidak ada data participant maka dibuat, 
+                // $trx->participants()->create([
+                //     'ticket_id' => $trx->ticket_id,
+                //     'name' => $row[3],
+                //     'email' => $row[4],
+                //     'phone' => $row[5],
+                //     'status' => '1',
+                // ]);
+                // $participants = $trx->participants()->get();
+                // foreach ($participants as $p) {
+                //     $p->status = '1';
+                //     $p->save();
+                // }
             }
         }
 
+        $sumAmountParticipant = \App\Models\Participant::where('status', '1')->sum('amount');
+        $trx = \App\Models\Transaksi::where('status', 'success')->sum('amount');
+
         return response()->json([
             'message' => 'Midtrans settlement processed successfully',
+            'sumAmountParticipant' => $sumAmountParticipant,
+            'trx' => $trx,
         ]);
     });
 
