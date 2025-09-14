@@ -662,94 +662,64 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Transaksi tidak ditemukan'], 404);
         }
 
-        // Cache attributes needed for response before any side-effects
-        // to avoid losing values if the model instance state changes
+        // Safety: kalau sudah success tapi flag notifikasi belum terset, panggil sekali
+        if ($trx->status === 'success' && (int) $trx->notifikasi === 0) {
+            $this->postPaymentSuccessActions($trx); // fungsi sudah idempotent karena ada guard notifikasi==1
+            // refresh untuk ambil nilai terbaru setelah aksi sukses
+            $trx->refresh();
+        }
+
+        // Cache nilai untuk response
         $invoiceVal = $trx->invoice;
         $statusVal  = $trx->status;
         $amountVal  = $trx->amount;
         $eventsVal  = $trx->events;
 
-        //cek apakah sudah kirim notifikasi
-        if ($trx->notifikasi == 0 && $trx->status == 'success') {
-            $this->postPaymentSuccessActions($trx);
-        }
-
-        // events may be serialized or JSON/plain; keep legacy behavior
+        // Events bisa serialized/plain
         $noTiket = @unserialize($eventsVal);
         if ($noTiket === false) {
             $noTiket = $eventsVal;
         }
 
+        // Detail user (peserta register tunggal, jika ada)
         $userDetail = User::where('id', $trx->peserta_id)->first();
 
-        // Build QR URL if exists; do not generate here (generation happens on webhook or register)
-        $qrPath = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
-        $qrUrl = ($qrPath && file_exists($qrPath)) ? url("/qrcodes/{$noTiket}.png") : null;
+        // QR legacy untuk no_tiket (tidak generate di sini)
+        $qrPathLegacy = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
+        $qrUrlLegacy  = ($qrPathLegacy && file_exists($qrPathLegacy)) ? url("/qrcodes/{$noTiket}.png") : null;
 
-        // Get participants from participants table, backfill if needed
-        $participants = $trx->participants();
-        // if ($participants->count() == 0 && !empty($trx->getAttributes()['participants'])) {
-        //     $decoded = json_decode($trx->getAttributes()['participants'], true);
-        //     if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-        //         foreach ($decoded as $i => $p) {
-        //             $pid = $p['participant_id'] ?? ('PID-' . Str::upper(Str::random(7)));
-        //             Participant::create([
-        //                 'transaction_id' => $trx->id,
-        //                 'participant_id' => $pid,
-        //                 'name' => $p['name'] ?? null,
-        //                 'nik' => $p['nik'] ?? null,
-        //                 'email' => $p['email'] ?? null,
-        //                 'phone' => $p['phone'] ?? null,
-        //                 'province' => $p['province'] ?? null,
-        //                 'city' => $p['city'] ?? null,
-        //                 'ticket_id' => $p['ticketId'] ?? null,
-        //                 'status_racepack' => $p['status_racepack'] ?? 'belum',
-        //             ]);
-
-        //             // Generate QR code for participant_id
-        //             $qrDir = public_path('participants');
-        //             if (!file_exists($qrDir)) {
-        //                 mkdir($qrDir, 0755, true);
-        //             }
-        //             $qrPath = $qrDir . '/' . $pid . '.png';
-        //             if (!file_exists($qrPath)) {
-        //                 QrCode::format('png')->size(300)->generate($pid, $qrPath);
-        //             }
-        //         }
-        //         $participants = $trx->participants()->get();
-        //     }
-        // } else {
-        $participants = $participants->get();
-        // }
+        // Ambil participants dari tabel relasi
+        $participants = $trx->participants()->get();
 
         return response()->json([
-            'invoice' => $invoiceVal,
-            'status' => $statusVal,
-            'amount' => $amountVal,
-            'no_tiket' => $noTiket,
-            'qr_url' => $qrUrl,
-            'user' => $userDetail ? [
-                'id' => $userDetail->id,
-                'nama' => $userDetail->name,
-                'email' => $userDetail->email,
-                'no_hp' => $userDetail->no_hp,
-                'status_payment' => $userDetail->status_payment,
-                'event_id' => $userDetail->event_id,
-                'nomor_punggung' => $userDetail->nomor_punggung,
-                'start_at' => $userDetail->start_at,
-                'finish_at' => $userDetail->finish_at,
+            'invoice'     => $invoiceVal,
+            'status'      => $statusVal,
+            'amount'      => $amountVal,
+            'no_tiket'    => $noTiket,
+            'qr_url'      => $qrUrlLegacy, // hanya untuk skenario legacy no_tiket
+            'user'        => $userDetail ? [
+                'id'              => $userDetail->id,
+                'nama'            => $userDetail->name,
+                'email'           => $userDetail->email,
+                'no_hp'           => $userDetail->no_hp,
+                'status_payment'  => $userDetail->status_payment,
+                'event_id'        => $userDetail->event_id,
+                'nomor_punggung'  => $userDetail->nomor_punggung,
+                'start_at'        => $userDetail->start_at,
+                'finish_at'       => $userDetail->finish_at,
             ] : null,
+            // Untuk peserta per-orang: QR disajikan via storage/participants (dibuat saat webhook/register)
             'participants' => $participants->map(fn($p) => [
-                'participant_id' => $p->participant_id,
-                'name' => $p->name,
-                'nik' => $p->nik,
-                'email' => $p->email,
-                'phone' => $p->phone,
-                'province' => $p->province,
-                'city' => $p->city,
-                'ticket_id' => $p->ticket_id,
-                'status_racepack' => $p->status_racepack,
-                'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
+                'participant_id'   => $p->participant_id,
+                'name'             => $p->name,
+                'nik'              => $p->nik,
+                'email'            => $p->email,
+                'phone'            => $p->phone,
+                'province'         => $p->province,
+                'city'             => $p->city,
+                'ticket_id'        => $p->ticket_id,
+                'status_racepack'  => $p->status_racepack,
+                'qr_url'           => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
     }
@@ -1285,37 +1255,25 @@ class PendaftarController extends Controller
      */
     public function notificationHandler(Request $request)
     {
-
-        //content type application/json
-        $contentType = $request->header('Content-Type');
-        if ($contentType !== 'application/json') {
+        // Pastikan content-type JSON
+        if ($request->header('Content-Type') !== 'application/json') {
             return response()->json(['message' => 'Invalid content type'], 400);
         }
 
         $payload      = $request->getContent();
         $notification = json_decode($payload);
 
-        // Log incoming webhook summary for debugging
-        // \Illuminate\Support\Facades\Log::info('Midtrans webhook received', [
-        //     'order_id' => $notification->order_id ?? null,
-        //     'transaction_status' => $notification->transaction_status ?? null,
-        //     'payment_type' => $notification->payment_type ?? null,
-        //     'fraud_status' => $notification->fraud_status ?? null,
-        //     'status_code' => $notification->status_code ?? null,
-        //     'raw_len' => strlen($payload),
-        // ]);
+        // Validasi signature
+        $validSignatureKey = hash(
+            'sha512',
+            $notification->order_id .
+                $notification->status_code .
+                $notification->gross_amount .
+                config('services.midtrans.serverKey')
+        );
 
-        $validSignatureKey = hash('sha512', $notification->order_id . $notification->status_code . $notification->gross_amount . config('services.midtrans.serverKey'));
-
-        if ($notification->signature_key != $validSignatureKey) {
-            // \Illuminate\Support\Facades\Log::warning('Midtrans invalid signature', [
-            //     'order_id' => $notification->order_id ?? null,
-            //     'provided_signature' => $notification->signature_key ?? null,
-            //     'computed_signature' => $validSignatureKey,
-            //     'gross_amount' => $notification->gross_amount ?? null,
-            //     'status_code' => $notification->status_code ?? null,
-            // ]);
-            return response(['message' => 'Invalid signature'], 403);
+        if (!hash_equals($validSignatureKey, $notification->signature_key)) {
+            return response()->json(['message' => 'Invalid signature'], 403);
         }
 
         $transaction  = $notification->transaction_status;
@@ -1323,106 +1281,38 @@ class PendaftarController extends Controller
         $orderId      = $notification->order_id;
         $fraud        = $notification->fraud_status;
 
-        // \Illuminate\Support\Facades\Log::debug('Midtrans parsed fields', [
-        //     'order_id' => $orderId,
-        //     'transaction' => $transaction,
-        //     'type' => $type,
-        //     'fraud' => $fraud,
-        // ]);
-
-        // find transaction by invoice
-        $data_transaction = Transaksi::where('invoice', $orderId)->first();
-        if (!$data_transaction) {
-            // \Illuminate\Support\Facades\Log::warning('Midtrans webhook: transaction not found for order_id', [
-            //     'order_id' => $orderId,
-            // ]);
+        // Cari transaksi berdasarkan invoice
+        $trx = Transaksi::where('invoice', $orderId)->first();
+        if (!$trx) {
             return response()->json(['message' => 'Order not found'], 404);
         }
 
-        if ($transaction == 'capture') {
+        // Mapping status midtrans → status DB
+        $statusMap = [
+            'capture'    => 'success',
+            'settlement' => 'success',
+            'pending'    => 'pending',
+            'deny'       => 'failed',
+            'expire'     => 'expired',
+            'cancel'     => 'failed',
+        ];
 
-            // For credit card transaction, we need to check whether transaction is challenge by FDS or not
-            if ($type == 'credit_card') {
-
-                if ($fraud == 'challenge') {
-
-                    /**
-                     *   update invoice to pending
-                     */
-                    $data_transaction->update([
-                        'status' => 'pending'
-                    ]);
-                } else {
-
-                    /**
-                     *   update invoice to success
-                     */
-                    $data_transaction->update([
-                        'status' => 'success'
-                    ]);
-                    // Trigger post-success actions for non-challenged credit card capture
-                    // \Illuminate\Support\Facades\Log::info('Midtrans capture success (non-challenge) -> postPaymentSuccessActions', [
-                    //     'invoice' => $orderId,
-                    // ]);
-                    $this->postPaymentSuccessActions($data_transaction);
-                }
+        // Update status sesuai map
+        if (isset($statusMap[$transaction])) {
+            // Khusus credit card: challenge = pending
+            if ($transaction === 'capture' && $type === 'credit_card' && $fraud === 'challenge') {
+                $trx->update(['status' => 'pending']);
+            } else {
+                $trx->update(['status' => $statusMap[$transaction]]);
             }
-        } elseif ($transaction == 'settlement') {
-
-            /**
-             *   update invoice to success
-             */
-            $update = $data_transaction->update([
-                'status' => 'success'
-            ]);
-            // Post-success processing: assign participant IDs, ensure status_racepack, and send WA
-            // \Illuminate\Support\Facades\Log::info('Midtrans settlement -> postPaymentSuccessActions', [
-            //     'invoice' => $orderId,
-            // ]);
-            // if($update){
-            // $this->postPaymentSuccessActions($data_transaction);
-            // }
-            //cek apakah sudah kirim notifikasi
-            if ($data_transaction->notifikasi == 0 && $data_transaction->status == 'success') {
-                $this->postPaymentSuccessActions($data_transaction);
-            }
-        } elseif ($transaction == 'pending') {
-
-            /**
-             *   update invoice to pending
-             */
-            $data_transaction->update([
-                'status' => 'pending'
-            ]);
-        } elseif ($transaction == 'deny') {
-
-            /**
-             *   update invoice to failed
-             */
-            $data_transaction->update([
-                'status' => 'failed'
-            ]);
-        } elseif ($transaction == 'expire') {
-
-            /**
-             *   update invoice to expired
-             */
-            $data_transaction->update([
-                'status' => 'expired'
-            ]);
-        } elseif ($transaction == 'cancel') {
-
-            /**
-             *   update invoice to failed
-             */
-            $data_transaction->update([
-                'status' => 'failed'
-            ]);
         }
-        // Also run on capture-success (non-challenged)
-        if (in_array($transaction, ['capture']) && isset($fraud) && $type === 'credit_card' && $fraud !== 'challenge') {
-            $this->postPaymentSuccessActions($data_transaction);
+
+        // Jalankan postPaymentSuccessActions hanya jika status akhir = success
+        if ($trx->status === 'success') {
+            $this->postPaymentSuccessActions($trx);
         }
+
+        return response()->json(['message' => 'OK']);
     }
 
     /**
@@ -1436,6 +1326,12 @@ class PendaftarController extends Controller
         //     'invoice' => $trx->invoice,
         // ]);
         // Check if participants already exist in table
+
+        // Skip jika sudah pernah kirim notifikasi
+        if ($trx->notifikasi == 1) {
+            return;
+        }
+
         $participants = $trx->participants();
         // \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
         //     'count' => $participants->count(),
@@ -1655,9 +1551,7 @@ class PendaftarController extends Controller
                 }
 
                 // update status to success
-                $trx->update([
-                    'notifikasi' => 1,
-                ]);
+                $trx->update(['notifikasi' => 1]);
             } catch (\Throwable $e) {
                 // If sending email fails for this participant, log and continue with the next
                 // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
