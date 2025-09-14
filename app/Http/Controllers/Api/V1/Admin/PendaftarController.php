@@ -1163,6 +1163,7 @@ class PendaftarController extends Controller
                 'nik'           => $buyerNik,
                 'email'         => $buyerEmail,
                 'nama'          => $buyerName,
+                'expired_snap_time' => Carbon::now()->addMinutes(15),
                 // new column to be added by migration
                 'participants'  => json_encode($participantsAug),
             ]);

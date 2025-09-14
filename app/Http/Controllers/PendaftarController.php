@@ -19,6 +19,7 @@ use Spatie\MediaLibrary\MediaCollections\Models\Media;
 use Symfony\Component\HttpFoundation\Response;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\User;
+use Carbon\Carbon;
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 use PHPMailer\PHPMailer\SMTP;
@@ -162,6 +163,7 @@ class PendaftarController extends Controller
             'amount'        => $amount,
             'note'          => $request->input('nama'),
             'status'        => 'pending',
+            'expired_snap_time' => Carbon::now()->addMinutes(15),
         ]);
 
         $payload = [

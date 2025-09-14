@@ -35,6 +35,7 @@ class Transaksi extends Model implements HasMedia
         'updated_at',
         'deleted_at',
         'paired_at',
+        'expired_snap_time',
     ];
 
     protected $fillable = [
@@ -49,6 +50,7 @@ class Transaksi extends Model implements HasMedia
         'snap_token',
         'status',
         'paired_at',
+        'expired_snap_time',
         'created_at',
         'updated_at',
         'deleted_at',
