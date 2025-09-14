@@ -204,6 +204,28 @@ const TransactionsListPage = () => {
         meta: { headerClassName: 'min-w-[200px]' },
       },
       {
+        accessorFn: (row) => row?.peserta?.region || row?.peserta?.province || '',
+        id: 'province',
+        header: ({ column }) => <DataGridColumnHeader title="Provinsi" column={column} />,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const prov = row.original?.peserta?.region || row.original?.peserta?.province;
+          return prov ? String(prov).toUpperCase() : '-';
+        },
+        meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
+        accessorFn: (row) => row?.peserta?.city || '',
+        id: 'city',
+        header: ({ column }) => <DataGridColumnHeader title="Kota/Kab" column={column} />,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const city = row.original?.peserta?.city;
+          return city ? String(city).toUpperCase() : '-';
+        },
+        meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
         accessorKey: 'created_at',
         id: 'created_at',
         header: ({ column }) => <DataGridColumnHeader title="Tanggal" column={column} />,
