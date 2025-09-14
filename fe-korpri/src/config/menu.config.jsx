@@ -3,7 +3,7 @@ export const MENU_SIDEBAR = [
   // { title: 'Dark Sidebar', path: '/dark-sidebar' },
   { title: 'Transactions', path: '/transactions', icon: 'cheque' },
   // { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
-  { title: 'Racepacks', path: '/racepacks', icon: 'gift' },
+  { title: 'Participant', path: '/racepacks', icon: 'gift' },
   { title: 'Missing Participants', path: '/participants/missing', icon: 'information' },
   { title: 'Withdrawal', path: '/withdrawal', icon: 'wallet' },
   { title: 'Users', path: '/users', icon: 'users' },
