@@ -492,6 +492,11 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         }
 
         foreach ($data as $row) {
+            // Hanya proses transaksi dengan Amount > 10000 (data kecil dianggap testing)
+            $amountCsv = isset($row[4]) ? (int) preg_replace('/[^0-9]/', '', $row[4]) : 0;
+            if ($amountCsv <= 10000) {
+                continue;
+            }
             $trx = \App\Models\Transaksi::where('invoice', $row[1])->first();
             if ($trx) {
                 // Normalisasi status dari CSV (kolom 6 / index 5)
