@@ -46,6 +46,121 @@ class PendaftarController extends Controller
     }
 
     /**
+     * Generate/backfill participants for a successful transaction.
+     * POST /api/v1/participants/generate
+     * Accepts: invoice (string) or transaction_id (int)
+     */
+    public function generateParticipants(Request $request)
+    {
+        $invoice = $request->input('invoice');
+        $trxId   = $request->input('transaction_id');
+
+        if (!$invoice && !$trxId) {
+            return response()->json(['message' => 'invoice or transaction_id is required'], 422);
+        }
+
+        $trxQuery = Transaksi::query();
+        if ($trxId) {
+            $trxQuery->where('id', $trxId);
+        } else {
+            $trxQuery->where('invoice', $invoice);
+        }
+        $trx = $trxQuery->first();
+
+        if (!$trx) {
+            return response()->json(['message' => 'Transaction not found'], 404);
+        }
+        if ($trx->status !== 'success') {
+            return response()->json(['message' => 'Transaction is not success'], 422);
+        }
+
+        // Run post-success actions (will backfill participants if JSON exists and generate QR)
+        try {
+            $this->postPaymentSuccessActions($trx);
+        } catch (\Throwable $e) {
+            \Log::warning('generateParticipants failed', ['invoice' => $trx->invoice, 'error' => $e->getMessage()]);
+            return response()->json(['message' => 'Failed to generate participants', 'error' => $e->getMessage()], 500);
+        }
+
+        // Return participants summary
+        $participants = $trx->participants()->get(['participant_id', 'name', 'email', 'phone', 'ticket_id', 'status_racepack']);
+        return response()->json([
+            'message' => 'Participants generated',
+            'invoice' => $trx->invoice,
+            'count' => $participants->count(),
+            'participants' => $participants,
+        ]);
+    }
+
+    /**
+     * List successful transactions that do not have any participants rows yet.
+     * GET /api/v1/participants/missing
+     * Optional query params:
+     * - search: string (search invoice or user name/email)
+     * - date_from, date_to: filter by created_at range
+     * - per_page: int (default 50)
+     */
+    public function missingParticipants(Request $request)
+    {
+        $search   = $request->query('search');
+        $dateFrom = $request->query('date_from');
+        $dateTo   = $request->query('date_to');
+        $perPage  = max(1, (int) $request->query('per_page', 50));
+
+        $q = Transaksi::query()
+            ->with(['event:id,nama_event', 'peserta:id,name,email'])
+            ->where('status', 'success')
+            ->whereDoesntHave('participants')
+            ->orderByDesc('id');
+
+        if ($search) {
+            $kw = "%$search%";
+            $q->where(function ($w) use ($kw) {
+                $w->where('invoice', 'like', $kw)
+                  ->orWhereHas('peserta', function ($p) use ($kw) {
+                      $p->where('name', 'like', $kw)->orWhere('email', 'like', $kw);
+                  });
+            });
+        }
+        if ($dateFrom) {
+            try { $q->whereDate('created_at', '>=', \Carbon\Carbon::parse($dateFrom)->startOfDay()); } catch (\Throwable $e) {}
+        }
+        if ($dateTo) {
+            try { $q->whereDate('created_at', '<=', \Carbon\Carbon::parse($dateTo)->endOfDay()); } catch (\Throwable $e) {}
+        }
+
+        $paginator = $q->paginate($perPage);
+        $rows = $paginator->getCollection()->map(function ($t) {
+            return [
+                'id'         => $t->id,
+                'invoice'    => $t->invoice,
+                'status'     => $t->status,
+                'amount'     => (int) $t->amount,
+                'created_at' => optional($t->created_at)->toDateTimeString(),
+                'event'      => $t->event ? [
+                    'id'         => $t->event->id,
+                    'nama_event' => $t->event->nama_event,
+                ] : null,
+                'user'       => $t->peserta ? [
+                    'id'    => $t->peserta->id,
+                    'name'  => $t->peserta->name,
+                    'email' => $t->peserta->email,
+                ] : null,
+            ];
+        })->values();
+
+        return response()->json([
+            'data' => $rows,
+            'meta' => [
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+            ],
+        ]);
+    }
+
+    /**
      * Simple staff list for racepack dropdown, derived from participants table
      * GET /api/v1/staffs
      * Optional query: search
