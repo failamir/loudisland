@@ -56,6 +56,9 @@ const EventAnalytics = () => {
   const { days, salesSeries } = useMemo(() => {
     const byDate = new Map();
     for (const t of transactions) {
+      // Only count successful transactions for daily sales
+      const status = (t?.status || '').toLowerCase();
+      if (status !== 'success') continue;
       const key = dateKey(t.created_at);
       if (!key) continue;
       const prev = byDate.get(key) || 0;
