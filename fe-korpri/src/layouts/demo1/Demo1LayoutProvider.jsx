@@ -1,5 +1,5 @@
 /* eslint-disable no-unused-vars */
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router';
 import { useMenuChildren } from '@/components/menu';
 import { MENU_SIDEBAR } from '@/config/menu.config';
@@ -8,6 +8,7 @@ import { useMenus } from '@/providers';
 import { useLayout } from '@/providers';
 import { deepMerge } from '@/utils';
 import { demo1LayoutConfig } from './';
+import { useAuthContext } from '@/auth/useAuthContext';
 
 // Interface defining the structure for layout provider properties
 
@@ -61,10 +62,18 @@ const Demo1LayoutProvider = ({
   const {
     setMenuConfig
   } = useMenus(); // Accesses menu configuration methods
-  const secondaryMenu = useMenuChildren(pathname, MENU_SIDEBAR, 0); // Retrieves the secondary menu
+  const { currentUser } = useAuthContext();
+
+  // Build primary menu conditionally based on the authenticated user's email
+  const primaryMenu = useMemo(() => {
+    if (currentUser?.email === 'admin@superadmin.com') return MENU_SIDEBAR;
+    return MENU_SIDEBAR.filter(item => item?.title !== 'Missing Participants');
+  }, [currentUser]);
+
+  const secondaryMenu = useMenuChildren(pathname, primaryMenu, 0); // Retrieves the secondary menu
 
   // Sets the primary and secondary menu configurations
-  setMenuConfig('primary', MENU_SIDEBAR);
+  setMenuConfig('primary', primaryMenu);
   setMenuConfig('secondary', secondaryMenu);
   const {
     getLayout,
