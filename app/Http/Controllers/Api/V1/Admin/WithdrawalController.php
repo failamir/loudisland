@@ -189,7 +189,7 @@ class WithdrawalController extends Controller
             ->sum('amount');
 
         $availableBefore = max(0, $netIncome - $totalWithdrawn);
-
+        $totalIncome = $netIncome;
         DB::transaction(function () use ($data, $withdrawal, $userId, $netIncome, $totalWithdrawn, $availableBefore) {
             $withdrawal->update(['status' => $data['action']]);
 
