@@ -1352,7 +1352,7 @@ class PendaftarController extends Controller
                         'phone' => $p['phone'] ?? null,
                         'ticket_id' => $p['ticketId'] ?? null,
                         'status_racepack' => $p['status_racepack'] ?? 'belum',
-                        'amount' => $trx->amount,
+                        'amount' => Event::find($p['ticketId'])->harga,
                         'status' => 1,
                         'province' => $p['province'] ?? null,
                         'city' => $p['city'] ?? null,
@@ -1366,8 +1366,6 @@ class PendaftarController extends Controller
 
                     // Generate QR code for participant_id
                     $qrDir = storage_path('app/public/participants');
-                    // var_dump($qrDir);
-                    // die;
                     if (!file_exists($qrDir)) {
                         mkdir($qrDir, 0755, true);
                     }
@@ -1375,25 +1373,15 @@ class PendaftarController extends Controller
                     if (!file_exists($qrPath)) {
                         QrCode::format('png')->size(300)->generate($pid, $qrPath);
                     }
-                    // var_dump($qrPath);
-                    // die;
                 }
                 // Reload participants
                 $participants = $trx->participants()->get();
-                // \Illuminate\Support\Facades\Log::debug('participants after backfill from JSON', [
-                //     'count' => $participants->count(),
-                // ]);
             }
         } else {
             $participants = $participants->get();
         }
 
         if ($participants->isEmpty()) {
-            // \Illuminate\Support\Facades\Log::warning('No participants found for transaction, attempting fallback via user/no_tiket', [
-            //     'trx_id' => $trx->id,
-            //     'invoice' => $trx->invoice,
-            // ]);
-
             // Fallback: try to find single user by no_tiket stored in events
             $noTiket = @unserialize($trx->events);
             if ($noTiket === false) {
