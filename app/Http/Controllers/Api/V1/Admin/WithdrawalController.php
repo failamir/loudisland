@@ -189,7 +189,7 @@ class WithdrawalController extends Controller
             ->sum('amount');
 
         $availableBefore = max(0, $netIncome - $totalWithdrawn);
-        $totalIncome = $netIncome;
+
         DB::transaction(function () use ($data, $withdrawal, $userId, $netIncome, $totalWithdrawn, $availableBefore) {
             $withdrawal->update(['status' => $data['action']]);
 
@@ -204,7 +204,7 @@ class WithdrawalController extends Controller
                     ? max(0, $availableBefore - $withdrawal->amount)
                     : $availableBefore,
                 'meta' => [
-                    'total_income' => $totalIncome,
+                    'total_income' => $netIncome,
                     'total_withdrawn' => $totalWithdrawn,
                 ],
             ]);
