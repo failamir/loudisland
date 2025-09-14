@@ -697,6 +697,7 @@ class PendaftarController extends Controller
             'amount'      => $amountVal,
             'no_tiket'    => $noTiket,
             'qr_url'      => $qrUrlLegacy, // hanya untuk skenario legacy no_tiket
+            'expired_snap_time' => $trx->expired_snap_time,
             'user'        => $userDetail ? [
                 'id'              => $userDetail->id,
                 'nama'            => $userDetail->name,
@@ -1237,7 +1238,7 @@ class PendaftarController extends Controller
             $resp->total_amount = $amount;
             $resp->total_payment = $total_payment;
             $resp->total_ticket = count($data['participants']) . ' Tiket';
-
+            $resp->expired_snap_time = $transaksi->expired_snap_time;
             return response()->json($resp);
         } else {
             return response()->json(['data' => $validator->errors()->all()]);
