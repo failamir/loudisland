@@ -77,6 +77,9 @@ const EventAnalytics = () => {
   const { ticketLabels, ticketTypeSeries } = useMemo(() => {
     const counts = new Map();
     for (const t of transactions) {
+      // Only include successful transactions in event composition
+      const status = (t?.status || '').toLowerCase();
+      if (status !== 'success') continue;
       let label = 'Tidak diketahui';
       const ev = t?.event;
       if (ev?.event_code) {
