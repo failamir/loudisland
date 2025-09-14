@@ -188,8 +188,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         //     ->where('status', 'success')
         //     ->whereHas('participants');
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $query = \App\Models\Participant::query()
-            ->where('status', '1')
+        $query = \App\Models\Transaksi::query()
+            ->where('status', 'success')
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails);
         // ->whereHas('participants');
@@ -198,14 +198,6 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // $query->whereHas('participants', function ($q) {
         //     $q->where('status', '1');
         // });
-
-        // if (!empty($testingEmail)) {
-        //     $query->where(function ($q) use ($testingEmail) {
-        //         $q->where('amount', '>=', 175000)
-        //             ->orWhereNull('email')
-        //             ->orWhere('email', '!=', $testingEmail);
-        //     });
-        // }
 
         $count = (clone $query)->count();
         // print('total_tiket: ');

@@ -113,7 +113,7 @@ export default function RacepackListPage() {
         enableSorting: true,
         cell: ({ row }) => (
           <div className="flex flex-col gap-0.5">
-            <span className="text-sm font-medium text-gray-900">{row.original.name}</span>
+            <span className="text-sm font-medium text-gray-900">{String(row.original.name || '').toUpperCase()}</span>
             <span className="text-2sm text-gray-700">{row.original.email} • {row.original.phone}</span>
           </div>
         ),

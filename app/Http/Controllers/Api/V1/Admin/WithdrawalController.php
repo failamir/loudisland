@@ -78,7 +78,7 @@ class WithdrawalController extends Controller
         // profit = count * 5000 + floor(gross * 0.01)
         // net_income = max(0, gross - profit)
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $participantsQuery = Participant::query()->where('status', '1')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);

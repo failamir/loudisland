@@ -197,7 +197,10 @@ const TransactionsListPage = () => {
         id: 'nama',
         header: ({ column }) => <DataGridColumnHeader title="Nama" column={column} />,
         enableSorting: false,
-        cell: ({ row }) => row.original?.peserta?.name || row.original?.created_by?.name || '-',
+        cell: ({ row }) => {
+          const name = row.original?.peserta?.name || row.original?.created_by?.name;
+          return name ? String(name).toUpperCase() : '-';
+        },
         meta: { headerClassName: 'min-w-[200px]' },
       },
       {
@@ -358,7 +361,7 @@ const TransactionsListPage = () => {
                   <div className="flex justify-between"><span className="text-gray-600">Status:</span><span className="font-medium">{detail?.status || '-'}</span></div>
                   <div className="flex justify-between"><span className="text-gray-600">Jumlah:</span><span className="font-medium">{new Intl.NumberFormat('id-ID').format(detail?.amount || 0)}</span></div>
                   <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{formatIndoDateTime(detail?.created_at)}</span></div>
-                  <div className="flex justify-between col-span-2"><span className="text-gray-600">Pemesan:</span><span className="font-medium">{detail?.peserta?.name || '-'}</span></div>
+                  <div className="flex justify-between col-span-2"><span className="text-gray-600">Pemesan:</span><span className="font-medium">{detail?.peserta?.name ? String(detail.peserta.name).toUpperCase() : '-'}</span></div>
                 </div>
 
                 {Array.isArray(detail?.participants) && detail.participants.length > 0 && (
@@ -367,7 +370,7 @@ const TransactionsListPage = () => {
                     <div className="border rounded-md divide-y">
                       {detail.participants.map((p, idx) => (
                         <div key={idx} className="p-2 text-sm space-y-1">
-                          <div className="flex justify-between"><span className="text-gray-600">Nama</span><span className="font-medium">{p.name || '-'}</span></div>
+                          <div className="flex justify-between"><span className="text-gray-600">Nama</span><span className="font-medium">{p?.name ? String(p.name).toUpperCase() : '-'}</span></div>
                           <div className="flex justify-between"><span className="text-gray-600">NIK</span><span>{p.nik || '-'}</span></div>
                           <div className="flex justify-between"><span className="text-gray-600">Email</span><span>{p.email || '-'}</span></div>
                           <div className="flex justify-between"><span className="text-gray-600">Phone</span><span>{p.phone || '-'}</span></div>
