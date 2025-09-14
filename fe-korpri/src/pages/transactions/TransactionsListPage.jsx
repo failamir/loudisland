@@ -27,6 +27,25 @@ const TransactionsListPage = () => {
   const [detail, setDetail] = useState(null);
   const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
+  // Format: "hari, dd-mm-yyyy : HH:mm" in Asia/Jakarta
+  const formatIndoDateTime = (value) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    try {
+      const weekday = new Intl.DateTimeFormat('id-ID', { weekday: 'long', timeZone: 'Asia/Jakarta' }).format(d);
+      const day = new Intl.DateTimeFormat('id-ID', { day: '2-digit', timeZone: 'Asia/Jakarta' }).format(d);
+      const month = new Intl.DateTimeFormat('id-ID', { month: '2-digit', timeZone: 'Asia/Jakarta' }).format(d);
+      const year = new Intl.DateTimeFormat('id-ID', { year: 'numeric', timeZone: 'Asia/Jakarta' }).format(d);
+      let time = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).format(d);
+      // Normalize separator to colon (id-ID often uses dot)
+      time = time.replace('.', ':');
+      const capWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+      return `${capWeekday}, ${day}-${month}-${year} : ${time}`;
+    } catch (_) {
+      return d.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+    }
+  };
+
   const fetchData = async (params = {}) => {
     try {
       setLoading(true);
@@ -186,7 +205,7 @@ const TransactionsListPage = () => {
         id: 'created_at',
         header: ({ column }) => <DataGridColumnHeader title="Tanggal" column={column} />,
         enableSorting: true,
-        cell: ({ row }) => (row.original.created_at ? new Date(row.original.created_at).toLocaleString() : '-'),
+        cell: ({ row }) => formatIndoDateTime(row.original.created_at),
         meta: { headerClassName: 'min-w-[180px]' },
       },
       {
@@ -338,7 +357,7 @@ const TransactionsListPage = () => {
                   <div className="flex justify-between"><span className="text-gray-600">Invoice:</span><span className="font-medium">{detail?.invoice || '-'}</span></div>
                   <div className="flex justify-between"><span className="text-gray-600">Status:</span><span className="font-medium">{detail?.status || '-'}</span></div>
                   <div className="flex justify-between"><span className="text-gray-600">Jumlah:</span><span className="font-medium">{new Intl.NumberFormat('id-ID').format(detail?.amount || 0)}</span></div>
-                  <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{detail?.created_at || '-'}</span></div>
+                  <div className="flex justify-between"><span className="text-gray-600">Dibuat:</span><span className="font-medium">{formatIndoDateTime(detail?.created_at)}</span></div>
                   <div className="flex justify-between col-span-2"><span className="text-gray-600">Pemesan:</span><span className="font-medium">{detail?.peserta?.name || '-'}</span></div>
                 </div>
 

@@ -24,6 +24,24 @@ export default function RacepackListPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
 
+  // Format: "hari, dd-mm-yyyy : HH:mm" in Asia/Jakarta
+  const formatIndoDateTime = (value) => {
+    if (!value) return '-';
+    const d = new Date(value);
+    try {
+      const weekday = new Intl.DateTimeFormat('id-ID', { weekday: 'long', timeZone: 'Asia/Jakarta' }).format(d);
+      const day = new Intl.DateTimeFormat('id-ID', { day: '2-digit', timeZone: 'Asia/Jakarta' }).format(d);
+      const month = new Intl.DateTimeFormat('id-ID', { month: '2-digit', timeZone: 'Asia/Jakarta' }).format(d);
+      const year = new Intl.DateTimeFormat('id-ID', { year: 'numeric', timeZone: 'Asia/Jakarta' }).format(d);
+      let time = new Intl.DateTimeFormat('id-ID', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Jakarta' }).format(d);
+      time = time.replace('.', ':');
+      const capWeekday = weekday.charAt(0).toUpperCase() + weekday.slice(1);
+      return `${capWeekday}, ${day}-${month}-${year} : ${time}`;
+    } catch (_) {
+      return d.toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+    }
+  };
+
   const fetchServerItems = async ({ pageIndex, pageSize }) => {
     const { data } = await axios.get(`${baseUrl}/racepacks`, {
       params: {
@@ -126,15 +144,16 @@ export default function RacepackListPage() {
         id: 'racepack_at',
         header: ({ column }) => <DataGridColumnHeader title="Racepack At" column={column} />,
         enableSorting: true,
-        cell: ({ row }) => (row.original.racepack_at ? new Date(row.original.racepack_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) : '-'),
+        cell: ({ row }) => formatIndoDateTime(row.original.racepack_at),
         meta: { headerClassName: 'min-w-[200px]' },
       },
     ],
     []
   );
 
-  const ToolbarContent = () => (
-    <div className="card-header flex-wrap gap-2 border-b-0 px-5 w-full">
+  // Memoized toolbar element to prevent remounts on each keystroke (which caused input focus loss)
+  const toolbar = useMemo(() => (
+    <div data-toolbar className="card-header flex-wrap gap-2 border-b-0 px-5 w-full">
       <div className="flex items-center gap-2 flex-wrap">
         <label className="input input-sm">
           <KeenIcon icon="magnifier" />
@@ -186,7 +205,7 @@ export default function RacepackListPage() {
         )}
       </div>
     </div>
-  );
+  ), [search, status, staffId, staffName, staffOptions, dateFrom, dateTo, loading]);
 
   return (
     <Fragment>
@@ -236,7 +255,7 @@ export default function RacepackListPage() {
               setLoading(false);
             }
           }}
-          toolbar={<ToolbarContent />}
+          toolbar={toolbar}
           layout={{ card: true }}
         />
       </Container>
