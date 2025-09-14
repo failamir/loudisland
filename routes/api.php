@@ -188,8 +188,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         //     ->where('status', 'success')
         //     ->whereHas('participants');
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $query = \App\Models\Transaksi::query()
-            ->where('status', 'success')
+        $query = \App\Models\Participant::query()
+            ->where('status', '1')
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails);
         // ->whereHas('participants');

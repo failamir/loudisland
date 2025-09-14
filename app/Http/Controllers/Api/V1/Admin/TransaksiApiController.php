@@ -66,8 +66,8 @@ class TransaksiApiController extends Controller
         // Compute summary counts
         $totalAll  = Transaksi::where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->count();
         $totalSucc = Transaksi::where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->count();
-        // $sumSucc   = (int) Participant::where('status', 1)->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
-        $sumSucc   = (int) Transaksi::where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
+        $sumSucc   = (int) Participant::where('status', 1)->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
+        // $sumSucc   = (int) Transaksi::where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->sum('amount');
         $totalPend = Transaksi::where('status', 'pending')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->count();
         $totalExp  = Transaksi::where('status', 'expired')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails)->count();
 
