@@ -172,7 +172,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     //get all participants
     Route::get('participants', function () {
-        $query = \App\Models\Participant::where('status', '1')->get();
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $query = \App\Models\Participant::where('status', '1')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
         return response()->json([
             'data' => $query,
             'total' => count($query),
