@@ -119,6 +119,32 @@ const EventAnalytics = () => {
     return { ticketLabels: labels, ticketTypeSeries: series };
   }, [participants, transactions]);
 
+  // Build participant distribution per Province and City
+  const { provLabels, provSeries, cityLabels, citySeries } = useMemo(() => {
+    const provCounts = new Map();
+    const cityCounts = new Map();
+    for (const p of participants) {
+      // Only count confirmed/paid participants
+      if (String(p?.status ?? '') !== '1') continue;
+      const prov = (p?.province || p?.provinsi || '').toString().trim();
+      const city = (p?.city || p?.kota || p?.kabupaten || '').toString().trim();
+      if (prov) provCounts.set(prov, (provCounts.get(prov) || 0) + 1);
+      if (city) cityCounts.set(city, (cityCounts.get(city) || 0) + 1);
+    }
+
+    // Sort desc by count, take top 10 for readability
+    const sortDesc = (a, b) => b[1] - a[1];
+    const topProv = Array.from(provCounts.entries()).sort(sortDesc).slice(0, 10);
+    const topCity = Array.from(cityCounts.entries()).sort(sortDesc).slice(0, 10);
+
+    return {
+      provLabels: topProv.map(([k]) => k),
+      provSeries: [{ name: 'Peserta', data: topProv.map(([, v]) => v) }],
+      cityLabels: topCity.map(([k]) => k),
+      citySeries: [{ name: 'Peserta', data: topCity.map(([, v]) => v) }],
+    };
+  }, [participants]);
+
   // Build status distribution
   const statusSeries = useMemo(() => {
     const order = ['success', 'pending', 'failed', 'cancel', 'expire'];
@@ -167,6 +193,24 @@ const EventAnalytics = () => {
     colors: ['var(--tw-primary)']
   }), [statusSeries.labels]);
 
+  const provBarOptions = useMemo(() => ({
+    chart: { type: 'bar', toolbar: { show: false } },
+    plotOptions: { bar: { borderRadius: 6, columnWidth: '40%' } },
+    xaxis: { categories: provLabels, labels: { style: { colors: 'var(--tw-gray-500)', fontSize: '12px' } } },
+    yaxis: { labels: { style: { colors: 'var(--tw-gray-500)', fontSize: '12px' } } },
+    grid: { borderColor: 'var(--tw-gray-200)', strokeDashArray: 5 },
+    colors: ['#10b981']
+  }), [provLabels]);
+
+  const cityBarOptions = useMemo(() => ({
+    chart: { type: 'bar', toolbar: { show: false } },
+    plotOptions: { bar: { borderRadius: 6, columnWidth: '40%' } },
+    xaxis: { categories: cityLabels, labels: { rotate: -30, rotateAlways: false, style: { colors: 'var(--tw-gray-500)', fontSize: '12px' } } },
+    yaxis: { labels: { style: { colors: 'var(--tw-gray-500)', fontSize: '12px' } } },
+    grid: { borderColor: 'var(--tw-gray-200)', strokeDashArray: 5 },
+    colors: ['#6366f1']
+  }), [cityLabels]);
+
   return (
     <div className="grid lg:grid-cols-3 gap-5 lg:gap-7.5 items-stretch">
       <div className="lg:col-span-2">
@@ -198,6 +242,27 @@ const EventAnalytics = () => {
             <ApexChart type="bar" options={barOptions} series={statusSeries.series} height={260} />
           )}
         </Card>
+      </div>
+
+      <div className="lg:col-span-3 grid md:grid-cols-2 gap-5 lg:gap-7.5">
+        <div>
+          <Card title="Peserta per Provinsi (Top 10)">
+            {loading ? (
+              <div className="text-2sm text-gray-600">Memuat…</div>
+            ) : (
+              <ApexChart type="bar" options={provBarOptions} series={provSeries} height={280} />
+            )}
+          </Card>
+        </div>
+        <div>
+          <Card title="Peserta per Kota/Kabupaten (Top 10)">
+            {loading ? (
+              <div className="text-2sm text-gray-600">Memuat…</div>
+            ) : (
+              <ApexChart type="bar" options={cityBarOptions} series={citySeries} height={280} />
+            )}
+          </Card>
+        </div>
       </div>
     </div>
   );
