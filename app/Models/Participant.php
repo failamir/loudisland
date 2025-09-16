@@ -26,6 +26,7 @@ class Participant extends Model
         'staff_user_id',
         'racepack_by',
         'racepack_at',
+        'amount',
     ];
 
     protected $casts = [
