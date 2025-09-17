@@ -96,6 +96,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::get('tiket', [PendaftarController::class, 'tiket'])->name('tiket');
     // List success transactions without participant rows
     Route::get('participants/missing', [PendaftarController::class, 'missingParticipants'])->name('participants.missing');
+
+    Route::get('participants/{participant}', [PendaftarController::class, 'showParticipant'])->name('participants.show');
+
     // Generate/backfill participants for a transaction
     Route::post('participants/generate', [PendaftarController::class, 'generateParticipants'])->name('participants.generate');
     Route::post('notification', [PendaftarController::class, 'notificationHandler'])->name('notification');

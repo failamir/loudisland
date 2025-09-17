@@ -92,6 +92,12 @@ class PendaftarController extends Controller
         ]);
     }
 
+    public function showParticipant($participant)
+    {
+        $p = Participant::findOrFail($participant);
+        return new PendaftarResource($p);
+    }
+
     /**
      * List successful transactions that do not have any participants rows yet.
      * GET /api/v1/participants/missing
