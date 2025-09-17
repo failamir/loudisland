@@ -206,7 +206,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $grossSum = (int) (clone $query)->sum('amount');
         // print('total_masuk: ');
         // var_dump($grossSum);
-        $profit = (int) ($count * 5000) + (floor($grossSum * 0.01));
+        $profit = (int) ($count * 5000) + (floor($grossSum * 0.015));
         // print('profit: ');
         // var_dump($profit);
         $netIncome = max(0, $grossSum - $profit);

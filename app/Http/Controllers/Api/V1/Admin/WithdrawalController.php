@@ -42,7 +42,7 @@ class WithdrawalController extends Controller
         $grossSum = (int) (clone $query)->sum('amount');
 
         // Profit: per-success fee + 1% of gross sum (floor to int)
-        $profit = (int) ($count * 5000 + floor($grossSum * 0.01));
+        $profit = (int) ($count * 5000 + floor($grossSum * 0.015));
         $netIncome = max(0, $grossSum - $profit);
 
         return [
@@ -81,7 +81,7 @@ class WithdrawalController extends Controller
         $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
-        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
         $netIncome = max(0, $grossSum - $profit);
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
@@ -111,7 +111,7 @@ class WithdrawalController extends Controller
         $participantsQuery = Participant::query()->where('status', '1')->whereNotIn('email', $excluded_emails);
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
-        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
         $netIncome = max(0, $grossSum - $profit);
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
@@ -181,7 +181,7 @@ class WithdrawalController extends Controller
         $participantsQuery = Participant::query()->where('status', '1');
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
-        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.01);
+        $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
         $netIncome = max(0, $grossSum - $profit);
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])
