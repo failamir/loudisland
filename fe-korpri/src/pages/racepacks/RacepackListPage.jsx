@@ -23,6 +23,7 @@ export default function RacepackListPage() {
   const [search, setSearch] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [eventsMap, setEventsMap] = useState({});
 
   // Format: "hari, dd-mm-yyyy : HH:mm" in Asia/Jakarta
   const formatIndoDateTime = (value) => {
@@ -84,6 +85,26 @@ export default function RacepackListPage() {
     loadStaffs();
   }, []);
 
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        // Try to fetch many events; adjust if backend paginates
+        const { data } = await axios.get(`${baseUrl}/events`, { params: { per_page: 1000 } });
+        const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        const map = {};
+        items.forEach((ev) => {
+          if (ev && ev.id != null) {
+            map[ev.id] = ev.nama_event || ev.name || `Event #${ev.id}`;
+          }
+        });
+        setEventsMap(map);
+      } catch (_) {
+        setEventsMap({});
+      }
+    };
+    loadEvents();
+  }, [baseUrl]);
+
   const columns = useMemo(
     () => [
       {
@@ -138,6 +159,20 @@ export default function RacepackListPage() {
         enableSorting: true,
         cell: ({ row }) => row.original.city || '-',
         meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
+        accessorKey: 'ticket_id',
+        id: 'ticket_id',
+        header: ({ column }) => (
+          <DataGridColumnHeader title="Jenis Tiket" filter={<ColumnInputFilter column={column} />} column={column} />
+        ),
+        enableSorting: true,
+        cell: ({ row }) => {
+          const tid = row.original.ticket_id;
+          if (!tid) return '-';
+          return eventsMap[tid] || String(tid);
+        },
+        meta: { headerClassName: 'min-w-[140px]' },
       },
       {
         accessorKey: 'status_racepack',
