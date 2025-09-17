@@ -94,7 +94,10 @@ class PendaftarController extends Controller
 
     public function showParticipant($participant)
     {
-        $p = Participant::findOrFail($participant);
+        $p = Participant::where('participant_id', $participant)->first();
+        if (!$p) {
+            return response()->json(['message' => 'Participant not found'], 404);
+        }
         return new PendaftarResource($p);
     }
 
