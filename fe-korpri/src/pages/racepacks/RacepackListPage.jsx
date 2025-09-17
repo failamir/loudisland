@@ -170,7 +170,10 @@ export default function RacepackListPage() {
         cell: ({ row }) => {
           const tid = row.original.ticket_id;
           if (!tid) return '-';
-          return eventsMap[tid] || String(tid);
+          const num = Number(tid);
+          if (num === 1) return 'ASN';
+          if (num === 2) return 'UMUM';
+          return eventsMap[num] || eventsMap[tid] || String(tid);
         },
         meta: { headerClassName: 'min-w-[140px]' },
       },
