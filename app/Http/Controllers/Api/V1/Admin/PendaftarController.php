@@ -98,6 +98,8 @@ class PendaftarController extends Controller
         if (!$p) {
             return response()->json(['message' => 'Participant not found'], 404);
         }
+        //add jenis tiket dia
+        $p->jenis_tiket = Event::where('id', $p->ticket_id)->first()->nama_event;
         return new PendaftarResource($p);
     }
 
