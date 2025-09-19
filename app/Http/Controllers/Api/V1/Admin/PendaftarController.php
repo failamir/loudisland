@@ -100,7 +100,7 @@ class PendaftarController extends Controller
         }
         //add jenis tiket dia
         $p->jenis_tiket = Event::where('id', $p->ticket_id)->first()->nama_event;
-        return new PendaftarResource($p);
+        return response()->json($p);
     }
 
     /**
