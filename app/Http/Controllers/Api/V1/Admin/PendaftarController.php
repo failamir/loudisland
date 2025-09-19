@@ -46,6 +46,27 @@ class PendaftarController extends Controller
     }
 
     /**
+     * Build unified WhatsApp message text for payment success using the latest template.
+     */
+    protected function buildPaymentSuccessText(string $name, string $participantId, string $ticketLabel): string
+    {
+        $dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+        $lines = [];
+        $lines[] = 'Halo Bapak/Ibu ' . trim($name) . ',';
+        $lines[] = 'E-Ticket Mandalika Korpri Run Anda sudah terbit ✅';
+        $lines[] = '';
+        $lines[] = '🆔 ID Peserta: ' . $participantId;
+        $lines[] = '👤 Nama: ' . trim($name);
+        $lines[] = '🎟️ Jenis Tiket: ' . $ticketLabel;
+        $lines[] = '';
+        $lines[] = 'Silakan cek email atau login ke ' . $dashboardUrl . ' untuk mengunduh QR E-Ticket.';
+        $lines[] = '';
+        $lines[] = 'Jika ada kendala, hubungi kami melalui WA ini.';
+        $lines[] = 'Terima kasih 🙏';
+        return implode("\n", $lines);
+    }
+
+    /**
      * Generate/backfill participants for a successful transaction.
      * POST /api/v1/participants/generate
      * Accepts: invoice (string) or transaction_id (int)
@@ -1418,23 +1439,9 @@ class PendaftarController extends Controller
                     }
                 }
 
-                // Build message (align with participants flow)
-                $lines = [];
-                $lines[] = 'Hai ' . ($user->name ?? 'Peserta') . ',';
-                $lines[] = '';
-                $lines[] = 'Kamu sudah bisa check tiket online melalui website untuk pesanan berikut:';
-                $lines[] = '';
-                $lines[] = 'ID Peserta: ' . ($noTiket ?? '-');
-                $lines[] = 'Nama: ' . ($user->name ?? '-');
-                $lines[] = 'Jenis Tiket: ' . $jenis;
-                $lines[] = '';
-                $url = 'https://daftar.mandalikakorprirun.com/dashboard';
-                // $lines[] = 'Check Dashboard kamu di ' . $url;
-                $lines[] = 'Cek Email untuk mengunduh E-tiket Anda ';
-                $lines[] = 'Jika ada masalah, silahkan hubungi kami di nomor wa ini';
-                $lines[] = 'Terima kasih';
-
-                $text = implode("\n", $lines);
+                // Build message using unified template
+                $url = 'https://daftar.mandalikakorprirun.com/dashboard/';
+                $text = $this->buildPaymentSuccessText(($user->name ?? 'Peserta'), (string)($noTiket ?? '-'), $jenis);
 
                 // Send WA if phone exists
                 if (!empty($user->no_hp)) {
@@ -1495,22 +1502,8 @@ class PendaftarController extends Controller
 
             $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
 
-            $lines = [];
-            $lines[] = 'Hai ' . ($p->name ?? 'Peserta') . ',';
-            $lines[] = '';
-            $lines[] = 'Kamu sudah bisa check tiket online melalui website untuk pesanan berikut:';
-            $lines[] = '';
-            $lines[] = 'ID Peserta: ' . $p->participant_id;
-            $lines[] = 'Nama: ' . ($p->name ?? '-');
-            $lines[] = 'Jenis Tiket: ' . $jenis;
-            $lines[] = '';
-            $url = 'https://daftar.mandalikakorprirun.com/dashboard';
-            // $lines[] = 'Check Dashboard kamu di ' . $url;
-            $lines[] = 'Cek Email untuk mengunduh E-tiket Anda ';
-            $lines[] = 'Jika ada masalah, silahkan hubungi kami di nomor wa ini';
-            $lines[] = 'Terima kasih';
-
-            $text = implode("\n", $lines);
+            $url = 'https://daftar.mandalikakorprirun.com/dashboard/';
+            $text = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis);
 
             // \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
             //     'participant_id' => $p->participant_id,
