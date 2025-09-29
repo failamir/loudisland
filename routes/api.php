@@ -247,98 +247,98 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     //     "session": "KORPRIRUN"
     //   }
 
-    Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
-        $request->validate([
-            'chatId' => 'required|string',
-            'url' => 'required|string',
-            'caption' => 'nullable|string',
-        ]);
+    // Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
+    //     $request->validate([
+    //         'chatId' => 'required|string',
+    //         'url' => 'required|string',
+    //         'caption' => 'nullable|string',
+    //     ]);
 
-        $baseUrl = rtrim(config('services.waha.base_url'), '/');
-        $apiKey = config('services.waha.api_key');
-        $session = config('services.waha.session');
+    //     $baseUrl = rtrim(config('services.waha.base_url'), '/');
+    //     $apiKey = config('services.waha.api_key');
+    //     $session = config('services.waha.session');
 
-        if (!$baseUrl || !$apiKey || !$session) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'WAHA configuration is missing',
-            ], 500);
-        }
+    //     if (!$baseUrl || !$apiKey || !$session) {
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'WAHA configuration is missing',
+    //         ], 500);
+    //     }
 
-        // $url = trim($request->input('url'));
-        // if (!filter_var($url, FILTER_VALIDATE_URL)) {
-        //     return response()->json([
-        //         'status' => 'error',
-        //         'message' => 'Invalid image URL',
-        //     ], 422);
-        // }
+    //     // $url = trim($request->input('url'));
+    //     // if (!filter_var($url, FILTER_VALIDATE_URL)) {
+    //     //     return response()->json([
+    //     //         'status' => 'error',
+    //     //         'message' => 'Invalid image URL',
+    //     //     ], 422);
+    //     // }
 
-        $caption = (string) $request->input('caption', 'QR ID Peserta');
+    //     $caption = (string) $request->input('caption', 'QR ID Peserta');
 
-        // Ensure filename is safe and has a proper extension
-        $filename = trim($caption) !== ''
-            ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption)
-            : 'image';
+    //     // Ensure filename is safe and has a proper extension
+    //     $filename = trim($caption) !== ''
+    //         ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption)
+    //         : 'image';
 
-        $url = $request->input('url', 'https://gooogle.com');
+    //     $url = $request->input('url', 'https://gooogle.com');
 
-        // Add proper extension based on URL or default to jpg
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-        if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
-            $extension = 'jpg';
-        }
-        $filename = "$filename.$extension";
+    //     // Add proper extension based on URL or default to jpg
+    //     $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+    //     if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+    //         $extension = 'jpg';
+    //     }
+    //     $filename = "$filename.$extension";
 
-        $payload = [
-            'chatId' => $request->input('chatId'),
-            'file' => [
-                'mimetype' => 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension),
-                'filename' => $filename,
-                'url' => $url,
-            ],
-            'reply_to' => null,
-            'caption' => $caption,
-            'session' => $session,
-        ];
+    //     $payload = [
+    //         'chatId' => $request->input('chatId'),
+    //         'file' => [
+    //             'mimetype' => 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension),
+    //             'filename' => $filename,
+    //             'url' => $url,
+    //         ],
+    //         'reply_to' => null,
+    //         'caption' => $caption,
+    //         'session' => $session,
+    //     ];
 
-        try {
-            $response = Http::withHeaders([
-                'x-api-key' => $apiKey,
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])
-                ->timeout(30)
-                ->connectTimeout(15)
-                ->post($baseUrl . '/api/sendImage', $payload);
-            // var_dump($response);
-            // die;
-            if ($response->successful()) {
-                return response()->json([
-                    'status' => 'success',
-                    'message' => 'Image sent successfully',
-                ], 200);
-            }
+    //     try {
+    //         $response = Http::withHeaders([
+    //             'x-api-key' => $apiKey,
+    //             'Content-Type' => 'application/json',
+    //             'Accept' => 'application/json',
+    //         ])
+    //             ->timeout(30)
+    //             ->connectTimeout(15)
+    //             ->post($baseUrl . '/api/sendImage', $payload);
+    //         // var_dump($response);
+    //         // die;
+    //         if ($response->successful()) {
+    //             return response()->json([
+    //                 'status' => 'success',
+    //                 'message' => 'Image sent successfully',
+    //             ], 200);
+    //         }
 
-            // Non-2xx from WAHA
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Failed to send image',
-                'upstream_status' => $response->status(),
-                'error' => $response->json() ?? $response->body(),
-            ], 502);
-        } catch (ConnectionException $e) {
-            \Log::warning('WAHA sendImage timeout/connection error', [
-                'exception' => $e->getMessage(),
-                'chatId' => $request->input('chatId'),
-                'url' => $url,
-            ]);
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Upstream WAHA service timeout or connection issue',
-                'hint' => 'Ensure the image URL is publicly accessible from WAHA and try again.',
-            ], 504);
-        }
-    });
+    //         // Non-2xx from WAHA
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Failed to send image',
+    //             'upstream_status' => $response->status(),
+    //             'error' => $response->json() ?? $response->body(),
+    //         ], 502);
+    //     } catch (ConnectionException $e) {
+    //         \Log::warning('WAHA sendImage timeout/connection error', [
+    //             'exception' => $e->getMessage(),
+    //             'chatId' => $request->input('chatId'),
+    //             'url' => $url,
+    //         ]);
+    //         return response()->json([
+    //             'status' => 'error',
+    //             'message' => 'Upstream WAHA service timeout or connection issue',
+    //             'hint' => 'Ensure the image URL is publicly accessible from WAHA and try again.',
+    //         ], 504);
+    //     }
+    // });
 
 
     // Send link with custom preview (high quality) via WAHA
@@ -543,149 +543,183 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
     });
 
-    // Route::post('waha/sendImage', function (\Illuminate\Http\Request $request) {
-    //     $request->validate([
-    //         'chatId' => 'required',
-    //         'image' => 'required|image',
-    //         'caption' => 'nullable|string',
-    //     ]);
-    //     $data = [
-    //         'chatId' => $request->input('chatId'),
-    //         'file' => [
-    //             'mimetype' => $request->file('image')->getClientMimeType(),
-    //             'filename' => $request->file()
-    //         ],
-    //         'reply_to' => null,
-    //         'caption' => $request->input('caption'),
-    //         'session' => 'KORPRIRUN',
-    //     ];
-    //     $response = Http::withHeaders([
-    //         'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-    //     ])->attach('file', file_get_contents($request->file('image')->getRealPath()), $request->file('image')->getClientOriginalName())
-    //         ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
+    Route::post('waha/Blast', function (Request $request) {
+        $baseUrl = 'https://waha-nco1sqgcadk4.babat.sumopod.my.id';
+        $apiKey = 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L';
+        $session = 'Nyala';
 
-    //     if ($response->successful()) {
-    //         return response()->json([
-    //             'status' => 'success',
-    //             'message' => 'Image sent successfully',
-    //         ], 200);
-    //     } else {
-    //         //know the error
-    //         $error = $response->json();
+        if (!$baseUrl || !$apiKey || !$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'WAHA configuration is missing',
+            ], 500);
+        }
 
-    //         return response()->json([
-    //             'status' => 'error',
-    //             'message' => 'Failed to send image',
-    //             'error' => $error,
-    //         ], 500);
-    //     }
-    // });
+        $hasCsv = $request->hasFile('csv') || $request->hasFile('file');
 
-    // buat api waha sendimage
-    // dengan detail seperti berikut:
-    // Admin Console
+        if ($hasCsv) {
+            $request->validate([
+                'csv' => 'nullable|file|mimes:csv,txt',
+                'file' => 'nullable|file|mimes:csv,txt',
+                'url' => 'required|string|url',
+                'caption' => 'nullable|string',
+            ]);
 
-    // https://waha-nco1sqgcadk4.babat.sumopod.my.id
+            $caption = (string) $request->input('caption', '');
+            $url = $request->input('url');
 
-    // API Key
+            $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+            if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                $extension = 'jpg';
+            }
+            $filename = (trim($caption) !== '' ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) : 'image') . ".{$extension}";
 
-    // df3rWS9MH4lWzj5Al5COhDnX4wsqT72L
+            $uploaded = $request->file('csv') ?: $request->file('file');
+            $path = $uploaded->store('public/waha');
+            $rows = array_map('str_getcsv', file(storage_path('app/' . $path)));
 
-    // Username
+            $numbers = [];
+            foreach ($rows as $i => $row) {
+                if (!isset($row[0])) {
+                    continue;
+                }
+                $cell = trim($row[0]);
+                if ($i === 0 && strcasecmp($cell, 'number') === 0) {
+                    continue;
+                }
+                if ($cell === '') {
+                    continue;
+                }
+                $digits = preg_replace('/[^0-9]/', '', $cell);
+                if ($digits === '') {
+                    continue;
+                }
+                if (strpos($digits, '0') === 0) {
+                    $digits = '62' . substr($digits, 1);
+                }
+                if (strpos($digits, '62') !== 0) {
+                    $digits = '62' . ltrim($digits, '0');
+                }
+                $numbers[] = $digits;
+            }
 
-    // PAdKr8Qk
-    // Username for accessing the admin panel or service dashboard.
+            $results = [];
+            foreach ($numbers as $idx => $chatId) {
+                $payload = [
+                    'chatId' => $chatId,
+                    'file' => [
+                        'mimetype' => 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension),
+                        'filename' => $filename,
+                        'url' => $url,
+                    ],
+                    'reply_to' => null,
+                    'caption' => $caption,
+                    'session' => $session,
+                ];
 
-    // Password
+                try {
+                    $response = Http::withHeaders([
+                        'x-api-key' => $apiKey,
+                        'Content-Type' => 'application/json',
+                        'Accept' => 'application/json',
+                    ])->timeout(30)->connectTimeout(15)
+                        ->post($baseUrl . '/api/sendImage', $payload);
 
-    // EYJ4Jfwc7f7GLF1DsaFk5d6I
+                    $ok = $response->successful();
+                    $results[] = [
+                        'chatId' => $chatId,
+                        'status' => $ok ? 'success' : 'error',
+                        'upstream_status' => $response->status(),
+                        'error' => $ok ? null : ($response->json() ?? $response->body()),
+                    ];
+                } catch (ConnectionException $e) {
+                    $results[] = [
+                        'chatId' => $chatId,
+                        'status' => 'error',
+                        'upstream_status' => 0,
+                        'error' => $e->getMessage(),
+                    ];
+                }
 
-    // chatId
-    // Nyala
+                if ($idx < count($numbers) - 1) {
+                    usleep(2000000);
+                }
+            }
 
-    Route::post('waha/sendImage', function (Request $request) {
+            return response()->json([
+                'mode' => 'bulk',
+                'total' => count($numbers),
+                'success' => collect($results)->where('status', 'success')->count(),
+                'results' => $results,
+            ]);
+        }
+
+        // single send fallback
         $request->validate([
-            'chatId' => 'required',
-            'image' => 'nullable|image',
-            'url' => 'nullable|url',
+            'chatId' => 'required|string',
+            'url' => 'required|string|url',
             'caption' => 'nullable|string',
         ]);
 
-        // mengirim file pdf di link ini https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf
-        $pdfUrl = 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf';
-        $pdfFilename = 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf';
+        $caption = (string) $request->input('caption', '');
+        $url = $request->input('url');
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+        if (!in_array(strtolower($extension), ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+            $extension = 'jpg';
+        }
+        $filename = (trim($caption) !== '' ? preg_replace('/[^A-Za-z0-9._-]/', '_', $caption) : 'image') . ".{$extension}";
 
-        $data = [
-            'chatId' => $request->input('chatId'),
+        $chatId = preg_replace('/[^0-9]/', '', (string) $request->input('chatId'));
+        if (strpos($chatId, '0') === 0) {
+            $chatId = '62' . substr($chatId, 1);
+        }
+        if (strpos($chatId, '62') !== 0) {
+            $chatId = '62' . ltrim($chatId, '0');
+        }
+
+        $payload = [
+            'chatId' => $chatId,
             'file' => [
-                'mimetype' => 'application/pdf',
-                'filename' => $pdfFilename,
-                'url' => $pdfUrl,
-            ],
-            'reply_to' => null,
-            'caption' => '',
-            'session' => 'Nyala',
-        ];
-        $response = Http::withHeaders([
-            'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
-
-        $caption = <<<'TXT'
-Yth. Bapak/Ibu
-Di tempat
-
-Dengan hormat, kami mengundang Bapak/Ibu untuk dapat hadir dalam kegiatan Dialog Interaktif bersama Menko Pemberdayaan Masyarakat, pada:
-
-📅 Hari : Rabu, 1 Oktober 2025
-⏰️ Waktu : 15.00 WITA
-📍 Tempat : Aula GMIT Center, Jalan Perintis Kemerdekaan, Kelapa Lima, Kota Kupang
-
-Pendaftaran dapat dilakukan dengan scan Qrcode di atas
-
-Terima kasih atas perhatiannya, Bapak/Ibu.
-
-Hormat kami,
-Kemenko PM 🙏😇
-TXT;
-
-        // Gunakan URL gambar default jika tidak diberikan di request
-        $imageUrl = $request->input('url', 'https://mandalikakorprirun.com/storage/qr.jpeg');
-        $filename = 'qr.jpeg';
-
-        $data = [
-            'chatId' => $request->input('chatId'),
-            'file' => [
-                'mimetype' => 'image/jpeg',
+                'mimetype' => 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension),
                 'filename' => $filename,
-                'url' => $imageUrl,
+                'url' => $url,
             ],
             'reply_to' => null,
-            'caption' => $request->input('caption', $caption),
-            'session' => 'Nyala',
+            'caption' => $caption,
+            'session' => $session,
         ];
-        $response = Http::withHeaders([
-            'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
 
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->timeout(30)->connectTimeout(15)
+                ->post($baseUrl . '/api/sendImage', $payload);
 
-        if ($response->successful()) {
-            return response()->json([
-                'status' => 'success',
-                'message' => 'File sent successfully',
-            ], 200);
-        } else {
-            //know the error
-            $error = $response->json();
+            if ($response->successful()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Image sent successfully',
+                ], 200);
+            }
 
             return response()->json([
                 'status' => 'error',
-                'message' => 'Failed to send file',
-                'error' => $error,
-            ], 500);
+                'message' => 'Failed to send image',
+                'upstream_status' => $response->status(),
+                'error' => $response->json() ?? $response->body(),
+            ], 502);
+        } catch (ConnectionException $e) {
+            \Log::warning('WAHA Blast timeout/connection error', [
+                'exception' => $e->getMessage(),
+                'chatId' => $chatId ?? null,
+                'url' => $url,
+            ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Upstream WAHA service timeout or connection issue',
+            ], 504);
         }
     });
 });
