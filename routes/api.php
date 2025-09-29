@@ -600,7 +600,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             $filename = 'qr.jpeg';
 
             $data = [
-                'chatId' => $request->input('chatId'),
+                'chatId' => $no,
                 'file' => [
                     'mimetype' => 'image/jpeg',
                     'filename' => $filename,
