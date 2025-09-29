@@ -579,4 +579,64 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     //         ], 500);
     //     }
     // });
+
+    // buat api waha sendimage
+    // dengan detail seperti berikut:
+    // Admin Console
+
+    // https://waha-nco1sqgcadk4.babat.sumopod.my.id
+
+    // API Key
+
+    // df3rWS9MH4lWzj5Al5COhDnX4wsqT72L
+
+    // Username
+
+    // PAdKr8Qk
+    // Username for accessing the admin panel or service dashboard.
+
+    // Password
+
+    // EYJ4Jfwc7f7GLF1DsaFk5d6I
+
+    // chatId
+    // Nyala
+
+    Route::post('waha/sendImage', function (Request $request) {
+        $request->validate([
+            'chatId' => 'required',
+            'image' => 'required|image',
+            'caption' => 'nullable|string',
+        ]);
+        $data = [
+            'chatId' => $request->input('chatId'),
+            'file' => [
+                'mimetype' => $request->file('image')->getClientMimeType(),
+                'filename' => $request->file()
+            ],
+            'reply_to' => null,
+            'caption' => $request->input('caption'),
+            'session' => 'KORPRIRUN',
+        ];
+        $response = Http::withHeaders([
+            'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+        ])->attach('file', file_get_contents($request->file('image')->getRealPath()), $request->file('image')->getClientOriginalName())
+            ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
+
+        if ($response->successful()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Image sent successfully',
+            ], 200);
+        } else {
+            //know the error
+            $error = $response->json();
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send image',
+                'error' => $error,
+            ], 500);
+        }
+    });
 });
