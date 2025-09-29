@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Request;
 use App\Http\Controllers\Api\V1\Admin\RoleApiController;
 use App\Http\Controllers\Api\V1\Admin\PermissionApiController;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
@@ -608,6 +609,23 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'image' => 'required|image',
             'caption' => 'nullable|string',
         ]);
+        $caption = <<<'TXT'
+Yth. Bapak/Ibu
+Di tempat
+
+Dengan hormat, kami mengundang Bapak/Ibu untuk dapat hadir dalam kegiatan Dialog Interaktif bersama Menko Pemberdayaan Masyarakat, pada:
+
+📅 Hari : Rabu, 1 Oktober 2025
+⏰️ Waktu : 15.00 WITA
+📍 Tempat : Aula GMIT Center, Jalan Perintis Kemerdekaan, Kelapa Lima, Kota Kupang
+
+Pendaftaran dapat dilakukan melalui link berikut: https://bit.ly/dialogbersamamenkopm
+
+Terima kasih atas perhatiannya, Bapak/Ibu.
+
+Hormat kami,
+Kemenko PM 🙏😇
+TXT;
         $data = [
             'chatId' => $request->input('chatId'),
             'file' => [
@@ -615,8 +633,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'filename' => $request->file()
             ],
             'reply_to' => null,
-            'caption' => $request->input('caption'),
-            'session' => 'KORPRIRUN',
+            'caption' => $request->input('caption', $caption),
+            'session' => 'Nyala',
         ];
         $response = Http::withHeaders([
             'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
