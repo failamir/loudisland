@@ -554,19 +554,6 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // kirim ke semua no hp , ubah 0 didepannya jadi 62, jeda kirim nya 2 detik
 
         $noHp = [
-            '082145249550',
-            '082133828373',
-            '08113825169',
-            '08123924341',
-            '082144035722',
-            '081281261808',
-            '081339745645',
-            '082147645241',
-            '081239122737',
-            '081238396007',
-            '085158861364',
-            '081339376189',
-            '085158358552',
             '082247104771',
             '081238566684',
             '081339380501',
@@ -651,7 +638,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'Accept' => 'application/json',
             ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
 
-            sleep(2);
+            sleep(8);
             $caption = <<<'TXT'
         Yth. Bapak/Ibu
         Di tempat
