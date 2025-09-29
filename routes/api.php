@@ -620,7 +620,7 @@ Dengan hormat, kami mengundang Bapak/Ibu untuk dapat hadir dalam kegiatan Dialog
 ⏰️ Waktu : 15.00 WITA
 📍 Tempat : Aula GMIT Center, Jalan Perintis Kemerdekaan, Kelapa Lima, Kota Kupang
 
-Pendaftaran dapat dilakukan melalui link berikut: https://bit.ly/dialogbersamamenkopm
+Pendaftaran dapat dilakukan dengan scan Qrcode di atas
 
 Terima kasih atas perhatiannya, Bapak/Ibu.
 
