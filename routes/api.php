@@ -644,7 +644,7 @@ TXT;
             'session' => 'Nyala',
         ];
         $response = Http::withHeaders([
-            'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
+            'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
             'Content-Type' => 'application/json',
             'Accept' => 'application/json',
         ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
