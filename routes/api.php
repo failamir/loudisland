@@ -606,7 +606,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('waha/sendImage', function (Request $request) {
         $request->validate([
             'chatId' => 'required',
-            'image' => 'required|image',
+            'image' => 'nullable|image',
+            'url' => 'nullable|url',
             'caption' => 'nullable|string',
         ]);
         $caption = <<<'TXT'
@@ -626,11 +627,17 @@ Terima kasih atas perhatiannya, Bapak/Ibu.
 Hormat kami,
 Kemenko PM 🙏😇
 TXT;
+
+        // Gunakan URL gambar default jika tidak diberikan di request
+        $imageUrl = $request->input('url', 'https://mandalikakorprirun.com/storage/qr.jpeg');
+        $filename = 'qr.jpeg';
+
         $data = [
             'chatId' => $request->input('chatId'),
             'file' => [
-                'mimetype' => $request->file('image')->getClientMimeType(),
-                'filename' => $request->file()
+                'mimetype' => 'image/jpeg',
+                'filename' => $filename,
+                'url' => $imageUrl,
             ],
             'reply_to' => null,
             'caption' => $request->input('caption', $caption),
@@ -638,8 +645,9 @@ TXT;
         ];
         $response = Http::withHeaders([
             'x-api-key' => 'YV5CtoFFOFVAx3kOMfLrryCXiXK4lQpg',
-        ])->attach('file', file_get_contents($request->file('image')->getRealPath()), $request->file('image')->getClientOriginalName())
-            ->post('https://waha-1tssjsoucdmi.cinta.sumopod.my.id/api/sendImage', $data);
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
 
         if ($response->successful()) {
             return response()->json([
