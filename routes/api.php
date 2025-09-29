@@ -610,6 +610,28 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'url' => 'nullable|url',
             'caption' => 'nullable|string',
         ]);
+
+        // mengirim file pdf di link ini https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf
+        $pdfUrl = 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf';
+        $pdfFilename = 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf';
+
+        $data = [
+            'chatId' => $request->input('chatId'),
+            'file' => [
+                'mimetype' => 'application/pdf',
+                'filename' => $pdfFilename,
+                'url' => $pdfUrl,
+            ],
+            'reply_to' => null,
+            'caption' => '',
+            'session' => 'Nyala',
+        ];
+        $response = Http::withHeaders([
+            'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json',
+        ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
+
         $caption = <<<'TXT'
 Yth. Bapak/Ibu
 Di tempat
@@ -649,27 +671,6 @@ TXT;
             'Accept' => 'application/json',
         ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
 
-
-        // setelah mengirim gambar, kirim file pdf di link ini https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf
-        $pdfUrl = 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf';
-        $pdfFilename = 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf';
-
-        $data = [
-            'chatId' => $request->input('chatId'),
-            'file' => [
-                'mimetype' => 'application/pdf',
-                'filename' => $pdfFilename,
-                'url' => $pdfUrl,
-            ],
-            'reply_to' => null,
-            'caption' => $request->input('caption', $caption),
-            'session' => 'Nyala',
-        ];
-        $response = Http::withHeaders([
-            'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-            'Content-Type' => 'application/json',
-            'Accept' => 'application/json',
-        ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
 
         if ($response->successful()) {
             return response()->json([
