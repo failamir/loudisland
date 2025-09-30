@@ -553,174 +553,122 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // kirim ke semua no hp , ubah 0 didepannya jadi 62, jeda kirim nya 2 detik
 
-        $noHp = [
-            '081806206202',
-            '081286047365',
-            '081353579825',
-            '082147760394',
-            '082247559073',
-            '081353520918',
-            '082211621467',
-            '087841779029',
-            '081218198789',
-            '081246190910',
-            '081223066627',
-            '087882581196',
-            '082341670977',
-            '082236452100',
-            '085238336665',
-            '081337446951',
-            '081337462869',
-            '085959345310',
-            '082145249550',
-            '082133828373',
-            '08113825169',
-            '08123924341',
-            '082144035722',
-            '081281261808',
-            '081339745645',
-            '082147645241',
-            '081239122737',
-            '081238396007',
-            '085158861364',
-            '081339376189',
-            '085158358552',
-            '082247104771',
-            '081238566684',
-            '081339380501',
-            '087866302015',
-            '081239947708',
-            '082359448225',
-            '081353655385',
-            '085230977420',
-            '087740153070',
-            '081231173691',
-            '081339327818',
-            '085337526596',
-            '081246540839',
-            '082236191949',
-            '081237488163',
-            '082236577570',
-            '082189490075',
-            '081339970089',
-            '081339493364',
-            '082131340501',
-            '082187965200',
-            '081246377138',
-            '081237469826',
-            '081353743101',
-            '081339597990',
-            '081337608119',
-            '081339327818',
-            '081355600289',
-            '081249016375',
-            '081238899100',
-            '085339007647',
-            '08113822379',
-            '08113828222',
-            '082266498037',
-            '081353991977',
-            '081238396007',
-            '085238352253',
-            '081239926582',
-            '082129290576',
-            '082158364374',
-            '081288493941',
-            '081237941011',
-            '082146285964',
-            '081339276558',
-            '081236691398',
-            '085237736401',
-            '085239307988',
-            '081380123800',
-            '082151124919',
-            '081337107119',
-            '082283814599',
-            '082340550717',
-            '082147603001',
-            '082147430342',
-            '081337507741',
-            '082236393934',
-            '081391447798',
-            '081339416882',
-            '08123787683',
-            '082226888470',
-            '081338107407',
-            '081339234004',
-            '081311695806',
-            '085239252568',
-            '081238747290',
-            '08197227027',
-            '08238621555',
-            '081339459701',
-            '081338355756',
-            '085239214567',
-            '087765743527',
-            '085339175119',
-            '081339426218',
-            '082146923353',
-            '081337904201',
-            '081236709269',
-            '081295698298',
-            '082121684116',
-            '082121684118',
-            '085239939815',
-            '08113330232',
-        ];
+        // $noHp = [
+        //     '6282237099388',
+        //     '6282282225802',
+        //     '6281806206202',
+        //     '6281286047365',
+        // ];
 
-        foreach ($noHp as $no) {
-            $no = '62' . substr($no, 1);
-            $data = [
-                'chatId' => $no,
-                'file' => [
-                    'mimetype' => 'application/pdf',
-                    'filename' => 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf',
-                    'url' => 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf',
-                ],
-                'reply_to' => null,
-                'caption' => '',
-                'session' => 'Nyala',
-            ];
-            // $response = Http::withHeaders([
-            //     'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-            //     'Content-Type' => 'application/json',
-            //     'Accept' => 'application/json',
-            // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
+        // $noHp = require __DIR__ . '/data_peserta.php';
+        //get $data  from csv file
+        $hasCsv = $request->hasFile('csv') || $request->hasFile('file');
+        $response = null;
 
-            // sleep(8);
-            $caption = <<<'TXT'
-        Yth. Bapak/Ibu
-        Di tempat
-        
-        Berikut adalah QR terbaru jika anda mengalami kesulitan untuk scan QR sebelumnya,
-        dan untuk informasi tambahan peserta diharapkan bisa hadir jam 15.00 (3 sore)
-        
-        Terima kasih atas perhatiannya, Bapak/Ibu.
-        
-        Hormat kami,
-        Kemenko PM 🙏😇
-        TXT;
+        if ($hasCsv) {
+            // Baca CSV sebagai array baris, bukan string mentah
+            $uploaded = $request->file('csv') ?: $request->file('file');
+            $path = $uploaded->store('public/waha');
+            $rows = array_map('str_getcsv', file(storage_path('app/' . $path)));
 
-            // Gunakan URL gambar default jika tidak diberikan di request
-            $imageUrl = $request->input('url', 'https://mandalikakorprirun.com/storage/frame.png');
-            $filename = 'qr.jpeg';
+            // Opsional: lewati header jika baris pertama berisi teks header
+            if (!empty($rows)) {
+                $first = $rows[0];
+                $firstCell = isset($first[0]) ? strtolower(trim($first[0])) : '';
+                if (strpos($firstCell, 'peserta') !== false || strpos($firstCell, 'id') !== false) {
+                    array_shift($rows);
+                }
+            }
 
-            $data = [
-                'chatId' => $no,
-                'file' => [
-                    'mimetype' => 'image/jpeg',
-                    'filename' => $filename,
-                    'url' => $imageUrl,
-                ],
-                'reply_to' => null,
-                'caption' => $request->input('caption', $caption),
-                'session' => 'Nyala',
-            ];
-            $response = Http::withHeaders([
-                'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-                'Content-Type' => 'application/json',
-                'Accept' => 'application/json',
-            ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
+            // header nya peserta_id,nama,no_hp
+            $dataPeserta = array_map(function ($row) {
+                return [
+                    'peserta_id' => $row[0] ?? '',
+                    'nama' => $row[1] ?? '',
+                    'no_hp' => $row[2] ?? '',
+                ];
+            }, $rows);
+
+            foreach ($dataPeserta as $no) {
+                // $no = '62' . substr($no['no_hp'], 1);
+                // $data = [
+                //     'chatId' => $no,
+                //     'file' => [
+                //         'mimetype' => 'application/pdf',
+                //         'filename' => 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf',
+                //         'url' => 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf',
+                //     ],
+                //     'reply_to' => null,
+                //     'caption' => '',
+                //     'session' => 'Nyala',
+                // ];
+                // $response = Http::withHeaders([
+                //     'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
+                //     'Content-Type' => 'application/json',
+                //     'Accept' => 'application/json',
+                // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
+
+                // sleep(8);
+                $caption = <<<'TXT'
+                ✨🌟 PESERTA TERPILIH BERDAYA BERSAMA KUPANG! 🌟✨
+
+                    Selamat kepada para peserta terpilih yang akan bergabung dalam workshop “Penguatan Kapasitas Ekonomi Kreatif & Gig Workers di Era Digital”! 🎉
+
+                    📌 Daftar lengkap peserta bisa kamu cek di slide berikut.
+                    📲 Bagi yang terpilih, tim akan segera menghubungi melalui WhatsApp untuk info lebih lanjut.
+
+                    Jangan lewatkan momentum ini! Saatnya tumbuh bersama, berjejaring, dan jadi bagian dari gerakan #BerdayaBersama 💡✨
+
+                    👤ID PESERTA: {$no['peserta_id']} - {$no['nama']}
+
+                    📅 Rabu, 1 Oktober 2025
+                    🕒 08.00 - 12.00 WITA
+                    📍 GMIT Center, Kupang, NTT
+
+                    #BerdayaBersama #Kupang #EkonomiKreatif #GigWorkers #KemenkoPM #NTT
+                TXT;
+
+                // Gunakan URL gambar default jika tidak diberikan di request
+                // $imageUrl = $request->input('url', 'https://mandalikakorprirun.com/storage/frame.png');
+                // $filename = 'qr.jpeg';
+
+                // $data = [
+                //     'chatId' => $no['no_hp'],
+                //     'file' => [
+                //         'mimetype' => 'image/jpeg',
+                //         'filename' => $filename,
+                //         'url' => $imageUrl,
+                //     ],
+                //     'reply_to' => null,
+                //     'caption' => $request->input('caption', $caption),
+                //     'session' => 'Nyala',
+                // ];
+                // $response = Http::withHeaders([
+                //     'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
+                //     'Content-Type' => 'application/json',
+                //     'Accept' => 'application/json',
+                // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendImage', $data);
+
+                //gunakan api/sendText
+                $data = [
+                    'chatId' => $no['no_hp'],
+                    'text' => $caption,
+                    'session' => 'Nyala',
+                ];
+                $response = Http::withHeaders([
+                    'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
+                    'Content-Type' => 'application/json',
+                    'Accept' => 'application/json',
+                ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendText', $data);
+                sleep(2);
+            }
+        }
+
+        if (!$response) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No CSV uploaded or no messages sent',
+            ], 422);
         }
 
         if ($response->successful()) {
