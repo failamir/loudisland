@@ -295,13 +295,14 @@ const WithdrawalPage = () => {
                       <th>Status</th>
                       <th>Bank</th>
                       <th>Rekening</th>
+                      <th>Nama Pemilik Rekening</th>
                       <th>Diajukan Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
                     {list.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center text-gray-500">Belum ada data</td>
+                        <td colSpan={7} className="text-center text-gray-500">Belum ada data</td>
                       </tr>
                     )}
                     {list.map((row) => (
@@ -348,6 +349,7 @@ const WithdrawalPage = () => {
                     <th>Status</th>
                     <th>Bank</th>
                     <th>Rekening</th>
+                    <th>Nama Pemilik</th>
                     <th>Pemohon</th>
                     <th>Aksi</th>
                   </tr>
@@ -355,7 +357,7 @@ const WithdrawalPage = () => {
                 <tbody>
                   {list.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="text-center text-gray-500">Belum ada data</td>
+                      <td colSpan={8} className="text-center text-gray-500">Belum ada data</td>
                     </tr>
                   )}
                   {list.map((row) => {

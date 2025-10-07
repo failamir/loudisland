@@ -425,9 +425,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'error' => $response->json() ?? $response->body(),
             ], 502);
         } catch (ConnectionException $e) {
-            \Log::warning('WAHA sendLinkPreview timeout/connection error', [
-                'exception' => $e->getMessage(),
-            ]);
+            // \Log::warning('WAHA sendLinkPreview timeout/connection error', [
+            //     'exception' => $e->getMessage(),
+            // ]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Upstream WAHA service timeout or connection issue',
@@ -543,7 +543,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
     });
 
-    Route::post('waha/sendImage', function (Request $request) {
+    Route::post('waha/sendBlast', function (Request $request) {
         $request->validate([
             'chatId' => 'required',
             'image' => 'nullable|image',
@@ -562,6 +562,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // $noHp = require __DIR__ . '/data_peserta.php';
         //get $data  from csv file
+
         $hasCsv = $request->hasFile('csv') || $request->hasFile('file');
         $response = null;
 
@@ -583,14 +584,16 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             // header nya peserta_id,nama,no_hp
             $dataPeserta = array_map(function ($row) {
                 return [
-                    'peserta_id' => $row[0] ?? '',
-                    'nama' => $row[1] ?? '',
-                    'no_hp' => $row[2] ?? '',
+                    'no_hp' => $row[0] ?? '',
+                    // 'peserta_id' => $row[0] ?? '',
+                    // 'nama' => $row[1] ?? '',
+                    // 'no_hp' => $row[2] ?? '',
                 ];
             }, $rows);
-
+            // dd($dataPeserta);
             foreach ($dataPeserta as $no) {
                 // $no = '62' . substr($no['no_hp'], 1);
+                $no = '62' . $no['no_hp'];
                 // $data = [
                 //     'chatId' => $no,
                 //     'file' => [
@@ -609,23 +612,15 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
 
                 // sleep(8);
-                $caption = <<<'TXT'
-                ✨🌟 PESERTA TERPILIH BERDAYA BERSAMA KUPANG! 🌟✨
+                $caption = <<<TXT
+                ✨️Selamat Pagi Bapak/Ibu✨️ 
 
-                    Selamat kepada para peserta terpilih yang akan bergabung dalam workshop “Penguatan Kapasitas Ekonomi Kreatif & Gig Workers di Era Digital”! 🎉
+                Berdasarkan Undangan Peserta Dialog Interaktif bersama Menko Pemberdayaan Masyarakat di Kota Kupang, bersama ini kami sampaikan adanya perubahan lokasi pelaksanaan kegiatan, yang
+                semula direncanakan di Aula GMIT Center, menjadi:
 
-                    📌 Daftar lengkap peserta bisa kamu cek di slide berikut.
-                    📲 Bagi yang terpilih, tim akan segera menghubungi melalui WhatsApp untuk info lebih lanjut.
-
-                    Jangan lewatkan momentum ini! Saatnya tumbuh bersama, berjejaring, dan jadi bagian dari gerakan #BerdayaBersama 💡✨
-
-                    👤ID PESERTA: {$no['peserta_id']} - {$no['nama']}
-
-                    📅 Rabu, 1 Oktober 2025
-                    🕒 08.00 - 12.00 WITA
-                    📍 GMIT Center, Kupang, NTT
-
-                    #BerdayaBersama #Kupang #EkonomiKreatif #GigWorkers #KemenkoPM #NTT
+                📅Hari/Tanggal : Rabu, 01 Oktober 2025
+                ⏰️Waktu : 15.00 WITA – selesai
+                📍 Tempat : Kawasan Wisata Lahi Lai Bisi Kopan (LLBK), Kupang, Nusa Tenggara Timur
                 TXT;
 
                 // Gunakan URL gambar default jika tidak diberikan di request
@@ -651,7 +646,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
                 //gunakan api/sendText
                 $data = [
-                    'chatId' => $no['no_hp'],
+                    'chatId' => $no,
                     'text' => $caption,
                     'session' => 'Nyala',
                 ];
@@ -660,7 +655,28 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                     'Content-Type' => 'application/json',
                     'Accept' => 'application/json',
                 ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendText', $data);
-                sleep(2);
+                // sleep(2);
+
+                // mengirim file pdf di link ini https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf
+                // $pdfUrl = 'https://mandalikakorprirun.com/storage/rundown%20lengkap%20acara%20BERDAYA%20BERSAMA%20KUPANG.pdf';
+                // $pdfFilename = 'Rundown Lengkap Acara BERDAYA BERSAMA KUPANG.pdf';
+
+                // $data = [
+                //     'chatId' => $no['no_hp'],
+                //     'file' => [
+                //         'mimetype' => 'application/pdf',
+                //         'filename' => $pdfFilename,
+                //         'url' => $pdfUrl,
+                //     ],
+                //     'reply_to' => null,
+                //     'caption' => $caption,
+                //     'session' => 'Nyala',
+                // ];
+                // $response = Http::withHeaders([
+                //     'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
+                //     'Content-Type' => 'application/json',
+                //     'Accept' => 'application/json',
+                // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
             }
         }
 
@@ -686,30 +702,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
                 'error' => $error,
             ], 500);
         }
-
-        // mengirim file pdf di link ini https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf
-        // $pdfUrl = 'https://mandalikakorprirun.com/storage/Surat%20Undangan%20Peserta%20Dialog%20Interaktif%20Menko%20Pemberdayaan%20Masyarakat%20di%20Kota%20Kupang.pdf';
-        // $pdfFilename = 'Surat Undangan Peserta Dialog Interaktif Menko Pemberdayaan Masyarakat di Kota Kupang.pdf';
-
-        // $data = [
-        //     'chatId' => $request->input('chatId'),
-        //     'file' => [
-        //         'mimetype' => 'application/pdf',
-        //         'filename' => $pdfFilename,
-        //         'url' => $pdfUrl,
-        //     ],
-        //     'reply_to' => null,
-        //     'caption' => '',
-        //     'session' => 'Nyala',
-        // ];
-        // $response = Http::withHeaders([
-        //     'x-api-key' => 'df3rWS9MH4lWzj5Al5COhDnX4wsqT72L',
-        //     'Content-Type' => 'application/json',
-        //     'Accept' => 'application/json',
-        // ])->post('https://waha-nco1sqgcadk4.babat.sumopod.my.id/api/sendFile', $data);
-
-
     });
+
+    // });
 
     // Route::post('waha/Blast', function (Request $request) {
     //     $baseUrl = 'https://waha-nco1sqgcadk4.babat.sumopod.my.id';

@@ -1,5 +1,5 @@
 // Silakan isi komponen sesuai kebutuhan
-import { Fragment, useMemo, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { Container } from '@/components/container';
@@ -15,6 +15,8 @@ export default function UsersListPage() {
   const [headerTotal, setHeaderTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [roleId, setRoleId] = useState('');
+  const [rolesOptions, setRolesOptions] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [gridKey, setGridKey] = useState(0);
@@ -42,6 +44,7 @@ export default function UsersListPage() {
         page: pageIndex + 1,
         per_page: pageSize,
         search: search || undefined,
+        role_id: roleId || undefined,
       },
     });
     const rows = data?.data ?? [];
@@ -58,6 +61,19 @@ export default function UsersListPage() {
       className="h-9 w-full max-w-40"
     />
   );
+
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        const { data } = await axios.get(`${baseUrl}/roles`, { params: { per_page: 1000 } });
+        const items = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+        setRolesOptions(items);
+      } catch (e) {
+        setRolesOptions([]);
+      }
+    };
+    loadRoles();
+  }, [baseUrl]);
 
   const onAdd = () => {
     setEditingUser(null);
@@ -225,6 +241,12 @@ export default function UsersListPage() {
             }}
           />
         </label>
+        <select className="select select-sm" value={roleId} onChange={(e) => setRoleId(e.target.value)}>
+          <option value="">Semua Role</option>
+          {rolesOptions.map((r) => (
+            <option key={r.id ?? r.name ?? r.title} value={r.id ?? ''}>{r.title || r.name}</option>
+          ))}
+        </select>
         <button className="btn btn-sm btn-primary" onClick={() => setGridKey((k) => k + 1)} disabled={loading}>
           <KeenIcon icon="magnifier" />
           Search
@@ -232,11 +254,12 @@ export default function UsersListPage() {
         <button className="btn btn-sm btn-success" onClick={onAdd}>
           <KeenIcon icon="plus" /> Tambah
         </button>
-        {search && (
+        {(search || roleId) && (
           <button
             className="btn btn-sm btn-light"
             onClick={() => {
               setSearch('');
+              setRoleId('');
               setGridKey((k) => k + 1);
             }}
             disabled={loading}
