@@ -99,6 +99,10 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::get('participants/missing', [PendaftarController::class, 'missingParticipants'])->name('participants.missing');
 
     Route::get('participants/{participant}', [PendaftarController::class, 'showParticipant'])->name('participants.show');
+    
+    // Update shirt size for participants
+    Route::put('participants/{participant_id}/shirt-size', [PendaftarController::class, 'updateShirtSize'])->name('participants.updateShirtSize');
+    Route::post('participants/bulk-update-shirt-size', [PendaftarController::class, 'bulkUpdateShirtSize'])->name('participants.bulkUpdateShirtSize');
 
     // Generate/backfill participants for a transaction
     Route::post('participants/generate', [PendaftarController::class, 'generateParticipants'])->name('participants.generate');

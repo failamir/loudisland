@@ -20,6 +20,7 @@ class Participant extends Model
         'phone',
         'province',
         'city',
+        'shirt_size',
         'ticket_id',
         'status_racepack',
         'status',

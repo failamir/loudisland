@@ -125,6 +125,77 @@ class PendaftarController extends Controller
     }
 
     /**
+     * Update shirt size for a participant
+     * PUT /api/v1/participants/{participant_id}/shirt-size
+     */
+    public function updateShirtSize(Request $request, $participant_id)
+    {
+        $request->validate([
+            'shirt_size' => 'required|string|in:XS,S,M,L,XL,XXL,XXXL',
+        ]);
+
+        $participant = Participant::where('participant_id', $participant_id)->first();
+        if (!$participant) {
+            return response()->json(['message' => 'Participant not found'], 404);
+        }
+
+        $participant->update(['shirt_size' => $request->input('shirt_size')]);
+
+        return response()->json([
+            'message' => 'Shirt size updated successfully',
+            'participant' => [
+                'participant_id' => $participant->participant_id,
+                'name' => $participant->name,
+                'shirt_size' => $participant->shirt_size,
+            ],
+        ]);
+    }
+
+    /**
+     * Bulk update shirt sizes for multiple participants
+     * POST /api/v1/participants/bulk-update-shirt-size
+     * Body: { "updates": [{"participant_id": "PID-XXX", "shirt_size": "L"}, ...] }
+     */
+    public function bulkUpdateShirtSize(Request $request)
+    {
+        $request->validate([
+            'updates' => 'required|array|min:1',
+            'updates.*.participant_id' => 'required|string',
+            'updates.*.shirt_size' => 'required|string|in:XS,S,M,L,XL,XXL,XXXL',
+        ]);
+
+        $updates = $request->input('updates');
+        $updated = [];
+        $failed = [];
+
+        foreach ($updates as $update) {
+            $participant = Participant::where('participant_id', $update['participant_id'])->first();
+            if (!$participant) {
+                $failed[] = [
+                    'participant_id' => $update['participant_id'],
+                    'reason' => 'Participant not found',
+                ];
+                continue;
+            }
+
+            $participant->update(['shirt_size' => $update['shirt_size']]);
+            $updated[] = [
+                'participant_id' => $participant->participant_id,
+                'name' => $participant->name,
+                'shirt_size' => $participant->shirt_size,
+            ];
+        }
+
+        return response()->json([
+            'message' => 'Bulk update completed',
+            'updated_count' => count($updated),
+            'failed_count' => count($failed),
+            'updated' => $updated,
+            'failed' => $failed,
+        ]);
+    }
+
+    /**
      * List successful transactions that do not have any participants rows yet.
      * GET /api/v1/participants/missing
      * Optional query params:
@@ -1115,6 +1186,7 @@ class PendaftarController extends Controller
             'participants.*.nik' => 'required|string',
             'participants.*.province' => 'required|string',
             'participants.*.city' => 'required|string',
+            'participants.*.shirt_size' => 'nullable|string|in:XS,S,M,L,XL,XXL,XXXL',
             // 'participants.*.address' => 'required|string',
         ];
 
@@ -1390,6 +1462,7 @@ class PendaftarController extends Controller
                         'status' => 1,
                         'province' => $p['province'] ?? null,
                         'city' => $p['city'] ?? null,
+                        'shirt_size' => $p['shirt_size'] ?? null,
                         // 'address' => $p['address'] ?? null,
                         // 'postal_code' => $p['postal_code'] ?? null,
                         // 'country' => $p['country'] ?? null,
