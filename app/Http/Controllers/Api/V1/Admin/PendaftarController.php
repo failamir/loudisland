@@ -138,7 +138,7 @@ class PendaftarController extends Controller
         }
 
         $request->validate([
-            'shirt_size' => 'required|string|in:XS,S,M,L,XL,XXL,XXXL',
+            'shirt_size' => 'required|string',
         ]);
 
         $participant = Participant::where('participant_id', $participant_id)->first();
@@ -180,7 +180,7 @@ class PendaftarController extends Controller
         $request->validate([
             'updates' => 'required|array|min:1',
             'updates.*.participant_id' => 'required|string',
-            'updates.*.shirt_size' => 'required|string|in:XS,S,M,L,XL,XXL,XXXL',
+            'updates.*.shirt_size' => 'required|string',
         ]);
 
         $updates = $request->input('updates');
