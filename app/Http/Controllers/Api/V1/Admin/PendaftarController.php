@@ -447,6 +447,7 @@ class PendaftarController extends Controller
                         'phone'  => $p->phone,
                         'province' => $p->province ?? '',
                         'city'   => $p->city ?? '',
+                        'shirt_size' => $p->shirt_size ?? null,
                         'participant_id' => $p->participant_id,
                         'status_racepack' => $p->status_racepack,
                         'status' => $p->status,
