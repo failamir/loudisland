@@ -371,9 +371,14 @@ class PendaftarController extends Controller
                 : collect();
 
             // Enrich participants with event_name based on their ticketId
+            // Also force ticketId to be string for FE consistency
             if (is_array($t->participants_decoded)) {
                 $t->participants_decoded = array_map(function ($p) use ($eventMap) {
                     $eid = isset($p['ticketId']) ? (int) $p['ticketId'] : null;
+                    // Force ticketId to string if present
+                    if (isset($p['ticketId'])) {
+                        $p['ticketId'] = (string) $p['ticketId'];
+                    }
                     $p['event_name'] = ($eid && isset($eventMap[$eid])) ? $eventMap[$eid]['nama_event'] : null;
                     return $p;
                 }, $t->participants_decoded);
