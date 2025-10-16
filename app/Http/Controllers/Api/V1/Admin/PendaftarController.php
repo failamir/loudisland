@@ -1217,7 +1217,7 @@ class PendaftarController extends Controller
             'participants.*.nik' => 'required|string',
             'participants.*.province' => 'required|string',
             'participants.*.city' => 'required|string',
-            'participants.*.shirt_size' => 'nullable|string|in:XS,S,M,L,XL,XXL,XXXL',
+            'participants.*.shirt_size' => 'nullable|string',
             // 'participants.*.address' => 'required|string',
         ];
 
