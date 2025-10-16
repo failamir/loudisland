@@ -22,6 +22,7 @@ use stdClass;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\Tiket;
 use App\Models\Participant;
@@ -99,7 +100,7 @@ class PendaftarController extends Controller
         try {
             $this->postPaymentSuccessActions($trx);
         } catch (\Throwable $e) {
-            \Log::warning('generateParticipants failed', ['invoice' => $trx->invoice, 'error' => $e->getMessage()]);
+            Log::warning('generateParticipants failed', ['invoice' => $trx->invoice, 'error' => $e->getMessage()]);
             return response()->json(['message' => 'Failed to generate participants', 'error' => $e->getMessage()], 500);
         }
 
@@ -130,6 +131,12 @@ class PendaftarController extends Controller
      */
     public function updateShirtSize(Request $request, $participant_id)
     {
+        // Support camelCase input: shirtSize
+        $size = $request->input('shirtSize', $request->input('shirt_size'));
+        if ($size !== null) {
+            $request->merge(['shirt_size' => $size]);
+        }
+
         $request->validate([
             'shirt_size' => 'required|string|in:XS,S,M,L,XL,XXL,XXXL',
         ]);
@@ -158,6 +165,18 @@ class PendaftarController extends Controller
      */
     public function bulkUpdateShirtSize(Request $request)
     {
+        // Normalize camelCase 'shirtSize' to snake_case 'shirt_size' for validation
+        $incoming = $request->input('updates');
+        if (is_array($incoming)) {
+            $normalized = array_map(function ($u) {
+                if (!isset($u['shirt_size']) && isset($u['shirtSize'])) {
+                    $u['shirt_size'] = $u['shirtSize'];
+                }
+                return $u;
+            }, $incoming);
+            $request->merge(['updates' => $normalized]);
+        }
+
         $request->validate([
             'updates' => 'required|array|min:1',
             'updates.*.participant_id' => 'required|string',
@@ -1176,6 +1195,17 @@ class PendaftarController extends Controller
         }
 
         $data = $request->all();
+        // Normalize camelCase in participants payload: shirtSize -> shirt_size
+        if (isset($data['participants']) && is_array($data['participants'])) {
+            foreach ($data['participants'] as &$p) {
+                if (!isset($p['shirt_size']) && isset($p['shirtSize'])) {
+                    $p['shirt_size'] = $p['shirtSize'];
+                }
+            }
+            unset($p);
+            $request->merge(['participants' => $data['participants']]);
+            $data = $request->all();
+        }
         $rules = [
             'userId' => 'required',
             // Multi-person purchase: each participant has their own ticketId and identity fields
@@ -1463,7 +1493,8 @@ class PendaftarController extends Controller
                         'status' => 1,
                         'province' => $p['province'] ?? null,
                         'city' => $p['city'] ?? null,
-                        'shirt_size' => $p['shirt_size'] ?? null,
+                        // Accept both snake_case and camelCase from stored JSON
+                        'shirt_size' => $p['shirt_size'] ?? ($p['shirtSize'] ?? null),
                         // 'address' => $p['address'] ?? null,
                         // 'postal_code' => $p['postal_code'] ?? null,
                         // 'country' => $p['country'] ?? null,
