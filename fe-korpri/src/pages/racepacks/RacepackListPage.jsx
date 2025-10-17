@@ -178,9 +178,17 @@ export default function RacepackListPage() {
         meta: { headerClassName: 'min-w-[140px]' },
       },
       {
+        accessorKey: 'shirt_size',
+        id: 'shirt_size',
+        header: ({ column }) => <DataGridColumnHeader title="Ukuran Kaos" column={column} />, 
+        enableSorting: true,
+        cell: ({ row }) => row.original.shirt_size || '-',
+        meta: { headerClassName: 'min-w-[120px]' },
+      },
+      {
         accessorKey: 'status_racepack',
         id: 'status_racepack',
-        header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Status" column={column} />, 
         enableSorting: true,
         cell: ({ row }) => (
           <span className={`badge ${row.original.status_racepack === 'sudah' ? 'badge-success' : 'badge-secondary'} badge-outline rounded-[30px]`}>

@@ -1925,7 +1925,7 @@ class PendaftarController extends Controller
         $base = Participant::with(['staff:id,name'])
             ->select([
                 'id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'province', 'city',
-                'ticket_id', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at'
+                'ticket_id', 'shirt_size', 'status_racepack', 'staff_user_id', 'racepack_by', 'racepack_at'
             ])
             ->where('status', '1')
             ->whereNotIn('email', $excluded_emails);
