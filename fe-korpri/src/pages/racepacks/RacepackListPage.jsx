@@ -180,9 +180,9 @@ export default function RacepackListPage() {
       {
         accessorKey: 'shirt_size',
         id: 'shirt_size',
-        header: ({ column }) => <DataGridColumnHeader title="Ukuran Kaos" column={column} />, 
+        header: ({ column }) => <DataGridColumnHeader title="Ukuran Jersey" column={column} />, 
         enableSorting: true,
-        cell: ({ row }) => row.original.shirt_size || '-',
+        cell: ({ row }) => row.original.shirt_size || row.original.shirtSize || '-',
         meta: { headerClassName: 'min-w-[120px]' },
       },
       {
