@@ -68,6 +68,127 @@ class PendaftarController extends Controller
     }
 
     /**
+     * Blast WhatsApp messages to registered participants.
+     * POST /api/v1/participants/whatsapp-blast
+     * Body:
+     * - participant_ids: array<string> (optional) list of participant_id to send to
+     * - text: string (optional) custom message text
+     * - use_default_template: bool (optional) use payment success template per participant
+     * - send_all: bool (optional) if true, send to all registered participants (status=1, amount>100000, exclude EMAIL_TESTING)
+     * - search: string (optional) filter by participant_id/name/email/phone when send_all=true
+     */
+    public function whatsappBlast(Request $request)
+    {
+        $request->validate([
+            'participant_ids' => 'nullable|array',
+            'participant_ids.*' => 'string',
+            'text' => 'nullable|string',
+            'use_default_template' => 'nullable|boolean',
+            'send_all' => 'nullable|boolean',
+            'search' => 'nullable|string',
+        ]);
+
+        $useTemplate = (bool) $request->boolean('use_default_template', false);
+        $sendAll = (bool) $request->boolean('send_all', false);
+        $text = (string) $request->input('text', '');
+        $search = (string) $request->input('search', '');
+
+        // Build base query for participants
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $base = Participant::query()
+            ->select(['id','transaction_id','participant_id','name','email','phone','ticket_id'])
+            ->where('status', '1')
+            ->where('amount', '>', 100000)
+            ->whereNotIn('email', $excluded_emails);
+
+        if ($sendAll) {
+            if ($search) {
+                $base->where(function ($q) use ($search) {
+                    $q->where('participant_id', 'like', "%{$search}%")
+                      ->orWhere('name', 'like', "%{$search}%")
+                      ->orWhere('email', 'like', "%{$search}%")
+                      ->orWhere('phone', 'like', "%{$search}%");
+                });
+            }
+        } else {
+            $ids = (array) $request->input('participant_ids', []);
+            if (empty($ids)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'participant_ids required if send_all is not true',
+                ], 422);
+            }
+            $base->whereIn('participant_id', array_values($ids));
+        }
+
+        $list = $base->orderBy('id')->get();
+        if ($list->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No participants found for the given criteria',
+            ], 404);
+        }
+
+        // Prepare event name mapping (ticket_id => nama_event)
+        $ticketIds = $list->pluck('ticket_id')->filter()->unique()->values();
+        $eventName = collect();
+        if ($ticketIds->isNotEmpty()) {
+            $tickets = Event::whereIn('id', $ticketIds)->get(['id','nama_event']);
+            $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+        }
+
+        $dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+        $results = [];
+        $success = 0;
+        $failed = 0;
+
+        foreach ($list as $p) {
+            if (empty($p->phone)) {
+                $failed++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'error',
+                    'error' => 'No phone number',
+                ];
+                continue;
+            }
+
+            try {
+                $msg = $text;
+                if ($useTemplate || $msg === '') {
+                    $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
+                    $msg = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis);
+                }
+                $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
+                $success++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'success',
+                ];
+            } catch (\Throwable $e) {
+                $failed++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'error',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'mode' => $sendAll ? 'all' : 'selected',
+            'total' => $list->count(),
+            'success' => $success,
+            'failed' => $failed,
+            'results' => $results,
+        ]);
+    }
+
+    /**
      * Generate/backfill participants for a successful transaction.
      * POST /api/v1/participants/generate
      * Accepts: invoice (string) or transaction_id (int)

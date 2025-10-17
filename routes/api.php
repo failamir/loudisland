@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use App\Http\Controllers\Api\V1\Admin\RoleApiController;
 use App\Http\Controllers\Api\V1\Admin\PermissionApiController;
 use App\Http\Controllers\Api\V1\Admin\NomorPunggungApiController;
@@ -47,6 +48,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
         // Staff list for racepack dropdown
         Route::get('staffs', [PendaftarController::class, 'staffList'])->name('racepacks.staffs');
+
+        // WhatsApp blast to registered participants (protected)
+        Route::post('participants/whatsapp-blast', [PendaftarController::class, 'whatsappBlast'])->name('participants.whatsappBlast');
 
         // Orders (create ticket + transaction via Midtrans)
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
@@ -432,6 +436,63 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             // \Log::warning('WAHA sendLinkPreview timeout/connection error', [
             //     'exception' => $e->getMessage(),
             // ]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Upstream WAHA service timeout or connection issue',
+            ], 504);
+        }
+    });
+
+    // Send plain text via WAHA (proxy)
+    Route::post('waha/sendText', function (\Illuminate\Http\Request $request) {
+        $request->validate([
+            'chatId' => 'required|string',
+            'text' => 'required|string',
+        ]);
+
+        $baseUrl = rtrim(config('services.waha.base_url'), '/');
+        $apiKey = config('services.waha.api_key');
+        $session = config('services.waha.session');
+
+        if (!$baseUrl || !$apiKey || !$session) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'WAHA configuration is missing',
+            ], 500);
+        }
+
+        $payload = [
+            'session' => $session,
+            'chatId' => $request->input('chatId'),
+            'text' => $request->input('text'),
+        ];
+
+        try {
+            $response = Http::withHeaders([
+                'x-api-key' => $apiKey,
+                'Content-Type' => 'application/json',
+                'Accept' => 'application/json',
+            ])->timeout(30)->connectTimeout(15)
+                ->post($baseUrl . '/api/sendText', $payload);
+
+            if ($response->successful()) {
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Text sent successfully',
+                ], 200);
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to send text',
+                'upstream_status' => $response->status(),
+                'error' => $response->json() ?? $response->body(),
+            ], 502);
+        } catch (ConnectionException $e) {
+            Log::warning('WAHA sendText timeout/connection error', [
+                'exception' => $e->getMessage(),
+                'chatId' => $request->input('chatId'),
+            ]);
             return response()->json([
                 'status' => 'error',
                 'message' => 'Upstream WAHA service timeout or connection issue',
@@ -890,3 +951,5 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     //     }
     // });
 });
+
+// ... existing code ...

@@ -1,0 +1,357 @@
+import React, { Fragment, useEffect, useMemo, useState } from 'react';
+import axios from 'axios';
+import { Container } from '@/components/container';
+import { Toolbar, ToolbarActions, ToolbarHeading } from '@/partials/toolbar';
+import { useLayout } from '@/providers';
+import { DataGrid, DataGridColumnHeader, DataGridRowSelectAll, DataGridRowSelect, KeenIcon, useDataGrid } from '@/components';
+
+const WhatsAppBlastPage = () => {
+  const { currentLayout } = useLayout();
+  const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+
+  const [participants, setParticipants] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [message, setMessage] = useState('');
+  const [useTemplate, setUseTemplate] = useState(true);
+  const [search, setSearch] = useState('');
+  const [blastResult, setBlastResult] = useState(null);
+  const [selectedCount, setSelectedCount] = useState(0);
+  const [testPhone, setTestPhone] = useState('');
+  const [testName, setTestName] = useState('');
+  const [testParticipantId, setTestParticipantId] = useState('');
+  const [testTicket, setTestTicket] = useState('');
+  const [testSending, setTestSending] = useState(false);
+  const [testResult, setTestResult] = useState(null);
+
+  useEffect(() => {
+    loadParticipants();
+  }, []);
+
+  const loadParticipants = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const { data } = await axios.get(`${API_URL}/participants`);
+      const items = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+      setParticipants(items);
+    } catch (e) {
+      setError(e?.message || 'Gagal memuat peserta');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredParticipants = useMemo(() => {
+    if (!search) return participants;
+    const s = search.toLowerCase();
+    return participants.filter(p =>
+      (p.name || '').toLowerCase().includes(s) ||
+      (p.email || '').toLowerCase().includes(s) ||
+      (p.participant_id || '').toLowerCase().includes(s) ||
+      (p.phone || '').toLowerCase().includes(s)
+    );
+  }, [participants, search]);
+
+  const columns = useMemo(() => [
+    {
+      accessorKey: 'select',
+      header: () => <DataGridRowSelectAll />,
+      cell: ({ row }) => <DataGridRowSelect row={row} />,
+      enableSorting: false,
+      enableHiding: false,
+      meta: { headerClassName: 'w-0' }
+    },
+    {
+      accessorKey: 'participant_id',
+      header: ({ column }) => <DataGridColumnHeader title="ID Peserta" column={column} />,
+      cell: info => <div className="font-medium text-gray-900">{info.row.original.participant_id}</div>,
+      meta: { headerClassName: 'min-w-[160px]' }
+    },
+    {
+      accessorKey: 'name',
+      header: ({ column }) => <DataGridColumnHeader title="Nama" column={column} />,
+      cell: info => <div className="text-gray-800">{info.row.original.name}</div>,
+      meta: { headerClassName: 'min-w-[200px]' }
+    },
+    {
+      accessorKey: 'email',
+      header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
+      cell: info => <div className="text-gray-700">{info.row.original.email}</div>,
+      meta: { headerClassName: 'min-w-[220px]' }
+    },
+    {
+      accessorKey: 'phone',
+      header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
+      cell: info => <div className="text-gray-700">{info.row.original.phone}</div>,
+      meta: { headerClassName: 'min-w-[160px]' }
+    }
+  ], []);
+
+  const handleRowSelectionChange = (selection, table) => {
+    const rows = table.getSelectedRowModel().rows.map(r => r.original);
+    setSelectedCount(rows.length);
+  };
+
+  const handleBlast = async (tableRef) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setBlastResult(null);
+      // Ambil peserta terpilih langsung dari tableRef
+      const selectedRows = tableRef.getSelectedRowModel().rows.map(r => r.original);
+      const participantIds = selectedRows.map(r => r.participant_id).filter(Boolean);
+      if (participantIds.length === 0) {
+        setError('Pilih minimal 1 peserta terlebih dahulu');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        participant_ids: participantIds,
+        use_default_template: useTemplate,
+        text: useTemplate ? undefined : (message || '')
+      };
+      const res = await axios.post(`${API_URL}/participants/whatsapp-blast`, payload);
+      setBlastResult(res?.data || { status: 'ok' });
+      // Reload data jika perlu
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Gagal mengirim WhatsApp');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBlastAll = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setBlastResult(null);
+
+      const payload = {
+        send_all: true,
+        search: search || undefined,
+        use_default_template: useTemplate,
+        text: useTemplate ? undefined : (message || '')
+      };
+      const res = await axios.post(`${API_URL}/participants/whatsapp-blast`, payload);
+      setBlastResult(res?.data || { status: 'ok' });
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Gagal mengirim WhatsApp');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const ToolbarContent = () => {
+    // Akses instance table dari DataGrid melalui context hook
+    const { table } = useDataGrid();
+    const isFiltered = table.getState().columnFilters.length > 0;
+    const selected = table.getSelectedRowModel().rows.length;
+
+    return (
+      <div className="card-header px-5 py-5 border-b-0 flex-wrap gap-2 items-center">
+        <div className="flex items-center gap-2.5">
+          <div className="relative">
+            <KeenIcon icon="magnifier" className="leading-none text-md text-gray-500 absolute top-1/2 start-0 -translate-y-1/2 ms-3" />
+            <input
+              type="text"
+              placeholder="Cari nama, email, ID, atau HP..."
+              className="input input-sm ps-8"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-sm btn-light" onClick={() => { setSearch(''); }} disabled={loading}>Clear</button>
+        </div>
+
+        <div className="flex items-center gap-2.5 ml-auto">
+          <span className="text-sm text-gray-700">Dipilih: {selected}</span>
+          <button className="btn btn-sm btn-light" onClick={() => table.toggleAllPageRowsSelected(true)} disabled={loading}>Pilih semua</button>
+          <button className="btn btn-sm btn-outline btn-primary" onClick={() => handleBlast(table)} disabled={loading || selected === 0}>
+            <KeenIcon icon="whatsapp" /> Kirim WhatsApp
+          </button>
+          <button className="btn btn-sm btn-primary" onClick={handleBlastAll} disabled={loading}>
+            <KeenIcon icon="whatsapp" /> Kirim semua hasil filter
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Helper untuk normalisasi nomor dan membangun template uji coba
+  const normalizePhoneLocal = (input) => {
+    const digits = String(input || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('0')) return '62' + digits.slice(1);
+    if (!digits.startsWith('62')) return '62' + digits.replace(/^0+/, '');
+    return digits;
+  };
+
+  const buildPaymentSuccessTextFE = (name, participantId, ticketLabel) => {
+    const dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+    const n = (name || '').trim() || 'Peserta';
+    const pid = participantId || 'PID-TEST';
+    const t = ticketLabel || 'Tiket';
+    return [
+      `Halo Bapak/Ibu ${n},`,
+      'E-Ticket Mandalika Korpri Run Anda sudah terbit ✅',
+      '',
+      `🆔 ID Peserta: ${pid}`,
+      `👤 Nama: ${n}`,
+      `🎟️ Jenis Tiket: ${t}`,
+      '',
+      `Silakan cek email atau login ke https://daftar.mandalikakorprirun.com/dashboard/ untuk mengunduh QR E-Ticket.`,
+      '',
+      'Jika ada kendala, hubungi kami melalui WA ini.',
+      'Terima kasih 🙏',
+    ].join('\n');
+  };
+
+  const handleTestSend = async () => {
+    try {
+      setTestSending(true);
+      setError(null);
+      setTestResult(null);
+      const chatId = normalizePhoneLocal(testPhone);
+      if (!chatId || chatId.length < 8) {
+        setError('Nomor WhatsApp tidak valid');
+        setTestSending(false);
+        return;
+      }
+      const dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+      const text = useTemplate
+        ? buildPaymentSuccessTextFE(testName, testParticipantId, testTicket)
+        : (message || '').trim();
+
+      if (!text) {
+        setError('Pesan tidak boleh kosong');
+        setTestSending(false);
+        return;
+      }
+
+      const res = await axios.post(`${API_URL}/waha/sendText`, {
+        chatId,
+        text,
+      });
+      setTestResult({ status: 'ok', data: res?.data });
+    } catch (e) {
+      setTestResult({ status: 'error', message: e?.response?.data?.message || e?.message || 'Gagal kirim uji coba' });
+    } finally {
+      setTestSending(false);
+    }
+  };
+
+  return (
+    <Fragment>
+      {currentLayout?.name === 'demo1-layout' && (
+        <Container>
+          <Toolbar>
+            <ToolbarHeading title="WhatsApp Blast Peserta" description="Kirim pesan WhatsApp ke peserta terpilih" />
+            <ToolbarActions>
+              <button className="btn btn-sm btn-light" onClick={loadParticipants} disabled={loading}>Refresh</button>
+            </ToolbarActions>
+          </Toolbar>
+        </Container>
+      )}
+
+      <Container>
+        {error && <div className="text-red-600 mb-3">{error}</div>}
+        {blastResult && (
+          <div className="mb-3 p-4 rounded bg-green-50 text-green-800">
+            <div className="font-medium mb-1">Hasil Blast</div>
+            <div>Total: {blastResult.total}</div>
+            <div>Sukses: {blastResult.success}</div>
+            <div>Gagal: {blastResult.failed}</div>
+          </div>
+        )}
+
+        <div className="card mb-6">
+          <div className="card-header px-5 py-5 border-b-0 flex-wrap gap-2 items-center">
+            <h3 className="card-title">Pesan WhatsApp</h3>
+            <div className="flex items-center gap-3 ml-auto">
+              <label className="switch switch-sm">
+                <input name="useTemplate" type="checkbox" className="order-2" checked={useTemplate} onChange={e => setUseTemplate(e.target.checked)} />
+                <span className="switch-label order-1">Gunakan template sukses pembayaran</span>
+              </label>
+            </div>
+          </div>
+          <div className="card-body px-5 py-5">
+            <textarea
+              className="textarea w-full"
+              rows={5}
+              placeholder="Tulis pesan custom (jika tidak pakai template)"
+              value={message}
+              onChange={e => setMessage(e.target.value)}
+              disabled={useTemplate}
+            />
+            <div className="text-xs text-muted mt-2">Jika menggunakan template, sistem akan membuat pesan untuk setiap peserta berdasarkan tiketnya.</div>
+          </div>
+        </div>
+
+        {/* Form uji kirim satu nomor */}
+        <div className="card mb-6">
+          <div className="card-header px-5 py-5 border-b-0 flex-wrap gap-2 items-center">
+            <h3 className="card-title">Uji Kirim ke Satu Nomor</h3>
+          </div>
+          <div className="card-body px-5 py-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="form-label">Nomor WhatsApp</label>
+                <input
+                  type="text"
+                  className="input w-full"
+                  placeholder="Contoh: 08xxxxx atau 62xxxxx"
+                  value={testPhone}
+                  onChange={e => setTestPhone(e.target.value)}
+                />
+                <div className="text-xs text-muted mt-1">Akan dinormalisasi ke format 62.</div>
+              </div>
+              {useTemplate && (
+                <div className="grid grid-cols-1 gap-4">
+                  <div>
+                    <label className="form-label">Nama</label>
+                    <input type="text" className="input w-full" value={testName} onChange={e => setTestName(e.target.value)} placeholder="Nama penerima" />
+                  </div>
+                  <div>
+                    <label className="form-label">ID Peserta</label>
+                    <input type="text" className="input w-full" value={testParticipantId} onChange={e => setTestParticipantId(e.target.value)} placeholder="Contoh: MKR-1234" />
+                  </div>
+                  <div>
+                    <label className="form-label">Jenis Tiket</label>
+                    <input type="text" className="input w-full" value={testTicket} onChange={e => setTestTicket(e.target.value)} placeholder="Contoh: 5K, 10K, Family" />
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <button className="btn btn-primary" onClick={handleTestSend} disabled={testSending}>
+                <KeenIcon icon="whatsapp" /> Kirim Uji Coba
+              </button>
+              {testSending && <span className="text-sm text-muted">Mengirim...</span>}
+            </div>
+            {testResult && (
+              <div className={`mt-3 p-3 rounded ${testResult.status === 'ok' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                {testResult.status === 'ok' ? 'Pesan uji coba terkirim' : `Gagal: ${testResult.message || 'Gagal mengirim'}`}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <DataGrid
+          columns={columns}
+          data={filteredParticipants}
+          rowSelection={true}
+          onRowSelectionChange={handleRowSelectionChange}
+          getRowId={(row) => row.participant_id}
+          pagination={{ size: 50 }}
+          toolbar={<ToolbarContent />}
+          layout={{ card: true }}
+          messages={{ empty: loading ? 'Loading...' : 'Tidak ada data' }}
+        />
+      </Container>
+    </Fragment>
+  );
+};
+
+export default WhatsAppBlastPage;
