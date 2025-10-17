@@ -67,7 +67,7 @@ const Demo1LayoutProvider = ({
   // Build primary menu conditionally based on the authenticated user's email
   const primaryMenu = useMemo(() => {
     if (currentUser?.email === 'admin@superadmin.com') return MENU_SIDEBAR;
-    return MENU_SIDEBAR.filter(item => item?.title !== 'Missing Participants');
+    return MENU_SIDEBAR.filter(item => item?.title !== 'Missing Participants' && item?.title !== 'WA Blast');
   }, [currentUser]);
 
   const secondaryMenu = useMenuChildren(pathname, primaryMenu, 0); // Retrieves the secondary menu

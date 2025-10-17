@@ -85,6 +85,12 @@ const WhatsAppBlastPage = () => {
       header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
       cell: info => <div className="text-gray-700">{info.row.original.phone}</div>,
       meta: { headerClassName: 'min-w-[160px]' }
+    },
+    {
+      accessorKey: 'shirt_size',
+      header: ({ column }) => <DataGridColumnHeader title="Ukuran Kaos" column={column} />,
+      cell: info => <div className="text-gray-700">{info.row.original.shirt_size || '-'}</div>,
+      meta: { headerClassName: 'min-w-[120px]' }
     }
   ], []);
 

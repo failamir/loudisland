@@ -99,7 +99,8 @@ class PendaftarController extends Controller
             ->select(['id','transaction_id','participant_id','name','email','phone','ticket_id'])
             ->where('status', '1')
             ->where('amount', '>', 100000)
-            ->whereNotIn('email', $excluded_emails);
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNull('shirt_size');
 
         if ($sendAll) {
             if ($search) {
