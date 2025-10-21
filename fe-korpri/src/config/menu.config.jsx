@@ -10,6 +10,8 @@ export const MENU_SIDEBAR = [
   { title: 'Users', path: '/users', icon: 'users' },
   { title: 'Roles', path: '/roles', icon: 'shield-tick' },
   { title: 'Permissions', path: '/permissions', icon: 'lock' },
+  { title: 'Referral Codes', path: '/referral-codes', icon: 'user-tick' },
+  { title: 'Promo Codes', path: '/promo-codes', icon: 'badge' },
   // { title: 'Order Tiket', path: '/order' , icon: 'booking' },
 ];
 

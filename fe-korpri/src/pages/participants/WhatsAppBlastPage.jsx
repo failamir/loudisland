@@ -42,6 +42,33 @@ const WhatsAppBlastPage = () => {
     }
   };
 
+  const handleEmailBlast = async (tableRef) => {
+    try {
+      setLoading(true);
+      setError(null);
+      setBlastResult(null);
+      const selectedRows = tableRef.getSelectedRowModel().rows.map(r => r.original);
+      const participantIds = selectedRows.map(r => r.participant_id).filter(Boolean);
+      if (participantIds.length === 0) {
+        setError('Pilih minimal 1 peserta terlebih dahulu');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        participant_ids: participantIds,
+        use_default_template: useTemplate,
+        text: useTemplate ? undefined : (message || ''),
+      };
+      const res = await axios.post(`${API_URL}/participants/email-blast`, payload);
+      setBlastResult(res?.data || { status: 'ok' });
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Gagal mengirim Email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredParticipants = useMemo(() => {
     if (!search) return participants;
     const s = search.toLowerCase();
@@ -149,6 +176,26 @@ const WhatsAppBlastPage = () => {
     }
   };
 
+  const handleEmailBlastAll = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setBlastResult(null);
+      const payload = {
+        send_all: true,
+        search: search || undefined,
+        use_default_template: useTemplate,
+        text: useTemplate ? undefined : (message || ''),
+      };
+      const res = await axios.post(`${API_URL}/participants/email-blast`, payload);
+      setBlastResult(res?.data || { status: 'ok' });
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Gagal mengirim Email');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const ToolbarContent = () => {
     // Akses instance table dari DataGrid melalui context hook
     const { table } = useDataGrid();
@@ -179,6 +226,13 @@ const WhatsAppBlastPage = () => {
           </button>
           <button className="btn btn-sm btn-primary" onClick={handleBlastAll} disabled={loading}>
             <KeenIcon icon="whatsapp" /> Kirim semua hasil filter
+          </button>
+          <span className="divider-vertical h-5 mx-2" />
+          <button className="btn btn-sm btn-outline" onClick={() => handleEmailBlast(table)} disabled={loading || selected === 0}>
+            <KeenIcon icon="paper-plane" /> Kirim Email
+          </button>
+          <button className="btn btn-sm btn-secondary" onClick={handleEmailBlastAll} disabled={loading}>
+            <KeenIcon icon="paper-plane" /> Email semua hasil filter
           </button>
         </div>
       </div>

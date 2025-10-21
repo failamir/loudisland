@@ -23,6 +23,8 @@ import WhatsAppBlastPage from '@/pages/participants/WhatsAppBlastPage';
 import PermissionsListPage from '@/pages/permissions/PermissionsListPage';
 import RolesListPage from '@/pages/roles/RolesListPage';
 import RacepackListPage from '@/pages/racepacks/RacepackListPage';
+import ReferralCodesPage from '@/pages/codes/ReferralCodesPage';
+import PromoCodesPage from '@/pages/codes/PromoCodesPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -110,6 +112,8 @@ const AppRoutingSetup = () => {
           <Route path="/participants/wa-blast" element={<WhatsAppBlastPage />} />
           <Route path="/nomor-punggung" element={<NomorPunggungListPage />} />
           <Route path="/nomor-punggung/pair" element={<NomorPunggungPairPage />} />
+          <Route path="/referral-codes" element={<ReferralCodesPage />} />
+          <Route path="/promo-codes" element={<PromoCodesPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
           <Route path="/authentication/get-started" element={<AuthenticationGetStartedPage />} />

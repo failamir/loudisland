@@ -49,8 +49,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // Staff list for racepack dropdown
         Route::get('staffs', [PendaftarController::class, 'staffList'])->name('racepacks.staffs');
 
-        // WhatsApp blast to registered participants (protected)
+        // Blast to registered participants (protected)
         Route::post('participants/whatsapp-blast', [PendaftarController::class, 'whatsappBlast'])->name('participants.whatsappBlast');
+        Route::post('participants/email-blast', [PendaftarController::class, 'emailBlast'])->name('participants.emailBlast');
 
         // Orders (create ticket + transaction via Midtrans)
         Route::post('orders', [OrderController::class, 'store'])->name('orders.store');
