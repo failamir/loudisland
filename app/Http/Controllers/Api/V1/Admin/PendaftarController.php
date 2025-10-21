@@ -1601,6 +1601,16 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
+            //tambah PPN 11%
+            $ppn = $total_payment * 0.11;
+            $total_payment += $ppn;
+            $itemDetails[] = [
+                'id' => 'ppn',
+                'price' => (int) $ppn,
+                'quantity' => 1,
+                'name' => 'PPN',
+            ];
+
             $payload = [
                 'transaction_details' => [
                     'order_id'      => $transaksi->invoice,
@@ -2077,6 +2087,9 @@ class PendaftarController extends Controller
         // Compute totals regardless of status filter
         $totalSudah = (clone $base)->where('status_racepack', 'sudah')->count();
         $totalBelum = (clone $base)->where('status_racepack', 'belum')->count();
+        // Compute totals per ticket type (ASN=1, UMUM=2) regardless of status filter
+        $totalAsn = (clone $base)->where('ticket_id', 1)->count();
+        $totalUmum = (clone $base)->where('ticket_id', 2)->count();
 
         // Apply status for the listing (if provided)
         $listQuery = clone $base;
@@ -2096,6 +2109,8 @@ class PendaftarController extends Controller
                 'total' => $paginator->total(),
                 'total_sudah' => $totalSudah,
                 'total_belum' => $totalBelum,
+                'total_asn' => $totalAsn,
+                'total_umum' => $totalUmum,
             ],
         ]);
     }
