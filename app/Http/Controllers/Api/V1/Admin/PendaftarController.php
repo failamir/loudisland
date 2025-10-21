@@ -373,6 +373,28 @@ class PendaftarController extends Controller
         return response()->json($p);
     }
 
+    public function ticket($participant_id)
+    {
+        $p = Participant::where('participant_id', $participant_id)->first();
+        if (!$p) {
+            return response()->json(['message' => 'Participant not found'], 404);
+        }
+        $event = $p->ticket_id ? Event::select(['id','nama_event','harga','tanggal_mulai'])->find($p->ticket_id) : null;
+        $participant = [
+            'name' => $p->name,
+            'phone' => $p->phone,
+            'shirt_size' => $p->shirt_size,
+            'participant_id' => $p->participant_id,
+            'status_racepack' => $p->status_racepack,
+            'status' => $p->status,
+            'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
+        ];
+        return response()->json([
+            'event' => $event,
+            'participant' => $participant,
+        ]);
+    }
+
     /**
      * Update shirt size for a participant
      * PUT /api/v1/participants/{participant_id}/shirt-size
