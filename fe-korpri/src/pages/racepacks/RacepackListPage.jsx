@@ -13,6 +13,8 @@ export default function RacepackListPage() {
   const [headerTotal, setHeaderTotal] = useState(0);
   const [totalSudah, setTotalSudah] = useState(0);
   const [totalBelum, setTotalBelum] = useState(0);
+  const [totalAsn, setTotalAsn] = useState(0);
+  const [totalUmum, setTotalUmum] = useState(0);
   const [loading, setLoading] = useState(false);
   const [gridKey, setGridKey] = useState(0);
 
@@ -61,6 +63,8 @@ export default function RacepackListPage() {
     setHeaderTotal(total);
     setTotalSudah(data?.meta?.total_sudah ?? 0);
     setTotalBelum(data?.meta?.total_belum ?? 0);
+    setTotalAsn(data?.meta?.total_asn ?? 0);
+    setTotalUmum(data?.meta?.total_umum ?? 0);
     return { data: rows, totalCount: total };
   };
 
@@ -290,6 +294,12 @@ export default function RacepackListPage() {
                   </span>
                   <span className="badge badge-secondary badge-outline rounded-[30px] flex items-center gap-1">
                     <KeenIcon icon="clock" /> Belum: {totalBelum}
+                  </span>
+                  <span className="badge badge-outline rounded-[30px] flex items-center gap-1">
+                    <KeenIcon icon="user" /> ASN: {totalAsn}
+                  </span>
+                  <span className="badge badge-outline rounded-[30px] flex items-center gap-1">
+                    <KeenIcon icon="users" /> UMUM: {totalUmum}
                   </span>
                 </div>
               </ToolbarDescription>
