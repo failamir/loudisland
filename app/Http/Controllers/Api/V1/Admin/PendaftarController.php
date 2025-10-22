@@ -1630,7 +1630,7 @@ class PendaftarController extends Controller
                 'id' => 'ppn',
                 'price' => (int) $ppn,
                 'quantity' => 1,
-                'name' => 'PPN',
+                'name' => 'PPN (11%)',
             ];
 
             $payload = [

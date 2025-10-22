@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\V1\Admin\TiketApiController;
 use App\Http\Controllers\Api\V1\Admin\PendaftarController;
 use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
+use App\Http\Controllers\Api\V1\Admin\PromoCodeApiController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -43,6 +44,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // Roles & Permissions CRUD for FE admin
         Route::apiResource('roles', RoleApiController::class);
         Route::apiResource('permissions', PermissionApiController::class);
+
+        // Promo Codes CRUD
+        Route::apiResource('promo-codes', PromoCodeApiController::class);
 
         // Racepack listing (filterable)
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
