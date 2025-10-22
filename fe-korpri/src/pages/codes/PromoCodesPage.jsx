@@ -8,6 +8,8 @@ const PromoCodesPage = () => {
   const [codes, setCodes] = useState([]);
   const [discountType, setDiscountType] = useState('percent'); // 'percent' | 'fixed'
   const [amount, setAmount] = useState(10);
+  const [expiresAt, setExpiresAt] = useState(''); // ISO-like string via datetime-local
+  const [usageLimit, setUsageLimit] = useState('');
   const [check, setCheck] = useState('');
 
   const normalizedPrefix = useMemo(() => normalizeCode(prefix), [prefix]);
@@ -20,6 +22,8 @@ const PromoCodesPage = () => {
       code: generatePromoCode(L, normalizedPrefix),
       discountType,
       amount: amt,
+      expiresAt: expiresAt || null,
+      usageLimit: usageLimit === '' ? null : Math.max(0, Number(usageLimit) || 0),
     }));
     setCodes(list);
   };
@@ -95,6 +99,29 @@ const PromoCodesPage = () => {
             min={0}
           />
         </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-gray-600">Usage Limit</span>
+          <input
+            type="number"
+            value={usageLimit}
+            onChange={(e) => setUsageLimit(e.target.value)}
+            className="border rounded px-3 py-2"
+            placeholder="e.g. 100 or empty"
+            min={0}
+          />
+        </label>
+      </div>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        <label className="flex flex-col gap-1">
+          <span className="text-sm text-gray-600">Expiry (expiresAt)</span>
+          <input
+            type="datetime-local"
+            value={expiresAt}
+            onChange={(e) => setExpiresAt(e.target.value)}
+            className="border rounded px-3 py-2"
+          />
+        </label>
       </div>
 
       <div className="flex items-center gap-3">
@@ -111,6 +138,8 @@ const PromoCodesPage = () => {
                 <th className="text-left px-3 py-2">#</th>
                 <th className="text-left px-3 py-2">Code</th>
                 <th className="text-left px-3 py-2">Discount</th>
+                <th className="text-left px-3 py-2">Usage Limit</th>
+                <th className="text-left px-3 py-2">Expires At</th>
                 <th className="text-left px-3 py-2">Actions</th>
               </tr>
             </thead>
@@ -122,6 +151,8 @@ const PromoCodesPage = () => {
                   <td className="px-3 py-2">
                     {row.discountType === 'percent' ? `${row.amount}%` : row.amount}
                   </td>
+                  <td className="px-3 py-2">{row.usageLimit ?? '-'}</td>
+                  <td className="px-3 py-2">{row.expiresAt || '-'}</td>
                   <td className="px-3 py-2">
                     <button onClick={() => onCopy(row.code)} className="text-blue-600 hover:underline">Copy</button>
                   </td>
