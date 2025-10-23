@@ -1673,7 +1673,9 @@ class PendaftarController extends Controller
                 }
             }
             $total_payment = $amount;
+            // dd($total_payment);
             $promo_code_id = $request->promoCodeId ?? null;
+            // dd($promo_code_id);
             $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
             if ($discountType == 'fixed') {
                 $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
@@ -1684,7 +1686,7 @@ class PendaftarController extends Controller
             }
 
             $ticket_price = $total_payment - $discount;
-
+            // dd($ticket_price);
             // tambah 1.5 % di amount
             $fee_service = $amount * 0.02;
             // $fee_service = $fee_service * count($itemDetails);
@@ -1727,19 +1729,21 @@ class PendaftarController extends Controller
 
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
-            Transaksi::where('invoice', $no_invoice)->update([
+            $updateTrx = Transaksi::where('invoice', $no_invoice)->update([
                 'payment_url' => $paymentUrl,
                 'promo_code_id' => $promo_code_id,
                 'discount' => $discount,
                 'final_price' => $final_price,
             ]);
 
+            // dd($updateTrx);
+
             $resp = new stdClass();
             $resp->data = $paymentUrl;
             $resp->invoice = $no_invoice;
             $resp->participants = $data['participants'];
             $resp->service_fee = $fee_service;
-            $resp->total_amount = $amount;
+            $resp->total_amount = $ticket_price;
             $resp->total_payment = $total_payment;
             $resp->total_ticket = count($data['participants']) . ' Tiket';
             $resp->expired_snap_time = $transaksi->expired_snap_time;
