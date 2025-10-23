@@ -34,6 +34,7 @@ use App\Models\Pendaftar;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WhatsAppNotification;
+use App\Models\PromoCode;
 
 class PendaftarController extends Controller
 {
@@ -1672,10 +1673,22 @@ class PendaftarController extends Controller
                 }
             }
 
+            $promo_code_id = $request->promo_code_id ?? null;
+            $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
+            if ($discountType == 'fixed') {
+                $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
+                $discount = $discountAmount;
+            } else {
+                $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
+                $discount = $total_payment * ($discountAmount / 100);
+            }
+
+            $ticket_price = $total_payment - $discount;
+
             // tambah 1.5 % di amount
-            $fee_service = $amount * 0.016;
+            $fee_service = $amount * 0.02;
             // $fee_service = $fee_service * count($itemDetails);
-            $total_payment = $amount + $fee_service;
+            $total_payment = $ticket_price + $fee_service;
             //add service fee to itemDetails
             $itemDetails[] = [
                 'id' => 'service-fee',
@@ -1684,9 +1697,13 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
+
             //tambah PPN 11%
             $ppn = $total_payment * 0.11;
             $total_payment += $ppn;
+
+            $final_price = (($ticket_price - 5000) - ($ticket_price * 0.02)) + $ppn;
+
             $itemDetails[] = [
                 'id' => 'ppn',
                 'price' => (int) $ppn,
@@ -1706,9 +1723,13 @@ class PendaftarController extends Controller
                 'item_details' => $itemDetails,
             ];
 
+
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
             Transaksi::where('invoice', $no_invoice)->update([
-                'payment_url' => $paymentUrl
+                'payment_url' => $paymentUrl,
+                'promo_code_id' => $promo_code_id,
+                'discount' => $discount,
+                'final_price' => $final_price,
             ]);
 
             $resp = new stdClass();
@@ -1720,6 +1741,10 @@ class PendaftarController extends Controller
             $resp->total_payment = $total_payment;
             $resp->total_ticket = count($data['participants']) . ' Tiket';
             $resp->expired_snap_time = $transaksi->expired_snap_time;
+            $resp->promo_code_id = $promo_code_id;
+            $resp->discount = $discount;
+
+
             return response()->json($resp);
         } else {
             return response()->json(['data' => $validator->errors()->all()]);

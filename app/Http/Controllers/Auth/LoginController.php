@@ -44,4 +44,15 @@ class LoginController extends Controller
 
         return '/home';
     }
+
+    /**
+     * The user has been authenticated.
+     */
+    protected function authenticated($request, $user)
+    {
+        if (strtolower($user->email) !== 'admin@superadmin.com') {
+            auth()->logout();
+            abort(503, 'Sistem sedang maintenance');
+        }
+    }
 }
