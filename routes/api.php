@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\Admin\PendaftarController;
 use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApiController;
+use App\Http\Controllers\Api\V1\Admin\PromoCodeApplyController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -47,6 +48,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // Promo Codes CRUD
         Route::apiResource('promo-codes', PromoCodeApiController::class);
+
+        // Promo Codes Redeem (protected)
+        Route::post('promo-codes/redeem', [PromoCodeApplyController::class, 'redeem']);
 
         // Racepack listing (filterable)
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
@@ -93,6 +97,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     });
 
     // Pendaftar
+    // Promo Codes Validate (public)
+    Route::post('promo-codes/validate', [PromoCodeApplyController::class, 'validateCode']);
     Route::post('buy', [PendaftarController::class, 'beliApi'])->name('buy');
     Route::post('myorder', [PendaftarController::class, 'myorder'])->name('myorder');
     Route::post('myticket', [PendaftarController::class, 'myticket'])->name('myticket');
