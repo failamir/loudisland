@@ -68,6 +68,65 @@ class PendaftarController extends Controller
     }
 
     /**
+     * Build WhatsApp message with conditional format based on whether
+     * participant email equals purchaser email, including direct ticket link.
+     */
+    protected function buildWhatsappTicketText(string $name, string $participantId, string $ticketLabel, ?string $participantEmail, ?string $purchaserEmail): string
+    {
+        $name = trim($name);
+        $pid = (string) $participantId;
+        $pidCode = preg_replace('/^PID-/', '', $pid);
+        $ticketUrl = 'https://daftar.mandalikakorprirun.com/ticket?pid=' . $pidCode;
+
+        $same = false;
+        if ($participantEmail && $purchaserEmail) {
+            $same = strtolower(trim($participantEmail)) === strtolower(trim($purchaserEmail));
+        }
+
+        $lines = [];
+        $lines[] = 'Halo Bapak/Ibu ' . $name . ',';
+        $lines[] = 'E-Ticket Mandalika Korpri Run Anda sudah terbit ✅';
+        $lines[] = '';
+        if ($same) {
+            $lines[] = '🆔 ID Peserta: ' . $pid;
+            $lines[] = '👤 Nama: ' . $name;
+            $lines[] = '🎟️ Jenis Tiket: ' . $ticketLabel;
+            $lines[] = '';
+            $lines[] = 'Unduh Tiket:';
+            $lines[] = $ticketUrl;
+            $lines[] = '';
+            $lines[] = 'Jika ada kendala, hubungi kami melalui WA ini.';
+            $lines[] = 'Terima kasih 🙏';
+        } else {
+            $lines[] = '[PENTING] Anda menerima E-Ticket ini karena data Anda didaftarkan oleh seorang Pemesan (atas nama Anda).';
+            $lines[] = '';
+            $lines[] = 'Berikut adalah detail tiket Anda:';
+            $lines[] = '';
+            $lines[] = '🆔 ID Peserta: ' . $pid;
+            $lines[] = '👤 Nama: ' . $name;
+            $lines[] = '🎟️ Jenis Tiket: ' . $ticketLabel;
+            if (!empty($purchaserEmail)) {
+                $lines[] = '📧 Dipesankan oleh: ' . $purchaserEmail;
+            }
+            $lines[] = '';
+            $lines[] = 'Anda TIDAK PERLU LOGIN untuk mengunduh tiket.';
+            $lines[] = '';
+            $lines[] = 'Silakan gunakan link LANGSUNG di bawah ini untuk mengunduh E-Ticket Anda:';
+            $lines[] = $ticketUrl;
+            $lines[] = '';
+            $lines[] = '---';
+            $lines[] = '';
+            $lines[] = 'Ada kendala?';
+            $lines[] = '• Jika terdapat KESALAHAN DATA (nama, no. HP, dll), silakan hubungi Pemesan.';
+            $lines[] = '• Jika LINK UNDUHAN bermasalah, bisa hubungi kami (Admin) melalui WA ini.';
+            $lines[] = '';
+            $lines[] = 'Terima kasih 🙏';
+        }
+
+        return implode("\n", $lines);
+    }
+
+    /**
      * Blast WhatsApp messages to registered participants.
      * POST /api/v1/participants/whatsapp-blast
      * Body:
@@ -159,7 +218,9 @@ class PendaftarController extends Controller
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
                     $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
-                    $msg = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis);
+                    $order = $p->transaction_id ? Transaksi::find($p->transaction_id) : null;
+                    $purchaserEmail = $order->email ?? null;
+                    $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                 }
                 $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
                 $success++;
@@ -1893,7 +1954,8 @@ class PendaftarController extends Controller
             $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
 
             $url = 'https://daftar.mandalikakorprirun.com/dashboard/';
-            $text = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis);
+            $purchaserEmail = $trx->email ?? null;
+            $text = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
 
             // \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
             //     'participant_id' => $p->participant_id,
