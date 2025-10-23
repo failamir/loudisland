@@ -51,9 +51,13 @@ const Login = () => {
         navigate(from, {
           replace: true
         });
-      } catch {
-        setStatus('The login details are incorrect');
-        setSubmitting(false);
+      } catch (error) {
+        if (error?.response?.status === 503) {
+          navigate('/error/503', { replace: true });
+        } else {
+          setStatus('The login details are incorrect');
+          setSubmitting(false);
+        }
       }
       setLoading(false);
     }

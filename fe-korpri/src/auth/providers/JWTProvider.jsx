@@ -55,7 +55,8 @@ const AuthProvider = ({
       }
     } catch (error) {
       saveAuth(undefined);
-      throw new Error(`Error ${error}`);
+      // Rethrow original error to allow callers to detect HTTP status codes (e.g., 503 maintenance)
+      throw error;
     }
   };
   const register = async (payload) => {
@@ -73,7 +74,8 @@ const AuthProvider = ({
       }
     } catch (error) {
       saveAuth(undefined);
-      throw new Error(`Error ${error}`);
+      // Rethrow original error to allow callers to detect HTTP status codes (e.g., 503 maintenance)
+      throw error;
     }
   };
   const requestPasswordResetLink = async email => {
