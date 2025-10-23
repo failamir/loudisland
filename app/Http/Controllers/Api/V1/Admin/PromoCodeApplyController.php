@@ -94,8 +94,8 @@ class PromoCodeApplyController extends Controller
             if (!$promo) {
                 return response()->json([
                     'status' => 'error',
-                    'reason' => 'not_found',
-                ], 404);
+                    'reason' => 'promo_not_found',
+                ], 400);
             }
             [$ok, $reason] = $this->isUsable($promo);
             if (!$ok) {
