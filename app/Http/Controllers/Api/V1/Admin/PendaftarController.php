@@ -1672,6 +1672,9 @@ class PendaftarController extends Controller
                     ];
                 }
             }
+
+            // dd($itemDetails);
+
             $total_payment = $amount;
             // dd($total_payment);
             $promo_code_id = $request->promoCodeId ?? null;
@@ -1683,6 +1686,38 @@ class PendaftarController extends Controller
             } else {
                 $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
                 $discount = $total_payment * ($discountAmount / 100);
+            }
+
+            // Apply discount proportionally to each ticket item in item_details so prices are net of discount
+            $originalSum = 0;
+            foreach ($itemDetails as $it) {
+                if (isset($it['id']) && strpos($it['id'], 'event-') === 0) {
+                    $originalSum += (int) ($it['price'] ?? 0);
+                }
+            }
+            if ($discount > 0 && $originalSum > 0) {
+                $remaining = (int) round($discount);
+                foreach ($itemDetails as $idx => $it) {
+                    if (isset($it['id']) && strpos($it['id'], 'event-') === 0) {
+                        // Proportional share of discount for this item
+                        $price = (int) ($it['price'] ?? 0);
+                        $share = (int) floor(($price / $originalSum) * $discount);
+                        // If this is the last event item, adjust to consume any remainder
+                        $isLast = true;
+                        for ($j = $idx + 1; $j < count($itemDetails); $j++) {
+                            if (isset($itemDetails[$j]['id']) && strpos($itemDetails[$j]['id'], 'event-') === 0) {
+                                $isLast = false;
+                                break;
+                            }
+                        }
+                        if ($isLast) {
+                            $share = $remaining;
+                        }
+                        $newPrice = max(0, $price - $share);
+                        $itemDetails[$idx]['price'] = (int) $newPrice;
+                        $remaining -= $share;
+                    }
+                }
             }
 
             $ticket_price = $total_payment - $discount;
@@ -1713,10 +1748,18 @@ class PendaftarController extends Controller
                 'name' => 'PPN (11%)',
             ];
 
+            // Ensure gross_amount equals the sum of item_details
+            $gross_amount = 0;
+            foreach ($itemDetails as $it) {
+                $price = (int) ($it['price'] ?? 0);
+                $qty = (int) ($it['quantity'] ?? 1);
+                $gross_amount += ($price * max(1, $qty));
+            }
+
             $payload = [
                 'transaction_details' => [
                     'order_id'      => $transaksi->invoice,
-                    'gross_amount'  => (int) $ticket_price,
+                    'gross_amount'  => (int) $gross_amount,
                 ],
                 'customer_details' => [
                     'first_name'       => $user->name,
