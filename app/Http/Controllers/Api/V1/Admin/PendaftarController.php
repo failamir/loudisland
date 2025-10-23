@@ -1673,7 +1673,7 @@ class PendaftarController extends Controller
                 }
             }
             $total_payment = $amount;
-            $promo_code_id = $request->promo_code_id ?? null;
+            $promo_code_id = $request->promoCodeId ?? null;
             $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
             if ($discountType == 'fixed') {
                 $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
