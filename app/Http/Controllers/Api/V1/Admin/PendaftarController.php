@@ -1716,7 +1716,7 @@ class PendaftarController extends Controller
             $payload = [
                 'transaction_details' => [
                     'order_id'      => $transaksi->invoice,
-                    'gross_amount'  => (int) $total_payment,
+                    'gross_amount'  => (int) $ticket_price,
                 ],
                 'customer_details' => [
                     'first_name'       => $user->name,
