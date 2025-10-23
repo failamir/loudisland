@@ -1719,7 +1719,8 @@ class PendaftarController extends Controller
                 'customer_details' => [
                     'first_name'       => $user->name,
                     'email'            => $user->email,
-                    'phone'
+                    'phone'            => $user->no_hp,
+                    'address' => $user->city . ',' . $user->province,
                 ],
                 'item_details' => $itemDetails,
             ];
