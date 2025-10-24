@@ -214,7 +214,8 @@ class TransaksiApiController extends Controller
                 if ($mode !== 'amount') {
                     $participants = $t->participants()->get(['ticket_id', 'amount']);
 
-                    $sumPerParticipant = 0.0;
+                    $gross = 0.0;
+                    $count = 0;
                     foreach ($participants as $p) {
                         $pAmount = (float) ($p->amount ?? 0);
                         if ($pAmount <= 0 && $p->ticket_id) {
@@ -224,17 +225,21 @@ class TransaksiApiController extends Controller
                             }
                         }
                         if ($pAmount > 0) {
-                            $sumPerParticipant += ($pAmount - $fixedFee) - ($pAmount * $percentFee);
+                            $gross += $pAmount;
+                            $count++;
                         }
                     }
 
-                    // Fallback: if no participant data or all zero, try using transaction amount as single-participant
-                    if ($sumPerParticipant <= 0 && $amount > 0) {
-                        $sumPerParticipant = ($amount - $fixedFee) - ($amount * $percentFee);
+                    // Fallback: if no participant data, use transaction amount as gross with single unit count
+                    if ($gross <= 0 && $amount > 0) {
+                        $gross = $amount;
+                        $count = max(1, (int) $t->qty ?? 1);
                     }
 
-                    if (is_finite($sumPerParticipant)) {
-                        $finalByFormula = (int) round($sumPerParticipant);
+                    if ($gross > 0) {
+                        $profit = ($count * $fixedFee) + floor($gross * $percentFee);
+                        $net = max(0, $gross - $profit);
+                        $finalByFormula = (int) round($net);
                     }
                 }
 

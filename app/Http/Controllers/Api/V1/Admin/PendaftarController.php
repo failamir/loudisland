@@ -1734,12 +1734,13 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
-
             //tambah PPN 11%
             $ppn = $total_payment * 0.11;
             $total_payment += $ppn;
-
-            $final_price = (($ticket_price - 5000) - ($ticket_price * 0.02)) + $ppn;
+            $participant_count = count($data['participants']);
+            $gross = (int) $ticket_price;
+            $profit = (int) (($participant_count * 5000) + floor($gross * 0.02));
+            $final_price = max(0, $gross - $profit) + $ppn;
 
             $itemDetails[] = [
                 'id' => 'ppn',
