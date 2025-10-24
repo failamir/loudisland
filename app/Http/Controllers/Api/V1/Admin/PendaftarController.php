@@ -2236,10 +2236,20 @@ class PendaftarController extends Controller
             });
         }
         if ($dateFrom) {
-            $base->whereDate('racepack_at', '>=', $dateFrom);
+            try {
+                $from = \Carbon\Carbon::parse($dateFrom)->startOfDay();
+                $base->where('racepack_at', '>=', $from);
+            } catch (\Throwable $e) {
+                // ignore invalid date
+            }
         }
         if ($dateTo) {
-            $base->whereDate('racepack_at', '<=', $dateTo);
+            try {
+                $to = \Carbon\Carbon::parse($dateTo)->endOfDay();
+                $base->where('racepack_at', '<=', $to);
+            } catch (\Throwable $e) {
+                // ignore invalid date
+            }
         }
 
         // Compute totals regardless of status filter

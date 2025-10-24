@@ -8,8 +8,9 @@ use App\Http\Requests\StoreTransaksiRequest;
 use App\Http\Requests\UpdateTransaksiRequest;
 use App\Http\Resources\Admin\TransaksiResource;
 use App\Models\Participant;
+use App\Models\Event;
 use App\Models\Transaksi;
-use Gate;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -160,5 +161,102 @@ class TransaksiApiController extends Controller
         $transaksi->delete();
 
         return response(null, Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Backfill final_price for transactions where it is null/empty/zero.
+     * POST /api/v1/transactions/backfill-final-price
+     * Optional query/body:
+     * - mode: auto|amount|formula (default: auto)
+     *   - amount: final_price = amount
+     *   - formula: final_price = sum(ticket_price) - (count*ticket_fee_fixed) - (sum(ticket_price)*fee_percent)
+     *   - auto: try formula, fallback to amount
+     */
+    public function backfillFinalPrice(Request $request)
+    {
+        $mode = strtolower((string) $request->input('mode', $request->query('mode', 'auto')));
+        if (!in_array($mode, ['auto', 'amount', 'formula'], true)) {
+            $mode = 'auto';
+        }
+
+        $fixedFee = 5000;        // per ticket
+        $percentFee = 0.016;     // 1.6%
+
+        $all = (bool) $request->boolean('all', $request->query('all', false));
+        $includeTrashed = (bool) $request->boolean('with_trashed', $request->query('with_trashed', false));
+
+        $q = $all ? Transaksi::withoutGlobalScopes() : Transaksi::query();
+        if ($includeTrashed) {
+            $q->withTrashed();
+        }
+        $q = $q->where(function ($w) {
+            $w->whereNull('final_price')
+                ->orWhere('final_price', '=', '')
+                ->orWhere('final_price', 0);
+        });
+
+        $total = (clone $q)->count();
+        $updated = 0;
+
+        $q->orderBy('id')->chunk(200, function ($rows) use (&$updated, $mode, $fixedFee, $percentFee) {
+            foreach ($rows as $t) {
+                $amount = (float) ($t->amount ?? 0);
+
+                $finalByAmount = (int) round($amount);
+
+                // Compute by formula if requested/allowed
+                $finalByFormula = null;
+                if ($mode !== 'amount') {
+                    $participants = $t->participants()->get(['ticket_id', 'amount']);
+                    $ticketCount = max(1, (int) $participants->count());
+
+                    // Sum ticket price from participant.amount if present, otherwise from Event.harga
+                    $ticketSum = 0.0;
+                    foreach ($participants as $p) {
+                        $pAmount = (float) ($p->amount ?? 0);
+                        if ($pAmount <= 0 && $p->ticket_id) {
+                            $ev = Event::select(['id', 'harga'])->find($p->ticket_id);
+                            if ($ev && $ev->harga) {
+                                $pAmount = (float) $ev->harga;
+                            }
+                        }
+                        $ticketSum += max(0, $pAmount);
+                    }
+
+                    if ($ticketSum <= 0 && $amount > 0) {
+                        // Fallback: use transaction amount and assume 1 ticket
+                        $ticketSum = $amount;
+                        $ticketCount = max(1, $ticketCount);
+                    }
+
+                    $calc = $ticketSum - ($ticketCount * $fixedFee) - ($ticketSum * $percentFee);
+                    if (is_finite($calc)) {
+                        $finalByFormula = (int) round($calc);
+                    }
+                }
+
+                $newFinal = null;
+                if ($mode === 'amount') {
+                    $newFinal = $finalByAmount;
+                } elseif ($mode === 'formula') {
+                    $newFinal = $finalByFormula ?? $finalByAmount;
+                } else { // auto
+                    $newFinal = $finalByFormula ?? $finalByAmount;
+                }
+
+                if ($newFinal !== null && $newFinal > 0) {
+                    $t->final_price = $newFinal;
+                    $t->save();
+                    $updated++;
+                }
+            }
+        });
+
+        return response()->json([
+            'message' => 'Backfill completed',
+            'total_candidates' => (int) $total,
+            'updated' => (int) $updated,
+            'mode' => $mode,
+        ]);
     }
 }

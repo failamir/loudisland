@@ -42,6 +42,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::put('users/{user}', [UserApiController::class, 'update']);
         Route::delete('users/{user}', [UserApiController::class, 'destroy']);
 
+        Route::post('transactions/backfill-final-price', [TransaksiApiController::class, 'backfillFinalPrice']);
+
         // Roles & Permissions CRUD for FE admin
         Route::apiResource('roles', RoleApiController::class);
         Route::apiResource('permissions', PermissionApiController::class);
