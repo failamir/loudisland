@@ -2235,18 +2235,44 @@ class PendaftarController extends Controller
                     ->orWhere('phone', 'like', "%{$search}%");
             });
         }
-        if ($dateFrom) {
+        // Date range filtering
+        if ($dateFrom || $dateTo) {
             try {
-                $from = \Carbon\Carbon::parse($dateFrom)->startOfDay();
-                $base->where('racepack_at', '>=', $from);
-            } catch (\Throwable $e) {
-                // ignore invalid date
-            }
-        }
-        if ($dateTo) {
-            try {
-                $to = \Carbon\Carbon::parse($dateTo)->endOfDay();
-                $base->where('racepack_at', '<=', $to);
+                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
+                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
+
+                // Helper to apply between on a column
+                $applyRange = function ($q, $column) use ($from, $to) {
+                    if ($from && $to) {
+                        $q->whereBetween($column, [$from, $to]);
+                    } elseif ($from) {
+                        $q->where($column, '>=', $from);
+                    } elseif ($to) {
+                        $q->where($column, '<=', $to);
+                    }
+                };
+
+                if ($status === 'sudah') {
+                    // Filter by racepack_at (time when handed over)
+                    $applyRange($base, 'racepack_at');
+                } elseif ($status === 'belum') {
+                    // Filter by created_at (registration time) for belum (racepack_at is null)
+                    $applyRange($base, 'created_at');
+                } else {
+                    // No status filter selected: include both groups
+                    $base->where(function ($w) use ($applyRange) {
+                        // Sudah by racepack_at
+                        $w->where(function ($q1) use ($applyRange) {
+                            $q1->where('status_racepack', 'sudah');
+                            $applyRange($q1, 'racepack_at');
+                        })
+                        // Belum by created_at
+                        ->orWhere(function ($q2) use ($applyRange) {
+                            $q2->where('status_racepack', 'belum');
+                            $applyRange($q2, 'created_at');
+                        });
+                    });
+                }
             } catch (\Throwable $e) {
                 // ignore invalid date
             }
