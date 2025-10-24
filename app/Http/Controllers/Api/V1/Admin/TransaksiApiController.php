@@ -209,14 +209,12 @@ class TransaksiApiController extends Controller
 
                 $finalByAmount = (int) round($amount);
 
-                // Compute by formula if requested/allowed
+                // Compute by formula if requested/allowed (apply per participant)
                 $finalByFormula = null;
                 if ($mode !== 'amount') {
                     $participants = $t->participants()->get(['ticket_id', 'amount']);
-                    $ticketCount = max(1, (int) $participants->count());
 
-                    // Sum ticket price from participant.amount if present, otherwise from Event.harga
-                    $ticketSum = 0.0;
+                    $sumPerParticipant = 0.0;
                     foreach ($participants as $p) {
                         $pAmount = (float) ($p->amount ?? 0);
                         if ($pAmount <= 0 && $p->ticket_id) {
@@ -225,18 +223,18 @@ class TransaksiApiController extends Controller
                                 $pAmount = (float) $ev->harga;
                             }
                         }
-                        $ticketSum += max(0, $pAmount);
+                        if ($pAmount > 0) {
+                            $sumPerParticipant += ($pAmount - $fixedFee) - ($pAmount * $percentFee);
+                        }
                     }
 
-                    if ($ticketSum <= 0 && $amount > 0) {
-                        // Fallback: use transaction amount and assume 1 ticket
-                        $ticketSum = $amount;
-                        $ticketCount = max(1, $ticketCount);
+                    // Fallback: if no participant data or all zero, try using transaction amount as single-participant
+                    if ($sumPerParticipant <= 0 && $amount > 0) {
+                        $sumPerParticipant = ($amount - $fixedFee) - ($amount * $percentFee);
                     }
 
-                    $calc = $ticketSum - ($ticketCount * $fixedFee) - ($ticketSum * $percentFee);
-                    if (is_finite($calc)) {
-                        $finalByFormula = (int) round($calc);
+                    if (is_finite($sumPerParticipant)) {
+                        $finalByFormula = (int) round($sumPerParticipant);
                     }
                 }
 
