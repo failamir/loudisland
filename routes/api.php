@@ -255,6 +255,20 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
     });
 
+    // Total of final_price for success transactions excluding testing emails
+    Route::get('total-final-income', function () {
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $sum = (int) \App\Models\Transaksi::query()
+            ->where('status', 'success')
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0)
+            ->sum('final_price');
+        return response()->json([
+            'total_final_price' => $sum,
+        ]);
+    });
+
     // TODO: email to ifailamir@kardusinfo.com and kardusinfo@failamir.com
 
 

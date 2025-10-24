@@ -198,7 +198,12 @@ class TransaksiApiController extends Controller
         $total = (clone $q)->count();
         $updated = 0;
 
-        $q->orderBy('id')->chunk(200, function ($rows) use (&$updated, $mode, $fixedFee, $percentFee) {
+        // Emails to treat as testing: set final_price to 0 for these
+        $excludedEmails = array_filter(array_map(function ($e) {
+            return strtolower(trim($e));
+        }, explode(',', env('EMAIL_TESTING', ''))));
+
+        $q->orderBy('id')->chunk(200, function ($rows) use (&$updated, $mode, $fixedFee, $percentFee, $excludedEmails) {
             foreach ($rows as $t) {
                 $amount = (float) ($t->amount ?? 0);
 
@@ -244,7 +249,15 @@ class TransaksiApiController extends Controller
                     $newFinal = $finalByFormula ?? $finalByAmount;
                 }
 
-                if ($newFinal !== null && $newFinal > 0) {
+                // If transaction email is in testing list, force to 0
+                $trxEmail = strtolower(trim((string) ($t->email ?? '')));
+                $forceZero = false;
+                if ($trxEmail !== '' && in_array($trxEmail, $excludedEmails, true)) {
+                    $newFinal = 0;
+                    $forceZero = true;
+                }
+
+                if ($newFinal !== null && ($newFinal > 0 || $forceZero)) {
                     $t->final_price = $newFinal;
                     $t->save();
                     $updated++;

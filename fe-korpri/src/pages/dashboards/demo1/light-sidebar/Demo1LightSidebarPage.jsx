@@ -18,20 +18,25 @@ const Demo1LightSidebarPage = () => {
   const { currentUser } = useAuthContext();
   const [totalIncome, setTotalIncome] = useState(null);
   const [totalProfit, setTotalProfit] = useState(null);
+  const [totalFinalIncome, setTotalFinalIncome] = useState(null);
   const [incomeLoading, setIncomeLoading] = useState(false);
   const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
   useEffect(() => {
     let ignore = false;
     setIncomeLoading(true);
-    axios
-      .get(`${API_URL}/total-income`)
-      .then((res) => {
+    Promise.all([
+      axios.get(`${API_URL}/total-income`),
+      axios.get(`${API_URL}/total-final-income`),
+    ])
+      .then(([res1, res2]) => {
         if (ignore) return;
-        const val = res?.data?.total_income ?? 0;
-        const profit = res?.data?.summary?.profit ?? 0;
+        const val = res1?.data?.total_income ?? 0;
+        const profit = res1?.data?.summary?.profit ?? 0;
+        const finalIncome = res2?.data?.total_final_price ?? 0;
         setTotalIncome(Number(val));
         setTotalProfit(Number(profit));
+        setTotalFinalIncome(Number(finalIncome));
       })
       .finally(() => {
         if (!ignore) setIncomeLoading(false);
@@ -50,6 +55,13 @@ const Demo1LightSidebarPage = () => {
                 <span className="text-gray-600 text-sm">Total Income</span>
                 <span className="font-extrabold text-lg badge badge-light-success">
                   {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
+                </span>
+              </div>
+
+          <div className="flex items-center gap-2 me-2">
+                <span className="text-gray-600 text-sm">Final Income</span>
+                <span className="font-extrabold text-lg badge badge-light-primary">
+                  {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalFinalIncome ?? 0)}
                 </span>
               </div>
 
