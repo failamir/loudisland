@@ -180,7 +180,7 @@ class TransaksiApiController extends Controller
         }
 
         $fixedFee = 5000;        // per ticket
-        $percentFee = 0.016;     // 1.6%
+        $percentFee = 0.02;     // 1.6%
 
         $all = (bool) $request->boolean('all', $request->query('all', false));
         $includeTrashed = (bool) $request->boolean('with_trashed', $request->query('with_trashed', false));
