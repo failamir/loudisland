@@ -51,12 +51,12 @@ const Demo1LightSidebarPage = () => {
         <ToolbarHeading title="Dashboard" description="Central Hub for Personal Customization" />
         <ToolbarActions>
 
-          <div className="flex items-center gap-2 me-2">
+          {/* <div className="flex items-center gap-2 me-2">
                 <span className="text-gray-600 text-sm">Total Income</span>
                 <span className="font-extrabold text-lg badge badge-light-success">
                   {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalIncome ?? 0)}
                 </span>
-              </div>
+              </div> */}
 
           <div className="flex items-center gap-2 me-2">
                 <span className="text-gray-600 text-sm">Final Income</span>
@@ -67,6 +67,7 @@ const Demo1LightSidebarPage = () => {
 
           {currentUser?.email === 'admin@superadmin.com' && (
             <>
+
               <div className="flex items-center gap-2 me-2">
                 <span className="text-gray-600 text-sm">Total Profit</span>
                 <span className="font-extrabold text-lg badge badge-light-warning">

@@ -186,12 +186,12 @@ class AuthController extends Controller
 
         $email = strtolower($data['email']);
         // Maintenance gate: only allow admin@superadmin.com to login
-        if ($email == 'admin@admin.com') {
-            return response()->json([
-                'message' => 'Sistem sedang maintenance',
-                'data' => null,
-            ], 503);
-        }
+        // if ($email == 'admin@admin.com') {
+        //     return response()->json([
+        //         'message' => 'Sistem sedang maintenance',
+        //         'data' => null,
+        //     ], 503);
+        // }
         $isGoogleLogin = $request->input('method', false);
         $token = null;
         $user = null;
