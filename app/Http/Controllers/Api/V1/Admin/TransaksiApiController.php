@@ -311,24 +311,30 @@ class TransaksiApiController extends Controller
         $q->orderBy('id')->chunk(500, function ($rows) use (&$updated, $fixedFee, $percentFee, $excludedEmails) {
             foreach ($rows as $p) {
                 // Determine base ticket price per participant
-                $price = (float) ($p->amount ?? 0);
-                if ($price <= 0 && $p->ticket_id) {
-                    $ev = Event::select(['id','harga'])->find($p->ticket_id);
-                    if ($ev && $ev->harga) {
-                        $price = (float) $ev->harga;
-                    }
-                }
-
-                // Compute final per participant
+                $statusVal = (string) ($p->status ?? '0');
                 $newFinal = null;
-                if ($price > 0) {
-                    $calc = ($price - $fixedFee) - ($price * $percentFee);
-                    if (is_finite($calc)) {
-                        $newFinal = (int) round($calc);
+
+                if ($statusVal === '1') {
+                    // Active participant: compute final
+                    $price = (float) ($p->amount ?? 0);
+                    if ($price <= 0 && $p->ticket_id) {
+                        $ev = Event::select(['id','harga'])->find($p->ticket_id);
+                        if ($ev && $ev->harga) {
+                            $price = (float) $ev->harga;
+                        }
                     }
+                    if ($price > 0) {
+                        $calc = ($price - $fixedFee) - ($price * $percentFee);
+                        if (is_finite($calc)) {
+                            $newFinal = (int) round($calc);
+                        }
+                    }
+                } else {
+                    // Inactive participant: force zero
+                    $newFinal = 0;
                 }
 
-                // Testing email forces zero
+                // Testing email forces zero regardless of status
                 $email = strtolower(trim((string) ($p->email ?? '')));
                 $forceZero = false;
                 if ($email !== '' && in_array($email, $excludedEmails, true)) {

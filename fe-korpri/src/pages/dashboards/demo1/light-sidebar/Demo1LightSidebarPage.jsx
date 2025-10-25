@@ -27,7 +27,7 @@ const Demo1LightSidebarPage = () => {
     setIncomeLoading(true);
     Promise.all([
       axios.get(`${API_URL}/total-income`),
-      axios.get(`${API_URL}/total-final-income`),
+      axios.get(`${API_URL}/total-final-income-participants`),
     ])
       .then(([res1, res2]) => {
         if (ignore) return;

@@ -72,11 +72,12 @@ class PromoCodeApplyController extends Controller
         // Additional business rules
         $baseAmount = (float) $data['base_amount'];
         $qty = (int) ($data['quantity'] ?? 1);
-        if (!is_null($promo->min_purchase) && $baseAmount < (float) $promo->min_purchase) {
+        // min_purchase and max_purchase are interpreted as ticket count limits
+        if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
             return response()->json([
                 'valid' => false,
                 'reason' => 'min_purchase_not_met',
-                'required_min_purchase' => (float) $promo->min_purchase,
+                'required_min_purchase' => (int) $promo->min_purchase,
                 'discount_type' => $promo->discount_type,
                 'amount' => (float) $promo->amount,
                 'expires_at' => optional($promo->expires_at)->toDateTimeString(),
@@ -138,11 +139,12 @@ class PromoCodeApplyController extends Controller
             }
             $baseAmount = (float) $data['base_amount'];
             $qty = (int) ($data['quantity'] ?? 1);
-            if (!is_null($promo->min_purchase) && $baseAmount < (float) $promo->min_purchase) {
+            // min_purchase and max_purchase are interpreted as ticket count limits
+            if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
                 return response()->json([
                     'status' => 'error',
                     'reason' => 'min_purchase_not_met',
-                    'required_min_purchase' => (float) $promo->min_purchase,
+                    'required_min_purchase' => (int) $promo->min_purchase,
                 ], 422);
             }
             if (!is_null($promo->max_purchase) && $qty > (int) $promo->max_purchase) {
@@ -154,11 +156,6 @@ class PromoCodeApplyController extends Controller
             }
 
             [$discountValue, $finalAmount] = $this->computeDiscount($promo, $baseAmount);
-
-            if (!is_null($promo->usage_limit)) {
-                $promo->used_count = $promo->used_count + 1;
-            }
-            $promo->save();
 
             return response()->json([
                 'status' => 'ok',

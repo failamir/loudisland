@@ -52,8 +52,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // Promo Codes CRUD
         Route::apiResource('promo-codes', PromoCodeApiController::class);
 
-        // Promo Codes Redeem (protected)
-        Route::post('promo-codes/redeem', [PromoCodeApplyController::class, 'redeem']);
+        // Promo Codes Redeem moved to public routes
 
         // Racepack listing (filterable)
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
@@ -100,8 +99,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     });
 
     // Pendaftar
-    // Promo Codes Validate (public)
+    // Promo Codes Validate & Redeem (public)
     Route::post('promo-codes/validate', [PromoCodeApplyController::class, 'validateCode']);
+    Route::post('promo-codes/redeem', [PromoCodeApplyController::class, 'redeem']);
     Route::post('buy', [PendaftarController::class, 'beliApi'])->name('buy');
     Route::post('myorder', [PendaftarController::class, 'myorder'])->name('myorder');
     Route::post('myticket', [PendaftarController::class, 'myticket'])->name('myticket');
@@ -261,6 +261,20 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $sum = (int) \App\Models\Transaksi::query()
             ->where('status', 'success')
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0)
+            ->sum('final_price');
+        return response()->json([
+            'total_final_price' => $sum,
+        ]);
+    });
+
+    // Total of participants.final_price for active participants excluding testing emails
+    Route::get('total-final-income-participants', function () {
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $sum = (int) \App\Models\Participant::query()
+            ->where('status', '1')
             ->whereNotIn('email', $excluded_emails)
             ->whereNotNull('final_price')
             ->where('final_price', '>', 0)
