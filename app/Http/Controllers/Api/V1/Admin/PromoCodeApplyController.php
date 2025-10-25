@@ -53,7 +53,7 @@ class PromoCodeApplyController extends Controller
         if (!$promo) {
             return response()->json([
                 'valid' => false,
-                'reason' => 'Maaf, kode promo yang Anda masukkan tidak berlaku.',
+                'message' => 'Maaf, kode promo yang Anda masukkan tidak ditemukan.',
             ], 404);
         }
         [$ok, $reason] = $this->isUsable($promo);
@@ -65,7 +65,7 @@ class PromoCodeApplyController extends Controller
                     : $reason);
             return response()->json([
                 'valid' => false,
-                'reason' => $message,
+                'message' => $message,
                 'discount_type' => $promo->discount_type,
                 'amount' => (float) $promo->amount,
                 'expires_at' => optional($promo->expires_at)->toDateTimeString(),
@@ -81,7 +81,7 @@ class PromoCodeApplyController extends Controller
         if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
             return response()->json([
                 'valid' => false,
-                'reason' => 'Promo ini berlaku untuk pembelian minimal ' . (int) $promo->min_purchase . ' tiket.',
+                'message' => 'Promo ini berlaku untuk pembelian minimal ' . (int) $promo->min_purchase . ' tiket.',
                 'required_min_purchase' => (int) $promo->min_purchase,
                 'discount_type' => $promo->discount_type,
                 'amount' => (float) $promo->amount,
@@ -93,7 +93,7 @@ class PromoCodeApplyController extends Controller
         if (!is_null($promo->max_purchase) && $qty > (int) $promo->max_purchase) {
             return response()->json([
                 'valid' => false,
-                'reason' => 'Promo ini tidak berlaku untuk pembelian lebih dari ' . $promo->max_purchase . ' tiket.',
+                'message' => 'Promo ini tidak berlaku untuk pembelian lebih dari ' . $promo->max_purchase . ' tiket.',
                 'max_purchase' => (int) $promo->max_purchase,
                 'discount_type' => $promo->discount_type,
                 'amount' => (float) $promo->amount,
@@ -107,7 +107,7 @@ class PromoCodeApplyController extends Controller
 
         return response()->json([
             'valid' => true,
-            'reason' => null,
+            'message' => null,
             'discount_type' => $promo->discount_type,
             'amount' => (float) $promo->amount,
             'discount_value' => $discountValue,
@@ -132,7 +132,7 @@ class PromoCodeApplyController extends Controller
             if (!$promo) {
                 return response()->json([
                     'status' => 'error',
-                    'reason' => 'Maaf, kode promo yang Anda masukkan tidak berlaku.',
+                    'message' => 'Maaf, kode promo yang Anda masukkan tidak ditemukan.',
                 ], 404);
             }
             [$ok, $reason] = $this->isUsable($promo);
@@ -144,7 +144,7 @@ class PromoCodeApplyController extends Controller
                         : $reason);
                 return response()->json([
                     'status' => 'error',
-                    'reason' => $message,
+                    'message' => $message,
                 ], 422);
             }
             $baseAmount = (float) $data['base_amount'];
@@ -153,14 +153,14 @@ class PromoCodeApplyController extends Controller
             if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
                 return response()->json([
                     'status' => 'error',
-                    'reason' => 'Promo ini berlaku untuk pembelian minimal ' . (int) $promo->min_purchase . ' tiket.',
+                    'message' => 'Promo ini berlaku untuk pembelian minimal ' . (int) $promo->min_purchase . ' tiket.',
                     'required_min_purchase' => (int) $promo->min_purchase,
                 ], 422);
             }
             if (!is_null($promo->max_purchase) && $qty > (int) $promo->max_purchase) {
                 return response()->json([
                     'status' => 'error',
-                    'reason' => 'Promo ini tidak berlaku untuk pembelian lebih dari ' . $promo->max_purchase . ' tiket.',
+                    'message' => 'Promo ini tidak berlaku untuk pembelian lebih dari ' . $promo->max_purchase . ' tiket.',
                     'max_purchase' => (int) $promo->max_purchase,
                 ], 422);
             }
