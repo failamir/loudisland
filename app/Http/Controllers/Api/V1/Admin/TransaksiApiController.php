@@ -275,4 +275,79 @@ class TransaksiApiController extends Controller
             'mode' => $mode,
         ]);
     }
+
+    /**
+     * Backfill participants.final_price where null/empty/zero using per-participant formula.
+     * POST /api/v1/participants/backfill-final-price
+     * Query/body options:
+     * - all=true to bypass tenant scopes
+     * - with_trashed=true to include soft-deleted participants
+     */
+    public function backfillParticipantsFinalPrice(Request $request)
+    {
+        $fixedFee = 5000;
+        $percentFee = 0.016;
+
+        $all = (bool) $request->boolean('all', $request->query('all', false));
+        $includeTrashed = (bool) $request->boolean('with_trashed', $request->query('with_trashed', false));
+
+        $excludedEmails = array_filter(array_map(function ($e) {
+            return strtolower(trim($e));
+        }, explode(',', env('EMAIL_TESTING', ''))));
+
+        $q = $all ? Participant::withoutGlobalScopes() : Participant::query();
+        if ($includeTrashed) {
+            $q->withTrashed();
+        }
+        $q = $q->where(function ($w) {
+            $w->whereNull('final_price')
+              ->orWhere('final_price', '=', '')
+              ->orWhere('final_price', 0);
+        });
+
+        $total = (clone $q)->count();
+        $updated = 0;
+
+        $q->orderBy('id')->chunk(500, function ($rows) use (&$updated, $fixedFee, $percentFee, $excludedEmails) {
+            foreach ($rows as $p) {
+                // Determine base ticket price per participant
+                $price = (float) ($p->amount ?? 0);
+                if ($price <= 0 && $p->ticket_id) {
+                    $ev = Event::select(['id','harga'])->find($p->ticket_id);
+                    if ($ev && $ev->harga) {
+                        $price = (float) $ev->harga;
+                    }
+                }
+
+                // Compute final per participant
+                $newFinal = null;
+                if ($price > 0) {
+                    $calc = ($price - $fixedFee) - ($price * $percentFee);
+                    if (is_finite($calc)) {
+                        $newFinal = (int) round($calc);
+                    }
+                }
+
+                // Testing email forces zero
+                $email = strtolower(trim((string) ($p->email ?? '')));
+                $forceZero = false;
+                if ($email !== '' && in_array($email, $excludedEmails, true)) {
+                    $newFinal = 0;
+                    $forceZero = true;
+                }
+
+                if ($newFinal !== null && ($newFinal > 0 || $forceZero)) {
+                    $p->final_price = $newFinal;
+                    $p->save();
+                    $updated++;
+                }
+            }
+        });
+
+        return response()->json([
+            'message' => 'Participants backfill completed',
+            'total_candidates' => (int) $total,
+            'updated' => (int) $updated,
+        ]);
+    }
 }
