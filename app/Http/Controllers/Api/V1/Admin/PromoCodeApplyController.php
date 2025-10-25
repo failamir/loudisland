@@ -46,6 +46,7 @@ class PromoCodeApplyController extends Controller
         $data = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'base_amount' => ['required', 'numeric', 'min:0'],
+            'quantity' => ['nullable', 'integer', 'min:1'],
         ]);
 
         $promo = $this->findByCode($data['code']);
@@ -64,10 +65,39 @@ class PromoCodeApplyController extends Controller
                 'amount' => (float) $promo->amount,
                 'expires_at' => optional($promo->expires_at)->toDateTimeString(),
                 'usage_left' => is_null($promo->usage_limit) ? null : max(0, $promo->usage_limit - $promo->used_count),
+                'tnc' => $promo->tnc,
             ]);
         }
 
-        [$discountValue, $finalAmount] = $this->computeDiscount($promo, (float) $data['base_amount']);
+        // Additional business rules
+        $baseAmount = (float) $data['base_amount'];
+        $qty = (int) ($data['quantity'] ?? 1);
+        if (!is_null($promo->min_purchase) && $baseAmount < (float) $promo->min_purchase) {
+            return response()->json([
+                'valid' => false,
+                'reason' => 'min_purchase_not_met',
+                'required_min_purchase' => (float) $promo->min_purchase,
+                'discount_type' => $promo->discount_type,
+                'amount' => (float) $promo->amount,
+                'expires_at' => optional($promo->expires_at)->toDateTimeString(),
+                'usage_left' => is_null($promo->usage_limit) ? null : max(0, $promo->usage_limit - $promo->used_count),
+                'tnc' => $promo->tnc,
+            ]);
+        }
+        if (!is_null($promo->max_purchase) && $qty > (int) $promo->max_purchase) {
+            return response()->json([
+                'valid' => false,
+                'reason' => 'exceed_max_purchase',
+                'max_purchase' => (int) $promo->max_purchase,
+                'discount_type' => $promo->discount_type,
+                'amount' => (float) $promo->amount,
+                'expires_at' => optional($promo->expires_at)->toDateTimeString(),
+                'usage_left' => is_null($promo->usage_limit) ? null : max(0, $promo->usage_limit - $promo->used_count),
+                'tnc' => $promo->tnc,
+            ]);
+        }
+
+        [$discountValue, $finalAmount] = $this->computeDiscount($promo, $baseAmount);
 
         return response()->json([
             'valid' => true,
@@ -78,6 +108,7 @@ class PromoCodeApplyController extends Controller
             'final_amount' => $finalAmount,
             'expires_at' => optional($promo->expires_at)->toDateTimeString(),
             'usage_left' => is_null($promo->usage_limit) ? null : max(0, $promo->usage_limit - $promo->used_count),
+            'tnc' => $promo->tnc,
         ]);
     }
 
@@ -87,6 +118,7 @@ class PromoCodeApplyController extends Controller
             'code' => ['required', 'string', 'max:100'],
             'base_amount' => ['required', 'numeric', 'min:0'],
             'order_id' => ['nullable', 'integer'],
+            'quantity' => ['nullable', 'integer', 'min:1'],
         ]);
 
         return DB::transaction(function () use ($data) {
@@ -94,8 +126,8 @@ class PromoCodeApplyController extends Controller
             if (!$promo) {
                 return response()->json([
                     'status' => 'error',
-                    'reason' => 'promo_not_found',
-                ], 400);
+                    'reason' => 'not_found',
+                ], 404);
             }
             [$ok, $reason] = $this->isUsable($promo);
             if (!$ok) {
@@ -104,8 +136,24 @@ class PromoCodeApplyController extends Controller
                     'reason' => $reason,
                 ], 422);
             }
+            $baseAmount = (float) $data['base_amount'];
+            $qty = (int) ($data['quantity'] ?? 1);
+            if (!is_null($promo->min_purchase) && $baseAmount < (float) $promo->min_purchase) {
+                return response()->json([
+                    'status' => 'error',
+                    'reason' => 'min_purchase_not_met',
+                    'required_min_purchase' => (float) $promo->min_purchase,
+                ], 422);
+            }
+            if (!is_null($promo->max_purchase) && $qty > (int) $promo->max_purchase) {
+                return response()->json([
+                    'status' => 'error',
+                    'reason' => 'exceed_max_purchase',
+                    'max_purchase' => (int) $promo->max_purchase,
+                ], 422);
+            }
 
-            [$discountValue, $finalAmount] = $this->computeDiscount($promo, (float) $data['base_amount']);
+            [$discountValue, $finalAmount] = $this->computeDiscount($promo, $baseAmount);
 
             if (!is_null($promo->usage_limit)) {
                 $promo->used_count = $promo->used_count + 1;

@@ -36,6 +36,9 @@ class PromoCodeApiController extends Controller
             'usage_limit' => ['nullable', 'integer', 'min:0'],
             'active' => ['boolean'],
             'metadata' => ['nullable', 'array'],
+            'tnc' => ['nullable', 'string'],
+            'min_purchase' => ['nullable', 'numeric', 'min:0'],
+            'max_purchase' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $promo = PromoCode::create($validated);
@@ -53,6 +56,9 @@ class PromoCodeApiController extends Controller
             'usage_limit' => ['nullable', 'integer', 'min:0'],
             'active' => ['boolean'],
             'metadata' => ['nullable', 'array'],
+            'tnc' => ['nullable', 'string'],
+            'min_purchase' => ['nullable', 'numeric', 'min:0'],
+            'max_purchase' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $promo_code->update($validated);

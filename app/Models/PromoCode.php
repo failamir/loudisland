@@ -18,6 +18,9 @@ class PromoCode extends Model
         'used_count',
         'active',
         'metadata',
+        'tnc',
+        'min_purchase',
+        'max_purchase',
     ];
 
     protected $casts = [
@@ -27,5 +30,7 @@ class PromoCode extends Model
         'used_count' => 'integer',
         'active' => 'boolean',
         'metadata' => 'array',
+        'min_purchase' => 'float',
+        'max_purchase' => 'integer',
     ];
 }
