@@ -214,44 +214,23 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     // Admin utilities
     Route::get('total-income', function () {
-        // $testingEmail = env('EMAIL_TESTING');
-
-        // $query = \App\Models\Transaksi::query()
-        //     ->where('status', 'success')
-        //     ->whereHas('participants');
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $query = \App\Models\Participant::query()
             ->where('status', '1')
-            ->where('amount', '>', 100000)
-            ->whereNotIn('email', $excluded_emails);
-        // ->whereHas('participants');
-
-        //where status in participant table = 1
-        // $query->whereHas('participants', function ($q) {
-        //     $q->where('status', '1');
-        // });
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0);
 
         $count = (clone $query)->count();
-        // print('total_tiket: ');
-        // var_dump($count);
-        $grossSum = (int) (clone $query)->sum('amount');
-        // print('total_masuk: ');
-        // var_dump($grossSum);
-        $profit = (int) ($count * 5000) + (floor($grossSum * 0.02));
-        // print('profit: ');
-        // var_dump($profit);
-        $netIncome = max(0, $grossSum - $profit);
-        // print('netIncome : ');
-        // var_dump($netIncome);
-        // $netIncome = $netIncome - 8119;
+        $sum = (int) (clone $query)->sum('final_price');
 
         return response()->json([
-            'total_income' => $netIncome,
+            'total_income' => $sum,
             'summary' => [
-                'gross_sum' => $grossSum,
+                'gross_sum' => $sum,
                 'count' => $count,
-                'profit' => $profit,
-                'net_income' => $netIncome,
+                'profit' => 0,
+                'net_income' => $sum,
             ],
         ]);
     });

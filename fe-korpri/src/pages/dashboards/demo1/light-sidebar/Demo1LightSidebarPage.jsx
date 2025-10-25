@@ -59,7 +59,7 @@ const Demo1LightSidebarPage = () => {
               </div> */}
 
           <div className="flex items-center gap-2 me-2">
-                <span className="text-gray-600 text-sm">Final Income</span>
+            <span className="text-gray-600 text-sm">Total Income</span>
                 <span className="font-extrabold text-lg badge badge-light-primary">
                   {incomeLoading ? 'Loading…' : new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(totalFinalIncome ?? 0)}
                 </span>

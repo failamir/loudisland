@@ -2071,7 +2071,9 @@ class PendaftarController extends Controller
                     Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
                 }
 
-                // update status to success
+                if ((int) $trx->notifikasi === 0) {
+                    $this->computeAndPersistFinalPrices($trx, $participants);
+                }
                 $trx->update(['notifikasi' => 1]);
             } catch (\Throwable $e) {
                 // If sending email fails for this participant, log and continue with the next
@@ -2082,6 +2084,54 @@ class PendaftarController extends Controller
                 continue;
             }
         }
+    }
+
+    protected function computeAndPersistFinalPrices(Transaksi $trx, $participants): void
+    {
+        $excludedEmails = array_filter(array_map(function ($e) {
+            return strtolower(trim($e));
+        }, explode(',', env('EMAIL_TESTING', ''))));
+
+        $sumFinal = 0;
+        foreach ($participants as $pp) {
+            $statusVal = (string) ($pp->status ?? '0');
+            $newFinal = 0;
+            if ($statusVal === '1') {
+                $price = (float) ($pp->amount ?? 0);
+                if ($price <= 0 && $pp->ticket_id) {
+                    $ev = Event::select(['id','harga'])->find($pp->ticket_id);
+                    if ($ev && $ev->harga) {
+                        $price = (float) $ev->harga;
+                    }
+                }
+                if ($price > 0) {
+                    $calc = ($price - 5000) - ($price * 0.016);
+                    if (is_finite($calc)) {
+                        $newFinal = (int) round($calc);
+                    }
+                }
+            } else {
+                $newFinal = 0;
+            }
+            $pEmail = strtolower(trim((string) ($pp->email ?? '')));
+            if ($pEmail !== '' && in_array($pEmail, $excludedEmails, true)) {
+                $newFinal = 0;
+            }
+            if ((int)($pp->final_price ?? 0) !== (int)$newFinal) {
+                $pp->final_price = $newFinal;
+                $pp->save();
+            }
+            $sumFinal += $newFinal;
+        }
+
+        $trxEmail = strtolower(trim((string) ($trx->email ?? '')));
+        if ($trxEmail !== '' && in_array($trxEmail, $excludedEmails, true)) {
+            $sumFinal = 0;
+        }
+
+        $trx->update([
+            'final_price' => (int) $sumFinal,
+        ]);
     }
 
     protected function sendWhatsapp(string $phone, string $text, string $url): void
