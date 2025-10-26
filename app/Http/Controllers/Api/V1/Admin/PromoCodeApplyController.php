@@ -62,7 +62,9 @@ class PromoCodeApplyController extends Controller
                 ? 'Maaf, kode promo ini belum dapat digunakan saat ini.'
                 : ($reason === 'expired'
                     ? ("Masa berlaku kode '" . $promo->code . "' telah habis.")
-                    : $reason);
+                    : ($reason === 'usage_limit_reached'
+                        ? 'Maaf, kuota penggunaan kode promo ini telah habis.'
+                        : $reason));
             return response()->json([
                 'valid' => false,
                 'message' => $message,
@@ -141,7 +143,9 @@ class PromoCodeApplyController extends Controller
                     ? 'Maaf, kode promo ini belum dapat digunakan saat ini.'
                     : ($reason === 'expired'
                         ? ("Masa berlaku kode '" . $promo->code . "' telah habis.")
-                        : $reason);
+                        : ($reason === 'usage_limit_reached'
+                            ? 'Maaf, kuota penggunaan kode promo ini telah habis.'
+                            : $reason));
                 return response()->json([
                     'status' => 'error',
                     'message' => $message,
