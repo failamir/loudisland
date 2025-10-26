@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApiController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApplyController;
+use App\Http\Controllers\Api\V1\Admin\PasswordResetApiController;
 
 // use Illuminate\Http\Client\Http;
 // Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin', 'middleware' => ['auth:sanctum']], function () {
@@ -33,6 +34,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::post('login', [AuthController::class, 'login'])->name('auth.login');
     Route::post('refresh', [AuthController::class, 'refresh'])->name('auth.refresh');
     Route::post('get-token', [AuthController::class, 'getToken'])->name('auth.getToken');
+    // Password reset (public)
+    Route::post('password/forgot', [PasswordResetApiController::class, 'sendResetLink'])->name('auth.password.forgot');
+    Route::post('password/reset', [PasswordResetApiController::class, 'resetPassword'])->name('auth.password.reset');
     Route::middleware('auth:api')->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         // Users API for FE admin
