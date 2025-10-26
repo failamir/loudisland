@@ -1883,12 +1883,29 @@ class PendaftarController extends Controller
         //     'trx_id' => $trx->id,
         //     'invoice' => $trx->invoice,
         // ]);
-        // Check if participants already exist in table
-
-        // Skip jika sudah pernah kirim notifikasi
-        if ($trx->notifikasi == 1) {
-            return;
+        // Atomically claim handling to avoid duplicate sends from repeated callbacks
+        $claimed = Transaksi::where('id', $trx->id)->where('notifikasi', 0)->update(['notifikasi' => 1]);
+        if ($claimed === 0) {
+            return; // another process already handled notifications
         }
+
+        // Refresh model to reflect claimed state
+        $trx = $trx->fresh();
+
+        // Increment promo usage exactly once after successful claim
+        if (!empty($trx->promo_code_id)) {
+            try {
+                $promo = \App\Models\PromoCode::find($trx->promo_code_id);
+                if ($promo) {
+                    $promo->used_count = (int)($promo->used_count ?? 0) + 1;
+                    $promo->save();
+                }
+            } catch (\Throwable $e) {
+                // silent fail
+            }
+        }
+
+        // Check if participants already exist in table
 
         $participants = $trx->participants();
         // \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [
@@ -2020,6 +2037,13 @@ class PendaftarController extends Controller
             $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
         }
 
+        // Recompute and persist final prices once
+        try {
+            $this->computeAndPersistFinalPrices($trx, $participants);
+        } catch (\Throwable $e) {
+            // ignore compute failures
+        }
+
         // Send individual message to each participant with only their own data
         foreach ($participants as $p) {
             if (empty($p->phone)) {
@@ -2068,20 +2092,10 @@ class PendaftarController extends Controller
                             'status' => $trx->status,
                         ],
                     ];
-                    Mail::to($recipients)->send(new WhatsAppNotification('paymentSuccess', $emailData));
+                    Mail::to($recipients)->send(new \App\Mail\WhatsAppNotification('paymentSuccess', $emailData));
                 }
-
-                if ((int) $trx->notifikasi === 0) {
-                    $this->computeAndPersistFinalPrices($trx, $participants);
-                }
-                $trx->update(['notifikasi' => 1]);
             } catch (\Throwable $e) {
-                // If sending email fails for this participant, log and continue with the next
-                // \Illuminate\Support\Facades\Log::warning('Failed to send payment success email notification', [
-                //     'error' => $e->getMessage(),
-                //     'participant' => $p->participant_id ?? null,
-                // ]);
-                continue;
+                // ignore email send failure per participant
             }
         }
     }
