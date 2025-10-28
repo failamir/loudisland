@@ -233,7 +233,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
             'summary' => [
                 'gross_sum' => $sum,
                 'count' => $count,
-                'profit' => 0,
+                'profit' => (int) ($count * 5000) + (int) floor($sum * 0.02),
                 'net_income' => $sum,
             ],
         ]);
