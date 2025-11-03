@@ -149,6 +149,14 @@ const TransactionsListPage = () => {
         meta: { headerClassName: 'w-0' },
       },
       {
+        accessorKey: 'created_at',
+        id: 'created_at',
+        header: ({ column }) => <DataGridColumnHeader title="Tanggal" column={column} />,
+        enableSorting: true,
+        cell: ({ row }) => formatIndoDateTime(row.original.created_at),
+        meta: { headerClassName: 'min-w-[180px]' },
+      },
+      {
         accessorKey: 'invoice',
         id: 'invoice',
         header: ({ column }) => (
@@ -166,12 +174,47 @@ const TransactionsListPage = () => {
         meta: { headerClassName: 'min-w-[160px]' },
       },
       {
+        accessorFn: (row) => row,
+        id: 'nama',
+        header: ({ column }) => <DataGridColumnHeader title="Nama Pemesan" column={column} />,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const name = row.original?.peserta?.name || row.original?.created_by?.name;
+          return name ? String(name).toUpperCase() : '-';
+        },
+        meta: { headerClassName: 'min-w-[200px]' },
+      },
+      {
         accessorKey: 'amount',
         id: 'amount',
-        header: ({ column }) => <DataGridColumnHeader title="Jumlah" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Total Harga" column={column} />,
         enableSorting: true,
         cell: ({ row }) => new Intl.NumberFormat('id-ID').format(row.original.amount || 0),
         meta: { headerClassName: 'min-w-[140px]' },
+      },
+      {
+        accessorFn: (row) => row?.amount ?? 0,
+        id: 'ppn',
+        header: ({ column }) => <DataGridColumnHeader title="PPN (11%)" column={column} />,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const amt = Number(row.original?.amount || 0);
+          const ppn = Math.round(amt * 0.11);
+          return new Intl.NumberFormat('id-ID').format(ppn);
+        },
+        meta: { headerClassName: 'min-w-[140px]' },
+      },
+      {
+        accessorFn: (row) => row?.amount ?? 0,
+        id: 'total_bayar',
+        header: ({ column }) => <DataGridColumnHeader title="Total Bayar" column={column} />,
+        enableSorting: false,
+        cell: ({ row }) => {
+          const amt = Number(row.original?.amount || 0);
+          const total = Math.round(amt * 1.11);
+          return new Intl.NumberFormat('id-ID').format(total);
+        },
+        meta: { headerClassName: 'min-w-[160px]' },
       },
       {
         accessorKey: 'status',
@@ -191,47 +234,6 @@ const TransactionsListPage = () => {
           return <span className={`badge ${cls} badge-outline rounded-[30px]`}>{row.original.status || '-'}</span>;
         },
         meta: { headerClassName: 'min-w-[140px]' },
-      },
-      {
-        accessorFn: (row) => row,
-        id: 'nama',
-        header: ({ column }) => <DataGridColumnHeader title="Nama" column={column} />,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const name = row.original?.peserta?.name || row.original?.created_by?.name;
-          return name ? String(name).toUpperCase() : '-';
-        },
-        meta: { headerClassName: 'min-w-[200px]' },
-      },
-      {
-        accessorFn: (row) => row?.peserta?.region || row?.peserta?.province || '',
-        id: 'province',
-        header: ({ column }) => <DataGridColumnHeader title="Provinsi" column={column} />,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const prov = row.original?.peserta?.region || row.original?.peserta?.province;
-          return prov ? String(prov).toUpperCase() : '-';
-        },
-        meta: { headerClassName: 'min-w-[160px]' },
-      },
-      {
-        accessorFn: (row) => row?.peserta?.city || '',
-        id: 'city',
-        header: ({ column }) => <DataGridColumnHeader title="Kota/Kab" column={column} />,
-        enableSorting: false,
-        cell: ({ row }) => {
-          const city = row.original?.peserta?.city;
-          return city ? String(city).toUpperCase() : '-';
-        },
-        meta: { headerClassName: 'min-w-[160px]' },
-      },
-      {
-        accessorKey: 'created_at',
-        id: 'created_at',
-        header: ({ column }) => <DataGridColumnHeader title="Tanggal" column={column} />,
-        enableSorting: true,
-        cell: ({ row }) => formatIndoDateTime(row.original.created_at),
-        meta: { headerClassName: 'min-w-[180px]' },
       },
       {
         accessorKey: 'actions',
