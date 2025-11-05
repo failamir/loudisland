@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\PromoCode;
+use App\Models\ReferralCode;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
@@ -132,10 +133,35 @@ class PromoCodeApplyController extends Controller
         return DB::transaction(function () use ($data) {
             $promo = $this->findByCode($data['code']);
             if (!$promo) {
+                // Not a promo? Try referral code in the same endpoint
+                $refCode = strtoupper(trim($data['code']));
+                $ref = ReferralCode::whereRaw('UPPER(code) = ?', [$refCode])->first();
+                if (!$ref) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Maaf, kode yang Anda masukkan tidak ditemukan.',
+                    ], 404);
+                }
+
+                $now = now();
+                $inWindow = (!$ref->valid_from || $now->gte($ref->valid_from)) && (!$ref->valid_to || $now->lte($ref->valid_to));
+                $underLimit = (is_null($ref->usage_limit) || (int)$ref->used_count < (int)$ref->usage_limit);
+                if (!$ref->active || !$inWindow || !$underLimit) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => !$ref->active ? 'Kode referal tidak aktif.' : (!$inWindow ? 'Masa berlaku kode referal telah habis atau belum dimulai.' : 'Kuota pemakaian kode referal telah habis.'),
+                    ], 422);
+                }
+
+                // Referral does not change price; FE should still pass this code to order
+                $baseAmount = (float) $data['base_amount'];
                 return response()->json([
-                    'status' => 'error',
-                    'message' => 'Maaf, kode promo yang Anda masukkan tidak ditemukan.',
-                ], 404);
+                    'status' => 'ok',
+                    'type' => 'referral',
+                    'promo_code_id' => $ref->code,
+                    'discount_value' => 0,
+                    'final_amount' => $baseAmount,
+                ]);
             }
             [$ok, $reason] = $this->isUsable($promo);
             if (!$ok) {
@@ -173,6 +199,7 @@ class PromoCodeApplyController extends Controller
 
             return response()->json([
                 'status' => 'ok',
+                'type' => 'promo',
                 'promo_code_id' => $promo->id,
                 'discount_value' => $discountValue,
                 'final_amount' => $finalAmount,

@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\Admin\OrderController;
 use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApiController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApplyController;
+use App\Http\Controllers\Api\V1\Admin\ReferralCodeController;
 use App\Http\Controllers\Api\V1\Admin\PasswordResetApiController;
 
 // use Illuminate\Http\Client\Http;
@@ -100,12 +101,22 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::patch('withdrawals/{withdrawal}/status', [WithdrawalController::class, 'updateStatus'])->name('withdrawals.updateStatus');
 
         Route::post('logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+        // Referral Codes (user-owned)
+        Route::get('referral-codes', [ReferralCodeController::class, 'index']);
+        Route::post('referral-codes', [ReferralCodeController::class, 'store']);
+        Route::patch('referral-codes/{id}', [ReferralCodeController::class, 'update']);
+        Route::delete('referral-codes/{id}', [ReferralCodeController::class, 'destroy']);
+        // Referral balance summary for current user
+        Route::get('referral/balance', [ReferralCodeController::class, 'balance']);
     });
 
     // Pendaftar
     // Promo Codes Validate & Redeem (public)
     Route::post('promo-codes/validate', [PromoCodeApplyController::class, 'validateCode']);
     Route::post('promo-codes/redeem', [PromoCodeApplyController::class, 'redeem']);
+    // Referral Codes Validate (public)
+    Route::post('referral-codes/validate', [ReferralCodeController::class, 'validatePublic']);
     Route::post('buy', [PendaftarController::class, 'beliApi'])->name('buy');
     Route::post('myorder', [PendaftarController::class, 'myorder'])->name('myorder');
     Route::post('myticket', [PendaftarController::class, 'myticket'])->name('myticket');
