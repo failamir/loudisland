@@ -47,7 +47,7 @@ class PromoCodeApplyController extends Controller
         $data = $request->validate([
             'code' => ['required', 'string', 'max:100'],
             'base_amount' => ['required', 'numeric', 'min:0'],
-            'quantity' => ['nullable', 'integer', 'min:1'],
+            'quantity' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $promo = $this->findByCode($data['code']);
