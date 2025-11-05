@@ -343,17 +343,18 @@ class AuthController extends Controller
             }
         }
 
-        // Prepare user data, excluding sensitive fields
-        $userPayload = collect($user)->except(['password'])->all();
+        $user->load(['roles' => function ($q) {
+            $q->select('roles.id', 'title');
+        }]);
+
+        $userArray = $user->toArray();
+        $userArray['roles'] = $user->roles->map(function ($r) {
+            return ['id' => $r->id, 'title' => $r->title];
+        })->values();
+        $userArray['role'] = optional($user->roles->first())->title;
 
         return response()->json(
-            // 'message' => 'Current user fetched successfully',
-            // 'firebaseUid' => $firebaseUid,
-            // 'firebaseIdToken' => $firebaseIdToken,
-            // 'firebaseUser' => $firebaseUser,
-            // 'firebaseError' => $firebaseError,
-            // 'data' => 
-            $userPayload,
+            $userArray,
         );
     }
 
