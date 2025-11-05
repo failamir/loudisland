@@ -1873,11 +1873,12 @@ class PendaftarController extends Controller
         }
 
         // Jalankan postPaymentSuccessActions hanya jika status akhir = success
-        if ($trx->status === 'success') {
-            $this->postPaymentSuccessActions($trx);
+        if ($trx->status == 'success') {
+            $notif = $this->postPaymentSuccessActions($trx);
+            if ($notif) {
+                return response()->json(['message' => 'OK']);
+            }
         }
-
-        return response()->json(['message' => 'OK']);
     }
 
     /**
