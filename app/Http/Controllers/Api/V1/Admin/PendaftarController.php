@@ -1873,11 +1873,15 @@ class PendaftarController extends Controller
         }
 
         // Jalankan postPaymentSuccessActions hanya jika status akhir = success
-        if ($trx->status === 'success') {
-            $this->postPaymentSuccessActions($trx);
+        if ($trx->status == 'success') {
+            $notif = $this->postPaymentSuccessActions($trx);
+            if($notif){
+                return response()->json(['message' => 'OK']);
+            }
+            
         }
 
-        return response()->json(['message' => 'OK']);
+        
     }
 
     /**
@@ -1886,6 +1890,7 @@ class PendaftarController extends Controller
      */
     protected function postPaymentSuccessActions(Transaksi $trx): void
     {
+        // echo 123;die;
         // \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
         //     'trx_id' => $trx->id,
         //     'invoice' => $trx->invoice,
@@ -1919,20 +1924,24 @@ class PendaftarController extends Controller
         if ($trx->type === 'referral' && !empty($trx->promo_code_id)) {
             try {
                 $owner = \App\Models\ReferralCode::find($trx->promo_code_id);
+                // dd($owner);
                 if ($owner) {
                     $refCode = strtoupper(trim((string) ($owner->code ?? '')));
                     $now = now();
                     $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
+                    // dd($inWindow);
                     $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
+                    // dd($underLimit);
                     if ($owner->active && $inWindow && $underLimit) {
                         // Insert referral log and credit
-                        \App\Models\Referal::create([
+                        $candra = \App\Models\Referal::create([
                             'user_id_referral' => (int) $owner->user_id,
                             'kode' => $refCode,
                             'value' => 5000,
                             'tanggal' => now(),
                             'email_pemesan' => $trx->email ?? null,
                         ]);
+                        // dd($candra);
                         $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
                         $owner->save();
                         $referralHandled = true;
