@@ -35,6 +35,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\WhatsAppNotification;
 use App\Models\PromoCode;
+use App\Models\Referal;
 
 class PendaftarController extends Controller
 {
@@ -1676,16 +1677,20 @@ class PendaftarController extends Controller
             // dd($itemDetails);
 
             $total_payment = $amount;
-            // dd($total_payment);
-            $promo_code_id = $request->promoCodeId ?? null;
-            // dd($promo_code_id);
-            $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
-            if ($discountType == 'fixed') {
-                $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
-                $discount = $discountAmount;
-            } else {
-                $discountAmount = PromoCode::find($promo_code_id)->amount ?? null;
-                $discount = $total_payment * ($discountAmount / 100);
+            // determine type and promo/referral id from FE (supports snake_case and camelCase)
+            $type = $request->input('type', 'promo');
+            $promo_code_id = $request->input('promo_code_id') ?? $request->input('promoCodeId');
+            // compute discount only for promo type with valid promo_code_id
+            $discount = 0;
+            if ($type === 'promo' && !empty($promo_code_id)) {
+                $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
+                if ($discountType == 'fixed') {
+                    $discountAmount = PromoCode::find($promo_code_id)->amount ?? 0;
+                    $discount = (float) $discountAmount;
+                } else {
+                    $discountAmount = PromoCode::find($promo_code_id)->amount ?? 0;
+                    $discount = (float) $total_payment * ((float) $discountAmount / 100);
+                }
             }
 
             // Apply discount proportionally to each ticket item in item_details so prices are net of discount
@@ -1771,10 +1776,12 @@ class PendaftarController extends Controller
                 'item_details' => $itemDetails,
             ];
 
+            // $type is already determined above
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
             $updateTrx = Transaksi::where('invoice', $no_invoice)->update([
                 'payment_url' => $paymentUrl,
+                'type' => $type,
                 'promo_code_id' => $promo_code_id,
                 'discount' => $discount,
                 'final_price' => $final_price,
@@ -1892,8 +1899,8 @@ class PendaftarController extends Controller
         // Refresh model to reflect claimed state
         $trx = $trx->fresh();
 
-        // Increment promo usage exactly once after successful claim
-        if (!empty($trx->promo_code_id)) {
+        // Increment promo usage exactly once after successful claim (only when type=promo)
+        if ($trx->type === 'promo' && !empty($trx->promo_code_id)) {
             try {
                 $promo = \App\Models\PromoCode::find($trx->promo_code_id);
                 if ($promo) {
@@ -1906,6 +1913,77 @@ class PendaftarController extends Controller
         }
 
         // Check if participants already exist in table
+
+        // Handle referral by promo_code_id if type=referral, otherwise fallback to note-based referral code
+        $referralHandled = false;
+        if ($trx->type === 'referral' && !empty($trx->promo_code_id)) {
+            try {
+                $owner = \App\Models\ReferralCode::find($trx->promo_code_id);
+                if ($owner) {
+                    $refCode = strtoupper(trim((string) ($owner->code ?? '')));
+                    $now = now();
+                    $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
+                    $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
+                    if ($owner->active && $inWindow && $underLimit) {
+                        // Insert referral log and credit
+                        \App\Models\Referal::create([
+                            'user_id_referral' => (int) $owner->user_id,
+                            'kode' => $refCode,
+                            'value' => 5000,
+                            'tanggal' => now(),
+                            'email_pemesan' => $trx->email ?? null,
+                        ]);
+                        $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
+                        $owner->save();
+                        $referralHandled = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                // silent
+            }
+        }
+
+        if (!$referralHandled) {
+            // Create referral record once if referral code exists in transaction note
+            try {
+                $refCode = strtoupper(trim((string) ($trx->note ?? '')));
+                if ($refCode !== '') {
+                    // Try to resolve owner via referral_codes mapping (case-insensitive)
+                    $owner = \App\Models\ReferralCode::whereRaw('UPPER(code) = ?', [$refCode])->first();
+                    $value = 0;
+                    $ownerId = null;
+                    $canCredit = false;
+                    if ($owner) {
+                        // Validate active, date window, and usage limit
+                        $now = now();
+                        $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
+                        $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
+                        if ($owner->active && $inWindow && $underLimit) {
+                            $canCredit = true;
+                            $ownerId = (int) $owner->user_id;
+                            $value = 5000; // fixed reward per successful usage
+                        }
+                    }
+
+                    // Insert referral log
+                    \App\Models\Referal::create([
+                        'user_id_referral' => $ownerId,
+                        'kode' => $refCode,
+                        'value' => $value,
+                        'tanggal' => now(),
+                        'email_pemesan' => $trx->email ?? null,
+                    ]);
+
+                    // Increment usage count if credited
+                    if ($canCredit && $owner) {
+                        $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
+                        $owner->save();
+                    }
+                }
+            } catch (\Throwable $e) {
+                // silent fail to avoid breaking success flow
+            }
+        }
 
         $participants = $trx->participants();
         // \Illuminate\Support\Facades\Log::debug('participants in table (before backfill)', [

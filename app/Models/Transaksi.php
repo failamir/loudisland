@@ -49,6 +49,7 @@ class Transaksi extends Model implements HasMedia
         'final_price',
         'discount',
         'promo_code_id',
+        'type',
         'note',
         'snap_token',
         'status',
