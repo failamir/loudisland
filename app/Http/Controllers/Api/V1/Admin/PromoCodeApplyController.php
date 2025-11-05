@@ -158,7 +158,7 @@ class PromoCodeApplyController extends Controller
                 return response()->json([
                     'status' => 'ok',
                     'type' => 'referral',
-                    'promo_code_id' => $ref->code,
+                    'promo_code_id' => $ref->id,
                     'discount_value' => 0,
                     'final_amount' => $baseAmount,
                 ]);
