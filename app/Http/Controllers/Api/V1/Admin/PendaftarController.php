@@ -1875,20 +1875,11 @@ class PendaftarController extends Controller
         // Jalankan postPaymentSuccessActions hanya jika status akhir = success
         if ($trx->status == 'success') {
             $notif = $this->postPaymentSuccessActions($trx);
-<<<<<<< HEAD
             if($notif){
                 return response()->json(['message' => 'OK']);
             }
             
         }
-
-        
-=======
-            if ($notif) {
-                return response()->json(['message' => 'OK']);
-            }
-        }
->>>>>>> 2e27c40d816ff19021a3cfccfeac2730103b8605
     }
 
     /**
@@ -1941,7 +1932,6 @@ class PendaftarController extends Controller
                     $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
                     // dd($underLimit);
                     if ($owner->active && $inWindow && $underLimit) {
-<<<<<<< HEAD
                         // Insert referral log and credit
                         $candra = \App\Models\Referal::create([
                             'user_id_referral' => (int) $owner->user_id,
@@ -1954,10 +1944,6 @@ class PendaftarController extends Controller
                         $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
                         $owner->save();
                         $referralHandled = true;
-=======
-                        $referralOwner = $owner;
-                        $referralCodeResolved = $code;
->>>>>>> 2e27c40d816ff19021a3cfccfeac2730103b8605
                     }
                 }
             } catch (\Throwable $e) { /* silent */ }
