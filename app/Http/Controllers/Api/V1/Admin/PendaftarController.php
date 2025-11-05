@@ -1935,7 +1935,7 @@ class PendaftarController extends Controller
                         // Insert referral log and credit
                         $candra = \App\Models\Referal::create([
                             'user_id_referral' => (int) $owner->user_id,
-                            'kode' => $refCode,
+                            'kode' => $code,
                             'value' => 5000,
                             'tanggal' => now(),
                             'email_pemesan' => $trx->email ?? null,
