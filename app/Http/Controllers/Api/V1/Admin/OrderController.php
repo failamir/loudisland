@@ -21,6 +21,7 @@ class OrderController extends Controller
     {
         $request->validate([
             'event_id' => 'required|integer|exists:events,id',
+            'referral_code' => 'nullable|string',
         ]);
 
         $user = Auth::guard('api')->user();
@@ -35,7 +36,7 @@ class OrderController extends Controller
             return response()->json(['message' => 'Invalid event price'], 422);
         }
 
-        $result = DB::transaction(function () use ($user, $event, $amount) {
+        $result = DB::transaction(function () use ($user, $event, $amount, $request) {
             // 1) Buat tiket
             $tiket = Tiket::query()->create([
                 'no_tiket'   => strtoupper('TK-' . date('ymd') . '-' . Str::random(6)),
@@ -53,7 +54,8 @@ class OrderController extends Controller
                 'tiket_id'   => $tiket->id,
                 'peserta_id' => $user->id,
                 'amount'     => $amount,
-                'note'       => null,
+                // Simpan referral_code (jika ada) di kolom note untuk diproses saat sukses
+                'note'       => $request->input('referral_code') ? (string) $request->input('referral_code') : null,
                 'snap_token' => null,
                 'status'     => 'pending',
             ]);
