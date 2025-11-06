@@ -252,6 +252,131 @@ class PendaftarController extends Controller
         ]);
     }
 
+    public function whatsappBlastTransactions(Request $request)
+    {
+        $request->validate([
+            'transaction_ids' => 'nullable|array',
+            'transaction_ids.*' => 'integer',
+            'text' => 'nullable|string',
+            'use_default_template' => 'nullable|boolean',
+            'send_all' => 'nullable|boolean',
+            'search' => 'nullable|string',
+        ]);
+
+        $useTemplate = (bool) $request->boolean('use_default_template', false);
+        $sendAll = (bool) $request->boolean('send_all', false);
+        $text = (string) $request->input('text', '');
+        $search = (string) $request->input('search', '');
+
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $base = Transaksi::query()
+            ->where('status', 'success')
+            ->where('amount', '>', 100000)
+            ->whereNotIn('email', $excluded_emails);
+
+        if ($sendAll) {
+            if ($search) {
+                $kw = "%{$search}%";
+                $base->where(function ($q) use ($kw) {
+                    $q->where('invoice', 'like', $kw)
+                      ->orWhere('nama', 'like', $kw)
+                      ->orWhere('email', 'like', $kw)
+                      ->orWhere('no_hp', 'like', $kw);
+                });
+            }
+        } else {
+            $ids = (array) $request->input('transaction_ids', []);
+            if (empty($ids)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'transaction_ids required if send_all is not true',
+                ], 422);
+            }
+            $base->whereIn('id', array_values($ids));
+        }
+
+        $list = $base->orderBy('id')->get();
+        if ($list->isEmpty()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'No transactions found for the given criteria',
+            ], 404);
+        }
+
+        $eventIds = $list->pluck('event_id')->filter()->unique()->values();
+        $eventName = collect();
+        if ($eventIds->isNotEmpty()) {
+            $events = Event::whereIn('id', $eventIds)->get(['id','nama_event']);
+            $eventName = $events->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+        }
+
+        $dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+        $results = [];
+        $success = 0;
+        $failed = 0;
+
+        foreach ($list as $t) {
+            $phone = $t->no_hp ?? null;
+            if (empty($phone)) {
+                $failed++;
+                $results[] = [
+                    'transaction_id' => $t->id,
+                    'invoice' => $t->invoice,
+                    'phone' => $phone,
+                    'status' => 'error',
+                    'error' => 'No phone number',
+                ];
+                continue;
+            }
+
+            try {
+                $msg = $text;
+                if ($useTemplate || $msg === '') {
+                    $buyer = trim((string)($t->nama ?? 'Pembeli'));
+                    $ev = $t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket';
+                    $lines = [];
+                    $lines[] = 'Halo Bapak/Ibu ' . $buyer . ',';
+                    $lines[] = 'Pembayaran Anda telah berhasil ✅';
+                    $lines[] = '';
+                    $lines[] = '🧾 Invoice: ' . (string)$t->invoice;
+                    $lines[] = '🎟️ Event: ' . $ev;
+                    $lines[] = '';
+                    $lines[] = 'Silakan cek email atau login ke ' . $dashboardUrl . ' untuk mengelola tiket.';
+                    $lines[] = '';
+                    $lines[] = 'Jika ada kendala, hubungi kami melalui WA ini.';
+                    $lines[] = 'Terima kasih 🙏';
+                    $msg = implode("\n", $lines);
+                }
+                $this->sendWhatsapp($phone, $msg, $dashboardUrl);
+                $success++;
+                $results[] = [
+                    'transaction_id' => $t->id,
+                    'invoice' => $t->invoice,
+                    'phone' => $phone,
+                    'status' => 'success',
+                ];
+            } catch (\Throwable $e) {
+                $failed++;
+                $results[] = [
+                    'transaction_id' => $t->id,
+                    'invoice' => $t->invoice,
+                    'phone' => $phone,
+                    'status' => 'error',
+                    'error' => $e->getMessage(),
+                ];
+            }
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'mode' => $sendAll ? 'all' : 'selected',
+            'total' => $list->count(),
+            'success' => $success,
+            'failed' => $failed,
+            'results' => $results,
+        ]);
+    }
+
     /**
      * Blast Email messages to registered participants.
      * POST /api/v1/participants/email-blast

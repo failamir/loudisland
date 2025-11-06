@@ -17,6 +17,7 @@ const WhatsAppBlastPage = () => {
   const [search, setSearch] = useState('');
   const [blastResult, setBlastResult] = useState(null);
   const [selectedCount, setSelectedCount] = useState(0);
+  const [source, setSource] = useState('participants'); // participants | transactions
   const [testPhone, setTestPhone] = useState('');
   const [testName, setTestName] = useState('');
   const [testParticipantId, setTestParticipantId] = useState('');
@@ -26,15 +27,21 @@ const WhatsAppBlastPage = () => {
 
   useEffect(() => {
     loadParticipants();
-  }, []);
+  }, [source]);
 
   const loadParticipants = async () => {
     try {
       setLoading(true);
       setError(null);
-      const { data } = await axios.get(`${API_URL}/participants`);
-      const items = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
-      setParticipants(items);
+      if (source === 'participants') {
+        const { data } = await axios.get(`${API_URL}/participants`);
+        const items = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+        setParticipants(items);
+      } else {
+        const { data } = await axios.get(`${API_URL}/transactions/simple`, { params: { status: 'success', per_page: 1000 } });
+        const items = Array.isArray(data?.data) ? data.data : [];
+        setParticipants(items);
+      }
     } catch (e) {
       setError(e?.message || 'Gagal memuat peserta');
     } finally {
@@ -72,54 +79,108 @@ const WhatsAppBlastPage = () => {
   const filteredParticipants = useMemo(() => {
     if (!search) return participants;
     const s = search.toLowerCase();
-    return participants.filter(p =>
-      (p.name || '').toLowerCase().includes(s) ||
-      (p.email || '').toLowerCase().includes(s) ||
-      (p.participant_id || '').toLowerCase().includes(s) ||
-      (p.phone || '').toLowerCase().includes(s)
-    );
-  }, [participants, search]);
-
-  const columns = useMemo(() => [
-    {
-      accessorKey: 'select',
-      header: () => <DataGridRowSelectAll />,
-      cell: ({ row }) => <DataGridRowSelect row={row} />,
-      enableSorting: false,
-      enableHiding: false,
-      meta: { headerClassName: 'w-0' }
-    },
-    {
-      accessorKey: 'participant_id',
-      header: ({ column }) => <DataGridColumnHeader title="ID Peserta" column={column} />,
-      cell: info => <div className="font-medium text-gray-900">{info.row.original.participant_id}</div>,
-      meta: { headerClassName: 'min-w-[160px]' }
-    },
-    {
-      accessorKey: 'name',
-      header: ({ column }) => <DataGridColumnHeader title="Nama" column={column} />,
-      cell: info => <div className="text-gray-800">{info.row.original.name}</div>,
-      meta: { headerClassName: 'min-w-[200px]' }
-    },
-    {
-      accessorKey: 'email',
-      header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
-      cell: info => <div className="text-gray-700">{info.row.original.email}</div>,
-      meta: { headerClassName: 'min-w-[220px]' }
-    },
-    {
-      accessorKey: 'phone',
-      header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
-      cell: info => <div className="text-gray-700">{info.row.original.phone}</div>,
-      meta: { headerClassName: 'min-w-[160px]' }
-    },
-    {
-      accessorKey: 'shirt_size',
-      header: ({ column }) => <DataGridColumnHeader title="Ukuran Jersey" column={column} />,
-      cell: info => <div className="text-gray-700">{info.row.original.shirt_size || info.row.original.shirtSize || '-'}</div>,
-      meta: { headerClassName: 'min-w-[120px]' }
+    if (source === 'participants') {
+      return participants.filter(p =>
+        (p.name || '').toLowerCase().includes(s) ||
+        (p.email || '').toLowerCase().includes(s) ||
+        (p.participant_id || '').toLowerCase().includes(s) ||
+        (p.phone || '').toLowerCase().includes(s)
+      );
     }
-  ], []);
+    // transactions simple shape
+    return participants.filter(t =>
+      (t.invoice || '').toLowerCase().includes(s) ||
+      ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
+      (String(t.amount || '').toLowerCase().includes(s)) ||
+      (String(t.payment_type || '').toLowerCase().includes(s))
+    );
+  }, [participants, search, source]);
+
+  const columns = useMemo(() => {
+    if (source === 'participants') {
+      return [
+        {
+          accessorKey: 'select',
+          header: () => <DataGridRowSelectAll />,
+          cell: ({ row }) => <DataGridRowSelect row={row} />,
+          enableSorting: false,
+          enableHiding: false,
+          meta: { headerClassName: 'w-0' }
+        },
+        {
+          accessorKey: 'participant_id',
+          header: ({ column }) => <DataGridColumnHeader title="ID Peserta" column={column} />,
+          cell: info => <div className="font-medium text-gray-900">{info.row.original.participant_id}</div>,
+          meta: { headerClassName: 'min-w-[160px]' }
+        },
+        {
+          accessorKey: 'name',
+          header: ({ column }) => <DataGridColumnHeader title="Nama" column={column} />,
+          cell: info => <div className="text-gray-800">{info.row.original.name}</div>,
+          meta: { headerClassName: 'min-w-[200px]' }
+        },
+        {
+          accessorKey: 'email',
+          header: ({ column }) => <DataGridColumnHeader title="Email" column={column} />,
+          cell: info => <div className="text-gray-700">{info.row.original.email}</div>,
+          meta: { headerClassName: 'min-w-[220px]' }
+        },
+        {
+          accessorKey: 'phone',
+          header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
+          cell: info => <div className="text-gray-700">{info.row.original.phone}</div>,
+          meta: { headerClassName: 'min-w-[160px]' }
+        },
+        {
+          accessorKey: 'shirt_size',
+          header: ({ column }) => <DataGridColumnHeader title="Ukuran Jersey" column={column} />,
+          cell: info => <div className="text-gray-700">{info.row.original.shirt_size || info.row.original.shirtSize || '-'}</div>,
+          meta: { headerClassName: 'min-w-[120px]' }
+        }
+      ];
+    }
+    // transactions columns
+    return [
+      {
+        accessorKey: 'select',
+        header: () => <DataGridRowSelectAll />,
+        cell: ({ row }) => <DataGridRowSelect row={row} />,
+        enableSorting: false,
+        enableHiding: false,
+        meta: { headerClassName: 'w-0' }
+      },
+      {
+        accessorKey: 'invoice',
+        header: ({ column }) => <DataGridColumnHeader title="Invoice" column={column} />,
+        cell: info => <div className="font-medium text-gray-900">{info.row.original.invoice}</div>,
+        meta: { headerClassName: 'min-w-[160px]' }
+      },
+      {
+        accessorKey: 'event',
+        header: ({ column }) => <DataGridColumnHeader title="Event" column={column} />,
+        cell: info => <div className="text-gray-800">{info.row.original?.event?.nama_event || '-'}</div>,
+        meta: { headerClassName: 'min-w-[200px]' }
+      },
+      {
+        accessorKey: 'amount',
+        header: ({ column }) => <DataGridColumnHeader title="Harga" column={column} />,
+        cell: info => <div className="text-gray-700">{new Intl.NumberFormat('id-ID').format(Number(info.row.original.amount || 0))}</div>,
+        meta: { headerClassName: 'min-w-[140px]' }
+      },
+      {
+        accessorKey: 'payment_type',
+        header: ({ column }) => <DataGridColumnHeader title="Metode" column={column} />,
+        cell: info => <div className="text-gray-700">{info.row.original.payment_type || '-'}</div>,
+        meta: { headerClassName: 'min-w-[140px]' }
+      },
+      {
+        accessorKey: 'created_at',
+        header: ({ column }) => <DataGridColumnHeader title="Waktu" column={column} />,
+        cell: info => <div className="text-gray-700">{info.row.original.created_at || '-'}</div>,
+        meta: { headerClassName: 'min-w-[180px]' }
+      }
+    ];
+  }, [source]);
 
   const handleRowSelectionChange = (selection, table) => {
     const rows = table.getSelectedRowModel().rows.map(r => r.original);
@@ -133,19 +194,24 @@ const WhatsAppBlastPage = () => {
       setBlastResult(null);
       // Ambil peserta terpilih langsung dari tableRef
       const selectedRows = tableRef.getSelectedRowModel().rows.map(r => r.original);
-      const participantIds = selectedRows.map(r => r.participant_id).filter(Boolean);
-      if (participantIds.length === 0) {
+      const ids = source === 'participants'
+        ? selectedRows.map(r => r.participant_id).filter(Boolean)
+        : selectedRows.map(r => r.id).filter(Boolean);
+      if (ids.length === 0) {
         setError('Pilih minimal 1 peserta terlebih dahulu');
         setLoading(false);
         return;
       }
 
       const payload = {
-        participant_ids: participantIds,
+        ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || '')
       };
-      const res = await axios.post(`${API_URL}/participants/whatsapp-blast`, payload);
+      const url = source === 'participants'
+        ? `${API_URL}/participants/whatsapp-blast`
+        : `${API_URL}/transactions/whatsapp-blast`;
+      const res = await axios.post(url, payload);
       setBlastResult(res?.data || { status: 'ok' });
       // Reload data jika perlu
     } catch (e) {
@@ -167,7 +233,10 @@ const WhatsAppBlastPage = () => {
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || '')
       };
-      const res = await axios.post(`${API_URL}/participants/whatsapp-blast`, payload);
+      const url = source === 'participants'
+        ? `${API_URL}/participants/whatsapp-blast`
+        : `${API_URL}/transactions/whatsapp-blast`;
+      const res = await axios.post(url, payload);
       setBlastResult(res?.data || { status: 'ok' });
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || 'Gagal mengirim WhatsApp');
@@ -330,6 +399,13 @@ const WhatsAppBlastPage = () => {
           <div className="card-header px-5 py-5 border-b-0 flex-wrap gap-2 items-center">
             <h3 className="card-title">Pesan WhatsApp</h3>
             <div className="flex items-center gap-3 ml-auto">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Sumber:</span>
+                <select className="select select-sm" value={source} onChange={(e) => setSource(e.target.value)} disabled={loading}>
+                  <option value="participants">Peserta</option>
+                  <option value="transactions">Transaksi sukses</option>
+                </select>
+              </div>
               <label className="switch switch-sm">
                 <input name="useTemplate" type="checkbox" className="order-2" checked={useTemplate} onChange={e => setUseTemplate(e.target.checked)} />
                 <span className="switch-label order-1">Gunakan template sukses pembayaran</span>
@@ -403,7 +479,7 @@ const WhatsAppBlastPage = () => {
           data={filteredParticipants}
           rowSelection={true}
           onRowSelectionChange={handleRowSelectionChange}
-          getRowId={(row) => row.participant_id}
+          getRowId={(row) => source === 'participants' ? row.participant_id : row.id}
           pagination={{ size: 50 }}
           toolbar={<ToolbarContent />}
           layout={{ card: true }}

@@ -132,6 +132,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::get('transactions', [PendaftarController::class, 'transaksi'])->name('transactions');
     // Simple transactions list for FE
     Route::get('transactions/simple', [TransactionsListController::class, 'index'])->name('transactions.simple');
+    Route::post('transactions/whatsapp-blast', [PendaftarController::class, 'whatsappBlastTransactions'])->name('transactions.whatsappBlast');
     Route::get('tiket', [PendaftarController::class, 'tiket'])->name('tiket');
     // List success transactions without participant rows
     Route::get('participants/missing', [PendaftarController::class, 'missingParticipants'])->name('participants.missing');
