@@ -56,10 +56,10 @@ class WithdrawalController extends Controller
 
     public function index(Request $request)
     {
-        if (Auth::id() == 1 || Auth::id() == 4) {
+        if (Auth::id() == 4) {
             $query = Withdrawal::with(['created_by'])
                 ->where('note', '!=', 'referral')
-            ->orderByDesc('created_at');
+                ->orderByDesc('created_at');
         } else {
             $query = Withdrawal::with(['created_by'])
                 ->where('created_by_id', Auth::id())
