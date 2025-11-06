@@ -95,7 +95,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // Withdrawals
         Route::get('withdrawals', [WithdrawalController::class, 'index'])->name('withdrawals.index');
-        Route::get('my-withdrawals', [WithdrawalController::class, 'myWithdrawals'])->name('withdrawals.myWithdrawals');
+        Route::get('my-withdrawals', [ReferralCodeController::class, 'myWithdrawals'])->name('withdrawals.myWithdrawals');
         Route::get('withdrawals/summary', [WithdrawalController::class, 'summary'])->name('withdrawals.summary');
         Route::post('withdrawals', [WithdrawalController::class, 'store'])->name('withdrawals.store');
         Route::get('withdrawals/{withdrawal}', [WithdrawalController::class, 'show'])->name('withdrawals.show');
