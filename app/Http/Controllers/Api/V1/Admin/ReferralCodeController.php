@@ -18,9 +18,9 @@ class ReferralCodeController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        if (Gate::denies('referral.manage')) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        // if (Gate::denies('referral.manage')) {
+        //     return response()->json(['message' => 'Forbidden'], 403);
+        // }
 
         $q = ReferralCode::query()->with(['user' => function ($r) {
             $r->select('id', 'name', 'email');
@@ -351,9 +351,9 @@ class ReferralCodeController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        if (Gate::denies('referral.manage')) {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
+        // if (Gate::denies('referral.manage')) {
+        //     return response()->json(['message' => 'Forbidden'], 403);
+        // }
 
         $data = $request->validate([
             'active' => 'required|boolean',
