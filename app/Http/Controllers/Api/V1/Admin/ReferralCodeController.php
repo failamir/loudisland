@@ -30,6 +30,15 @@ class ReferralCodeController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
+        // One-time registration: deny if user already has a referral code
+        $existing = ReferralCode::where('user_id', $user->id)->first();
+        if ($existing) {
+            return response()->json([
+                'message' => 'Anda sudah memiliki kode referal. Pendaftaran hanya dapat dilakukan sekali.',
+                'data' => $existing,
+            ], 409);
+        }
+
         $data = $request->validate([
             'code' => 'nullable|string|min:4|max:32',
             'active' => 'nullable|boolean',
@@ -72,7 +81,8 @@ class ReferralCodeController extends Controller
         $row = ReferralCode::create([
             'user_id' => $user->id,
             'code' => $code,
-            'active' => (bool) ($data['active'] ?? true),
+            // Default inactive; admin will approve/activate later
+            'active' => false,
             'usage_limit' => $data['usage_limit'] ?? null,
             'used_count' => 0,
             'valid_from' => $data['valid_from'] ?? null,
@@ -186,7 +196,7 @@ class ReferralCodeController extends Controller
         return $body;
     }
 
-    // Return current user's referral profile (code + metadata). Auto-create if missing.
+    // Return current user's referral profile (code + metadata). No auto-create.
     public function mine(Request $request)
     {
         $user = $request->user('api') ?: $request->user();
@@ -196,13 +206,7 @@ class ReferralCodeController extends Controller
 
         $row = ReferralCode::where('user_id', $user->id)->orderByDesc('created_at')->first();
         if (!$row) {
-            $row = ReferralCode::create([
-                'user_id' => $user->id,
-                'code' => $this->generateCode(),
-                'active' => true,
-                'used_count' => 0,
-                'metadata' => null,
-            ]);
+            return response()->json(['message' => 'Referral belum terdaftar untuk akun ini. Silakan daftar terlebih dahulu.'], 404);
         }
 
         // augment with balance
