@@ -253,7 +253,6 @@ class ReferralCodeController extends Controller
         $withdrawn = (int) \App\Models\Withdrawal::where('created_by_id', $user->id)
             ->where('note', 'referral')
             ->where('status', 'paid')
-            ->orWhere('status', 'queued')
             ->sum('amount');
         $available = max(0, $sum - $withdrawn);
         // recent uses list (desc by tanggal) with per_page limit (default 50)
