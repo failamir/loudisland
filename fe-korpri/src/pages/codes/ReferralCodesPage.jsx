@@ -1,110 +1,120 @@
-import React, { useMemo, useState } from 'react';
-import { generateReferralCode, isValidCodeFormat, normalizeCode, parseCodeType } from '@/utils';
+import React, { useEffect, useMemo, useState } from 'react';
+import { isValidCodeFormat, normalizeCode, parseCodeType } from '@/utils';
+import * as authHelper from '@/auth/_helpers';
+
+const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
 const ReferralCodesPage = () => {
-  const [prefix, setPrefix] = useState('REF');
-  const [length, setLength] = useState(8);
-  const [count, setCount] = useState(1);
-  const [codes, setCodes] = useState([]);
-  const [check, setCheck] = useState('');
+  const auth = useMemo(() => authHelper.getAuth(), []);
+  const headers = useMemo(() => ({
+    'Content-Type': 'application/json',
+    ...(auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : {}),
+  }), [auth]);
 
+  const [list, setList] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const [check, setCheck] = useState('');
+  const [prefix, setPrefix] = useState('REF');
   const normalizedPrefix = useMemo(() => normalizeCode(prefix), [prefix]);
 
-  const onGenerate = () => {
-    const n = Math.max(1, Math.min(100, Number(count) || 1));
-    const L = Math.max(4, Math.min(24, Number(length) || 8));
-    const list = Array.from({ length: n }, () => generateReferralCode(L, normalizedPrefix));
-    setCodes(list);
+  const fetchMine = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_URL}/referral-codes`, { headers });
+      const data = await res.json();
+      setList(Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []));
+    } catch (e) {
+      setError('Failed to load');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const onCopy = async (value) => {
+  useEffect(() => { fetchMine(); }, []);
+
+  const onToggle = async (row) => {
     try {
-      await navigator.clipboard.writeText(value);
-    } catch (_) {}
+      const res = await fetch(`${API_URL}/referral-codes/${row.id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ active: !row.active })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        alert(err.message || 'Gagal mengubah status');
+        return;
+      }
+      fetchMine();
+    } catch (e) {
+      alert('Gagal mengubah status');
+    }
   };
 
   const checked = normalizeCode(check);
-  const isValid = checked ? isValidCodeFormat(checked, { prefix: normalizedPrefix, length: Number(length) || 8 }) : null;
+  const isValid = checked ? isValidCodeFormat(checked, { prefix: normalizedPrefix, length: 8 }) : null;
   const type = checked ? parseCodeType(checked) : null;
 
   return (
     <div className="container mx-auto p-4 space-y-6">
-      <h1 className="text-xl font-semibold">Referral Codes</h1>
-
-      <div className="grid sm:grid-cols-3 gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-gray-600">Prefix</span>
-          <input
-            value={prefix}
-            onChange={(e) => setPrefix(e.target.value)}
-            className="border rounded px-3 py-2"
-            placeholder="REF"
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-gray-600">Length</span>
-          <input
-            type="number"
-            value={length}
-            onChange={(e) => setLength(e.target.value)}
-            className="border rounded px-3 py-2"
-            min={4}
-            max={24}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm text-gray-600">Count</span>
-          <input
-            type="number"
-            value={count}
-            onChange={(e) => setCount(e.target.value)}
-            className="border rounded px-3 py-2"
-            min={1}
-            max={100}
-          />
-        </label>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <button onClick={onGenerate} className="bg-blue-600 text-white rounded px-4 py-2">
-          Generate
-        </button>
-      </div>
-
-      {codes.length > 0 && (
-        <div className="overflow-x-auto border rounded">
-          <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-3 py-2">#</th>
-                <th className="text-left px-3 py-2">Code</th>
-                <th className="text-left px-3 py-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {codes.map((c, idx) => (
-                <tr key={idx} className="border-t">
-                  <td className="px-3 py-2">{idx + 1}</td>
-                  <td className="px-3 py-2 font-mono">{c}</td>
-                  <td className="px-3 py-2">
-                    <button onClick={() => onCopy(c)} className="text-blue-600 hover:underline">Copy</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Referral Codes</h1>
+        <div className="flex items-center gap-3">
+          <a href="/referral" className="text-blue-600 hover:underline text-sm">Dashboard</a>
+          <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
-      )}
+      </div>
+
+      {loading && <div className="text-sm text-gray-600">Loading...</div>}
+      {error && <div className="text-sm text-red-700">{error}</div>}
+
+      <div className="overflow-x-auto border rounded">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="text-left px-3 py-2">#</th>
+              <th className="text-left px-3 py-2">Code</th>
+              <th className="text-left px-3 py-2">Usage</th>
+              <th className="text-left px-3 py-2">Valid</th>
+              <th className="text-left px-3 py-2">Active</th>
+              <th className="text-left px-3 py-2">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.length === 0 && (
+              <tr><td className="px-3 py-3 text-gray-600" colSpan={6}>Belum ada referral code.</td></tr>
+            )}
+            {list.map((row, idx) => (
+              <tr key={row.id || idx} className="border-t">
+                <td className="px-3 py-2">{idx + 1}</td>
+                <td className="px-3 py-2 font-mono">{row.code}</td>
+                <td className="px-3 py-2">{row.used_count ?? 0}/{row.usage_limit ?? '-'}</td>
+                <td className="px-3 py-2">{(row.valid_from || '-') + ' s/d ' + (row.valid_to || '-')}</td>
+                <td className="px-3 py-2">{row.active ? 'Yes' : 'No'}</td>
+                <td className="px-3 py-2 flex gap-3">
+                  <button onClick={() => onToggle(row)} className="text-blue-600 hover:underline">
+                    {row.active ? 'Nonaktifkan' : 'Aktifkan'}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
 
       <div className="space-y-2">
-        <h2 className="text-lg font-medium">Validate a Code</h2>
-        <div className="flex gap-2">
-          <input
-            value={check}
-            onChange={(e) => setCheck(e.target.value)}
-            className="border rounded px-3 py-2 flex-1"
-            placeholder={`${normalizedPrefix}-XXXXXXXX`}
-          />
+        <h2 className="text-lg font-medium">Validate a Code (client-side)</h2>
+        <div className="grid sm:grid-cols-3 gap-4">
+          <label className="flex flex-col gap-1">
+            <span className="text-sm text-gray-600">Prefix</span>
+            <input value={prefix} onChange={(e)=>setPrefix(e.target.value)} className="border rounded px-3 py-2" placeholder="REF" />
+          </label>
+          <label className="flex flex-col gap-1 sm:col-span-2">
+            <span className="text-sm text-gray-600">Code</span>
+            <input value={check} onChange={(e)=>setCheck(e.target.value)} className="border rounded px-3 py-2" placeholder={`${normalizedPrefix}-XXXXXXXX`} />
+          </label>
         </div>
         {checked && (
           <div className="text-sm">
@@ -120,7 +130,7 @@ const ReferralCodesPage = () => {
         )}
       </div>
 
-      <p className="text-xs text-gray-500">Client-side only. Backend should enforce uniqueness and redemption rules.</p>
+      <p className="text-xs text-gray-500">Manage kode milik Anda. Untuk approval admin, gunakan endpoint admin atau halaman admin (jika tersedia).</p>
     </div>
   );
 };
