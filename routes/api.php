@@ -109,6 +109,11 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::delete('referral-codes/{id}', [ReferralCodeController::class, 'destroy']);
         // Referral balance summary for current user
         Route::get('referral/balance', [ReferralCodeController::class, 'balance']);
+        // Referral profile + dashboard
+        Route::get('referral-codes/mine', [ReferralCodeController::class, 'mine']);
+        Route::patch('referral-codes/mine', [ReferralCodeController::class, 'updateMine']);
+        Route::get('referral-codes/transactions', [ReferralCodeController::class, 'transactions']);
+        Route::get('referral/withdrawals', [ReferralCodeController::class, 'myWithdrawals']);
     });
 
     // Pendaftar

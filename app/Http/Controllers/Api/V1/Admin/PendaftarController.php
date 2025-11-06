@@ -1110,6 +1110,8 @@ class PendaftarController extends Controller
                 }
             }
         }
+
+        return true;
     }
 
     /**
@@ -1873,19 +1875,22 @@ class PendaftarController extends Controller
         }
 
         // Jalankan postPaymentSuccessActions hanya jika status akhir = success
-        if ($trx->status === 'success') {
-            $this->postPaymentSuccessActions($trx);
+        if ($trx->status == 'success') {
+            $notif = $this->postPaymentSuccessActions($trx);
+            if($notif){
+                return response()->json(['message' => 'OK']);
+            }
+            
         }
-
-        return response()->json(['message' => 'OK']);
     }
 
     /**
      * After payment success: ensure participants exist in participants table,
      * backfill from JSON if needed, and send WhatsApp messages.
      */
-    protected function postPaymentSuccessActions(Transaksi $trx): void
+    protected function postPaymentSuccessActions(Transaksi $trx): bool
     {
+        // echo 123;die;
         // \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
         //     'trx_id' => $trx->id,
         //     'invoice' => $trx->invoice,
@@ -1893,7 +1898,7 @@ class PendaftarController extends Controller
         // Atomically claim handling to avoid duplicate sends from repeated callbacks
         $claimed = Transaksi::where('id', $trx->id)->where('notifikasi', 0)->update(['notifikasi' => 1]);
         if ($claimed === 0) {
-            return; // another process already handled notifications
+            return true; // another process already handled notifications
         }
 
         // Refresh model to reflect claimed state
@@ -1914,75 +1919,42 @@ class PendaftarController extends Controller
 
         // Check if participants already exist in table
 
-        // Handle referral by promo_code_id if type=referral, otherwise fallback to note-based referral code
-        $referralHandled = false;
+        // Resolve referral code/owner early, credit later per ticket
+        $referralOwner = null; // ReferralCode model
+        $referralCodeResolved = null; // string
         if ($trx->type === 'referral' && !empty($trx->promo_code_id)) {
             try {
                 $owner = \App\Models\ReferralCode::find($trx->promo_code_id);
                 if ($owner) {
-                    $refCode = strtoupper(trim((string) ($owner->code ?? '')));
+                    $code = strtoupper(trim((string) ($owner->code ?? '')));
                     $now = now();
                     $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
                     $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
                     if ($owner->active && $inWindow && $underLimit) {
-                        // Insert referral log and credit
-                        \App\Models\Referal::create([
-                            'user_id_referral' => (int) $owner->user_id,
-                            'kode' => $refCode,
-                            'value' => 5000,
-                            'tanggal' => now(),
-                            'email_pemesan' => $trx->email ?? null,
-                        ]);
-                        $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
-                        $owner->save();
-                        $referralHandled = true;
+                        $referralOwner = $owner;
+                        $referralCodeResolved = $code;
                     }
                 }
-            } catch (\Throwable $e) {
-                // silent
-            }
-        }
-
-        if (!$referralHandled) {
-            // Create referral record once if referral code exists in transaction note
+            } catch (\Throwable $e) { /* silent */ }
+        } else {
             try {
-                $refCode = strtoupper(trim((string) ($trx->note ?? '')));
-                if ($refCode !== '') {
-                    // Try to resolve owner via referral_codes mapping (case-insensitive)
-                    $owner = \App\Models\ReferralCode::whereRaw('UPPER(code) = ?', [$refCode])->first();
-                    $value = 0;
-                    $ownerId = null;
-                    $canCredit = false;
+                $code = strtoupper(trim((string) ($trx->note ?? '')));
+                if ($code !== '') {
+                    $owner = \App\Models\ReferralCode::whereRaw('UPPER(code) = ?', [$code])->first();
                     if ($owner) {
-                        // Validate active, date window, and usage limit
                         $now = now();
                         $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
                         $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
                         if ($owner->active && $inWindow && $underLimit) {
-                            $canCredit = true;
-                            $ownerId = (int) $owner->user_id;
-                            $value = 5000; // fixed reward per successful usage
+                            $referralOwner = $owner;
+                            $referralCodeResolved = $code;
                         }
-                    }
-
-                    // Insert referral log
-                    \App\Models\Referal::create([
-                        'user_id_referral' => $ownerId,
-                        'kode' => $refCode,
-                        'value' => $value,
-                        'tanggal' => now(),
-                        'email_pemesan' => $trx->email ?? null,
-                    ]);
-
-                    // Increment usage count if credited
-                    if ($canCredit && $owner) {
-                        $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
-                        $owner->save();
+                    } else {
+                        // no owner found, still keep code for logging with null owner
+                        $referralCodeResolved = $code;
                     }
                 }
-            } catch (\Throwable $e) {
-                // silent fail to avoid breaking success flow
-            }
+            } catch (\Throwable $e) { /* silent */ }
         }
 
         $participants = $trx->participants();
@@ -2101,10 +2073,10 @@ class PendaftarController extends Controller
                     // ]);
                 }
 
-                return; // done via fallback
+                return true; // done via fallback
             }
 
-            return; // nothing to do (no user fallback)
+            return true; // nothing to do (no user fallback)
         }
 
         // Build map: ticket_id => event name for message
@@ -2113,6 +2085,40 @@ class PendaftarController extends Controller
         if ($ticketIds->isNotEmpty()) {
             $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
             $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+        }
+
+        // Credit referral per ticket after participants finalized
+        try {
+            // Count tickets with active status ('1')
+            $ticketCount = $participants->filter(function ($pp) {
+                return (string) ($pp->status ?? '0') === '1';
+            })->count();
+            if ($ticketCount === 0) {
+                // Fallback: try participants JSON
+                $decoded = null;
+                try { $decoded = json_decode($trx->getAttributes()['participants'] ?? 'null', true); } catch (\Throwable $e) {}
+                if (is_array($decoded) && count($decoded) > 0) {
+                    $ticketCount = count($decoded);
+                }
+            }
+
+            if ($ticketCount > 0 && ($referralOwner || $referralCodeResolved)) {
+                $value = 5000 * (int) $ticketCount;
+                \App\Models\Referal::create([
+                    'user_id_referral' => $referralOwner ? (int) $referralOwner->user_id : null,
+                    'kode' => $referralCodeResolved,
+                    'value' => $value,
+                    'tanggal' => now(),
+                    'email_pemesan' => $trx->email ?? null,
+                ]);
+
+                if ($referralOwner) {
+                    $referralOwner->used_count = (int) ($referralOwner->used_count ?? 0) + (int) $ticketCount;
+                    $referralOwner->save();
+                }
+            }
+        } catch (\Throwable $e) {
+            // silent credit failure
         }
 
         // Recompute and persist final prices once

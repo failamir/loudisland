@@ -36,6 +36,10 @@ class ReferralCodeController extends Controller
             'usage_limit' => 'nullable|integer|min:1',
             'valid_from' => 'nullable|date',
             'valid_to' => 'nullable|date|after_or_equal:valid_from',
+            // referral profile metadata
+            'full_name' => 'nullable|string|max:150',
+            'bank' => 'nullable|string|max:150',
+            'account_number' => 'nullable|string|max:150',
         ]);
 
         // Normalize incoming code or generate default
@@ -73,7 +77,11 @@ class ReferralCodeController extends Controller
             'used_count' => 0,
             'valid_from' => $data['valid_from'] ?? null,
             'valid_to' => $data['valid_to'] ?? null,
-            'metadata' => null,
+            'metadata' => [
+                'full_name' => $data['full_name'] ?? null,
+                'bank' => $data['bank'] ?? null,
+                'account_number' => $data['account_number'] ?? null,
+            ],
         ]);
 
         return response()->json(['data' => $row], 201);
@@ -176,5 +184,107 @@ class ReferralCodeController extends Controller
             $body .= $chars[random_int(0, strlen($chars) - 1)];
         }
         return $body;
+    }
+
+    // Return current user's referral profile (code + metadata). Auto-create if missing.
+    public function mine(Request $request)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $row = ReferralCode::where('user_id', $user->id)->orderByDesc('created_at')->first();
+        if (!$row) {
+            $row = ReferralCode::create([
+                'user_id' => $user->id,
+                'code' => $this->generateCode(),
+                'active' => true,
+                'used_count' => 0,
+                'metadata' => null,
+            ]);
+        }
+
+        // augment with balance
+        $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
+
+        return response()->json([
+            'data' => [
+                'id' => $row->id,
+                'code' => $row->code,
+                'active' => (bool) $row->active,
+                'usage_limit' => $row->usage_limit,
+                'used_count' => $row->used_count,
+                'valid_from' => $row->valid_from,
+                'valid_to' => $row->valid_to,
+                'metadata' => $row->metadata,
+                'balance' => $sum,
+            ],
+        ]);
+    }
+
+    // Update current user's referral profile metadata and active flag
+    public function updateMine(Request $request)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $data = $request->validate([
+            'full_name' => 'nullable|string|max:150',
+            'bank' => 'nullable|string|max:150',
+            'account_number' => 'nullable|string|max:150',
+            'active' => 'nullable|boolean',
+        ]);
+
+        $row = ReferralCode::where('user_id', $user->id)->orderByDesc('created_at')->first();
+        if (!$row) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $meta = $row->metadata ?? [];
+        foreach (['full_name', 'bank', 'account_number'] as $k) {
+            if (array_key_exists($k, $data)) {
+                $meta[$k] = $data[$k];
+            }
+        }
+
+        $row->update([
+            'active' => array_key_exists('active', $data) ? (bool) $data['active'] : $row->active,
+            'metadata' => $meta,
+        ]);
+
+        return response()->json(['data' => $row->fresh()]);
+    }
+
+    // List referral transactions that credit current user (for dashboard)
+    public function transactions(Request $request)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $limit = max(1, (int) $request->get('per_page', 20));
+        $rows = Referal::where('user_id_referral', $user->id)
+            ->orderByDesc('tanggal')
+            ->take($limit)
+            ->get(['tanggal', 'email_pemesan', 'value', 'kode']);
+        return response()->json(['data' => $rows]);
+    }
+
+    // List my withdrawals (for dashboard history)
+    public function myWithdrawals(Request $request)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        $limit = max(1, (int) $request->get('per_page', 20));
+        $rows = \App\Models\Withdrawal::where('created_by_id', $user->id)
+            ->orderByDesc('created_at')
+            ->take($limit)
+            ->get(['id','amount','bank','account_name','account_number','status','created_at']);
+        return response()->json(['data' => $rows]);
     }
 }
