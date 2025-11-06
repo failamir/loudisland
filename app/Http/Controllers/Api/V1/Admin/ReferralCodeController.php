@@ -12,6 +12,37 @@ use Illuminate\Support\Facades\Gate;
 
 class ReferralCodeController extends Controller
 {
+    public function adminIndex(Request $request)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        if (Gate::denies('referral.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $q = ReferralCode::query()->with(['user' => function ($r) {
+            $r->select('id', 'name', 'email');
+        }])->orderByDesc('created_at');
+
+        if ($request->filled('active')) {
+            $q->where('active', filter_var($request->get('active'), FILTER_VALIDATE_BOOLEAN));
+        }
+        if ($request->filled('q')) {
+            $kw = '%' . trim($request->get('q')) . '%';
+            $q->where(function ($qq) use ($kw) {
+                $qq->where('code', 'like', $kw)
+                    ->orWhereHas('user', function ($u) use ($kw) {
+                        $u->where('name', 'like', $kw)->orWhere('email', 'like', $kw);
+                    });
+            });
+        }
+
+        $limit = max(1, (int) $request->get('per_page', 50));
+        $rows = $q->take($limit)->get();
+        return response()->json(['data' => $rows]);
+    }
     public function index(Request $request)
     {
         $user = $request->user('api') ?: $request->user();
@@ -149,11 +180,18 @@ class ReferralCodeController extends Controller
 
         $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
         $count = (int) Referal::where('user_id_referral', $user->id)->count();
+        $withdrawn = (int) \App\Models\Withdrawal::where('created_by_id', $user->id)
+            ->where('status', 'paid')
+            ->where('note', 'referral')
+            ->sum('amount');
+        $available = max(0, $sum - $withdrawn);
 
         return response()->json([
             'data' => [
                 'balance' => $sum,
                 'total_uses' => $count,
+                'withdrawn_referral' => $withdrawn,
+                'available_referral' => $available,
             ],
         ]);
     }
@@ -212,6 +250,11 @@ class ReferralCodeController extends Controller
 
         // augment with balance
         $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
+        $withdrawn = (int) \App\Models\Withdrawal::where('created_by_id', $user->id)
+            ->where('status', 'paid')
+            ->where('note', 'referral')
+            ->sum('amount');
+        $available = max(0, $sum - $withdrawn);
         // recent uses list (desc by tanggal) with per_page limit (default 50)
         $limit = max(1, (int) $request->get('per_page', 50));
         $uses = Referal::where('user_id_referral', $user->id)
@@ -230,6 +273,8 @@ class ReferralCodeController extends Controller
                 'valid_to' => $row->valid_to,
                 'metadata' => $row->metadata,
                 'balance' => $sum,
+                'withdrawn_referral' => $withdrawn,
+                'available_referral' => $available,
                 'uses' => $uses,
             ],
         ]);

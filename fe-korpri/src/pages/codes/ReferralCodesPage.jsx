@@ -14,6 +14,12 @@ const ReferralCodesPage = () => {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  // admin panels
+  const [adminList, setAdminList] = useState([]);
+  const [adminEnabled, setAdminEnabled] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [wdList, setWdList] = useState([]);
+  const [wdLoading, setWdLoading] = useState(false);
 
   const [check, setCheck] = useState('');
   const [prefix, setPrefix] = useState('REF');
@@ -33,7 +39,77 @@ const ReferralCodesPage = () => {
     }
   };
 
+  const onAdminApprove = async (row, val=true) => {
+    try {
+      const res = await fetch(`${API_URL}/admin/referral-codes/${row.id}/status`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ active: Boolean(val) }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        alert(err.message || 'Gagal approve');
+        return;
+      }
+      fetchAdmin();
+    } catch (_) {
+      alert('Gagal approve');
+    }
+  };
+
+  const onWdAction = async (w, action) => {
+    try {
+      const res = await fetch(`${API_URL}/withdrawals/${w.id}/status`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(()=>({}));
+        alert(err.message || 'Gagal update status withdrawal');
+        return;
+      }
+      fetchWithdrawals();
+    } catch (_) {
+      alert('Gagal update status withdrawal');
+    }
+  };
+
   useEffect(() => { fetchMine(); }, []);
+
+  const fetchAdmin = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/referral-codes?per_page=100&active=false`, { headers });
+      if (res.status === 403) {
+        setAdminEnabled(false);
+        setAdminLoading(false);
+        return;
+      }
+      const data = await res.json().catch(()=>({}));
+      if (res.ok) {
+        setAdminEnabled(true);
+        setAdminList(Array.isArray(data?.data) ? data.data : []);
+      }
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const fetchWithdrawals = async () => {
+    setWdLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/withdrawals?status=queued&per_page=50`, { headers });
+      const data = await res.json().catch(()=>({}));
+      if (res.ok) {
+        setWdList(Array.isArray(data?.data) ? data.data : []);
+      }
+    } finally {
+      setWdLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAdmin(); fetchWithdrawals(); }, []);
 
   const onToggle = async (row) => {
     try {
@@ -65,6 +141,95 @@ const ReferralCodesPage = () => {
           <a href="/referral" className="text-blue-600 hover:underline text-sm">Dashboard</a>
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
+
+      {adminEnabled && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium">Admin: Approval Referral (pending)</h2>
+          {adminLoading && <div className="text-sm text-gray-600">Loading...</div>}
+          <div className="overflow-x-auto border rounded">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-3 py-2">#</th>
+                  <th className="text-left px-3 py-2">User</th>
+                  <th className="text-left px-3 py-2">Email</th>
+                  <th className="text-left px-3 py-2">Code</th>
+                  <th className="text-left px-3 py-2">Usage</th>
+                  <th className="text-left px-3 py-2">Valid</th>
+                  <th className="text-left px-3 py-2">Active</th>
+                  <th className="text-left px-3 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminList.length === 0 && (
+                  <tr><td className="px-3 py-3 text-gray-600" colSpan={8}>Tidak ada pengajuan.</td></tr>
+                )}
+                {adminList.map((r, idx) => (
+                  <tr key={r.id || idx} className="border-t">
+                    <td className="px-3 py-2">{idx + 1}</td>
+                    <td className="px-3 py-2">{r.user?.name || '-'}</td>
+                    <td className="px-3 py-2">{r.user?.email || '-'}</td>
+                    <td className="px-3 py-2 font-mono">{r.code}</td>
+                    <td className="px-3 py-2">{r.used_count ?? 0}/{r.usage_limit ?? '-'}</td>
+                    <td className="px-3 py-2">{(r.valid_from || '-') + ' s/d ' + (r.valid_to || '-')}</td>
+                    <td className="px-3 py-2">{r.active ? 'Yes' : 'No'}</td>
+                    <td className="px-3 py-2 flex gap-3">
+                      {!r.active && (
+                        <button onClick={() => onAdminApprove(r, true)} className="text-blue-600 hover:underline">Approve</button>
+                      )}
+                      {r.active && (
+                        <button onClick={() => onAdminApprove(r, false)} className="text-red-600 hover:underline">Deactivate</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {adminEnabled && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium">Admin: Verify Withdrawals (queued)</h2>
+          {wdLoading && <div className="text-sm text-gray-600">Loading...</div>}
+          <div className="overflow-x-auto border rounded">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-3 py-2">#</th>
+                  <th className="text-left px-3 py-2">ID</th>
+                  <th className="text-left px-3 py-2">Amount</th>
+                  <th className="text-left px-3 py-2">Bank</th>
+                  <th className="text-left px-3 py-2">Account</th>
+                  <th className="text-left px-3 py-2">Status</th>
+                  <th className="text-left px-3 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wdList.length === 0 && (
+                  <tr><td className="px-3 py-3 text-gray-600" colSpan={7}>Tidak ada pengajuan.</td></tr>
+                )}
+                {wdList.map((w, idx) => (
+                  <tr key={w.id || idx} className="border-t">
+                    <td className="px-3 py-2">{idx + 1}</td>
+                    <td className="px-3 py-2">{w.id}</td>
+                    <td className="px-3 py-2">{new Intl.NumberFormat('id-ID').format(w.amount || 0)}</td>
+                    <td className="px-3 py-2">{w.bank}</td>
+                    <td className="px-3 py-2">{w.account_name} / {w.account_number}</td>
+                    <td className="px-3 py-2">{w.status}</td>
+                    <td className="px-3 py-2 flex gap-3">
+                      <button onClick={() => onWdAction(w, 'approved')} className="text-blue-600 hover:underline">Approve</button>
+                      <button onClick={() => onWdAction(w, 'paid')} className="text-green-700 hover:underline">Mark Paid</button>
+                      <button onClick={() => onWdAction(w, 'rejected')} className="text-red-600 hover:underline">Reject</button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
       </div>
 
       {loading && <div className="text-sm text-gray-600">Loading...</div>}
