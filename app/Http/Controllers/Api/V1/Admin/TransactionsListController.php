@@ -47,6 +47,8 @@ class TransactionsListController extends Controller
                 'invoice' => $trx->invoice,
                 'status' => $trx->status,
                 'amount' => (int) $trx->amount,
+                'nama' => $trx->nama,
+                'no_hp' => $trx->no_hp,
                 'payment_type' => $trx->payment_type,
                 'created_at' => $trx->created_at,
                 'event' => $ev ? [

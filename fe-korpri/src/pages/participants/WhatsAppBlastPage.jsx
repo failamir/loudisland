@@ -49,6 +49,43 @@ const WhatsAppBlastPage = () => {
     }
   };
 
+  const handleResendFailed = async (tableRef) => {
+    try {
+      if (!blastResult || !Array.isArray(blastResult.results)) return;
+      const failed = blastResult.results.filter(r => r.status !== 'success');
+      if (failed.length === 0) return;
+
+      setLoading(true);
+      setError(null);
+      setBlastResult(null);
+
+      const ids = source === 'participants'
+        ? failed.map(r => r.participant_id).filter(Boolean)
+        : failed.map(r => r.transaction_id || r.id).filter(Boolean);
+
+      if (ids.length === 0) {
+        setError('Tidak ada ID untuk dikirim ulang');
+        setLoading(false);
+        return;
+      }
+
+      const payload = {
+        ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
+        use_default_template: useTemplate,
+        text: useTemplate ? undefined : (message || '')
+      };
+      const url = source === 'participants'
+        ? `${API_URL}/participants/whatsapp-blast`
+        : `${API_URL}/transactions/whatsapp-blast`;
+      const res = await axios.post(url, payload);
+      setBlastResult(res?.data || { status: 'ok' });
+    } catch (e) {
+      setError(e?.response?.data?.message || e?.message || 'Gagal mengirim ulang');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleEmailBlast = async (tableRef) => {
     try {
       setLoading(true);
@@ -153,6 +190,18 @@ const WhatsAppBlastPage = () => {
         accessorKey: 'invoice',
         header: ({ column }) => <DataGridColumnHeader title="Invoice" column={column} />,
         cell: info => <div className="font-medium text-gray-900">{info.row.original.invoice}</div>,
+        meta: { headerClassName: 'min-w-[160px]' }
+      },
+      {
+        accessorKey: 'nama',
+        header: ({ column }) => <DataGridColumnHeader title="Nama Pembeli" column={column} />,
+        cell: info => <div className="text-gray-800">{info.row.original?.nama || '-'}</div>,
+        meta: { headerClassName: 'min-w-[200px]' }
+      },
+      {
+        accessorKey: 'no_hp',
+        header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
+        cell: info => <div className="text-gray-700">{info.row.original?.no_hp || '-'}</div>,
         meta: { headerClassName: 'min-w-[160px]' }
       },
       {
@@ -285,6 +334,11 @@ const WhatsAppBlastPage = () => {
             />
           </div>
           <button className="btn btn-sm btn-light" onClick={() => { setSearch(''); }} disabled={loading}>Clear</button>
+          {loading && (
+            <div className="flex items-center gap-2 text-gray-600 text-sm">
+              <KeenIcon icon="loading" className="animate-spin" /> Memproses...
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2.5 ml-auto">
@@ -296,6 +350,16 @@ const WhatsAppBlastPage = () => {
           <button className="btn btn-sm btn-primary" onClick={handleBlastAll} disabled={loading}>
             <KeenIcon icon="whatsapp" /> Kirim semua hasil filter
           </button>
+          {blastResult?.failed > 0 && Array.isArray(blastResult?.results) && (
+            <button
+              className="btn btn-sm btn-outline btn-danger"
+              onClick={() => handleResendFailed(table)}
+              disabled={loading}
+              title="Kirim ulang ke nomor yang gagal pada blast terakhir"
+            >
+              <KeenIcon icon="refresh" /> Kirim ulang gagal ({blastResult.failed})
+            </button>
+          )}
           <span className="divider-vertical h-5 mx-2" />
           <button className="btn btn-sm btn-outline" onClick={() => handleEmailBlast(table)} disabled={loading || selected === 0}>
             <KeenIcon icon="paper-plane" /> Kirim Email
@@ -392,6 +456,23 @@ const WhatsAppBlastPage = () => {
             <div>Total: {blastResult.total}</div>
             <div>Sukses: {blastResult.success}</div>
             <div>Gagal: {blastResult.failed}</div>
+            {Array.isArray(blastResult.results) && blastResult.results.length > 0 && (
+              <div className="mt-3 max-h-60 overflow-auto pr-2">
+                {blastResult.results.map((r, idx) => (
+                  <div key={idx} className="text-sm flex items-center gap-2 py-0.5">
+                    <span className={r.status === 'success' ? 'text-green-700' : 'text-red-700'}>
+                      {r.status === 'success' ? '✔' : '✖'}
+                    </span>
+                    <span className="text-gray-800">
+                      {source === 'participants'
+                        ? `${r.participant_id || '-'} · ${r.phone || '-'}`
+                        : `${r.invoice || '-'} · ${r.phone || '-'}`}
+                    </span>
+                    {r.error && <span className="text-gray-600">— {r.error}</span>}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

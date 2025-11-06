@@ -60,7 +60,7 @@ class ReferralCodeController extends Controller
                 // no dash provided, treat as body and add default prefix
                 $body = preg_replace('/[^A-Z0-9]/', '', $norm);
                 $body = substr($body, 0, 24);
-                $norm = 'REF-' . ($body !== '' ? $body : $this->randomBody(8));
+                $norm = ($body !== '' ? $body : $this->randomBody(8));
             }
             $code = $norm;
         } else {
@@ -211,6 +211,12 @@ class ReferralCodeController extends Controller
 
         // augment with balance
         $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
+        // recent uses list (desc by tanggal) with per_page limit (default 50)
+        $limit = max(1, (int) $request->get('per_page', 50));
+        $uses = Referal::where('user_id_referral', $user->id)
+            ->orderByDesc('tanggal')
+            ->take($limit)
+            ->get(['tanggal', 'email_pemesan', 'value']);
 
         return response()->json([
             'data' => [
@@ -223,6 +229,7 @@ class ReferralCodeController extends Controller
                 'valid_to' => $row->valid_to,
                 'metadata' => $row->metadata,
                 'balance' => $sum,
+                'uses' => $uses,
             ],
         ]);
     }
