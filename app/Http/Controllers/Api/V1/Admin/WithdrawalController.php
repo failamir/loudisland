@@ -99,9 +99,9 @@ class WithdrawalController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'amount' => 'required|integer|min:1',
+            'amount' => 'required|integer|min:50000',
             'bank' => 'required|string|max:150',
-            'account_name' => 'required|string|max:150',
+            'account_name' => 'nullable|string|max:150',
             'account_number' => 'required|string|max:150',
             'note' => 'nullable|string',
         ]);
@@ -127,7 +127,16 @@ class WithdrawalController extends Controller
             ], 422);
         }
 
-        $userId = optional($request->user())->id;
+        $user = $request->user();
+        $userId = optional($user)->id;
+
+        // default account_name from referral profile if empty
+        if (empty($data['account_name'])) {
+            $ref = \App\Models\ReferralCode::where('user_id', $userId)->orderByDesc('created_at')->first();
+            if ($ref && !empty($ref->metadata['full_name'])) {
+                $data['account_name'] = $ref->metadata['full_name'];
+            }
+        }
 
         $withdrawal = null;
         DB::transaction(function () use (&$withdrawal, $data, $userId, $netIncome, $totalWithdrawn, $available) {

@@ -1110,6 +1110,8 @@ class PendaftarController extends Controller
                 }
             }
         }
+
+        return true;
     }
 
     /**
@@ -1886,7 +1888,7 @@ class PendaftarController extends Controller
      * After payment success: ensure participants exist in participants table,
      * backfill from JSON if needed, and send WhatsApp messages.
      */
-    protected function postPaymentSuccessActions(Transaksi $trx): void
+    protected function postPaymentSuccessActions(Transaksi $trx): bool
     {
         // echo 123;die;
         // \Illuminate\Support\Facades\Log::info('postPaymentSuccessActions start', [
@@ -1896,7 +1898,7 @@ class PendaftarController extends Controller
         // Atomically claim handling to avoid duplicate sends from repeated callbacks
         $claimed = Transaksi::where('id', $trx->id)->where('notifikasi', 0)->update(['notifikasi' => 1]);
         if ($claimed === 0) {
-            return; // another process already handled notifications
+            return true; // another process already handled notifications
         }
 
         // Refresh model to reflect claimed state
@@ -1923,27 +1925,14 @@ class PendaftarController extends Controller
         if ($trx->type === 'referral' && !empty($trx->promo_code_id)) {
             try {
                 $owner = \App\Models\ReferralCode::find($trx->promo_code_id);
-                // dd($owner);
                 if ($owner) {
                     $code = strtoupper(trim((string) ($owner->code ?? '')));
                     $now = now();
                     $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
-                    // dd($inWindow);
                     $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
-                    // dd($underLimit);
                     if ($owner->active && $inWindow && $underLimit) {
-                        // Insert referral log and credit
-                        $candra = \App\Models\Referal::create([
-                            'user_id_referral' => (int) $owner->user_id,
-                            'kode' => $code,
-                            'value' => 5000,
-                            'tanggal' => now(),
-                            'email_pemesan' => $trx->email ?? null,
-                        ]);
-                        // dd($candra);
-                        $owner->used_count = (int) ($owner->used_count ?? 0) + 1;
-                        $owner->save();
-                        $referralHandled = true;
+                        $referralOwner = $owner;
+                        $referralCodeResolved = $code;
                     }
                 }
             } catch (\Throwable $e) { /* silent */ }
@@ -2084,10 +2073,10 @@ class PendaftarController extends Controller
                     // ]);
                 }
 
-                return; // done via fallback
+                return true; // done via fallback
             }
 
-            return; // nothing to do (no user fallback)
+            return true; // nothing to do (no user fallback)
         }
 
         // Build map: ticket_id => event name for message

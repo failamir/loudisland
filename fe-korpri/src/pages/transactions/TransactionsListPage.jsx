@@ -46,6 +46,19 @@ const TransactionsListPage = () => {
     }
   };
 
+  // PPN only applies for transactions created after 24 Oct 2025 23:59:59 Asia/Jakarta
+  const isPPNApplicable = (createdAt) => {
+    if (!createdAt) return false;
+    try {
+      const t = new Date(createdAt);
+      // 2025-10-24 23:59:59 Asia/Jakarta equals 2025-10-24 16:59:59Z
+      const threshold = new Date('2025-10-24T16:59:59Z');
+      return t.getTime() > threshold.getTime();
+    } catch (_) {
+      return false;
+    }
+  };
+
   const fetchData = async (params = {}) => {
     try {
       setLoading(true);
@@ -187,7 +200,7 @@ const TransactionsListPage = () => {
       {
         accessorKey: 'amount',
         id: 'amount',
-        header: ({ column }) => <DataGridColumnHeader title="Total Harga" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Harga" column={column} />,
         enableSorting: true,
         cell: ({ row }) => new Intl.NumberFormat('id-ID').format(row.original.amount || 0),
         meta: { headerClassName: 'min-w-[140px]' },
@@ -199,7 +212,7 @@ const TransactionsListPage = () => {
         enableSorting: false,
         cell: ({ row }) => {
           const amt = Number(row.original?.amount || 0);
-          const ppn = Math.round(amt * 0.11);
+          const ppn = isPPNApplicable(row.original?.created_at) ? Math.round(amt * 0.11) : 0;
           return new Intl.NumberFormat('id-ID').format(ppn);
         },
         meta: { headerClassName: 'min-w-[140px]' },
@@ -207,11 +220,12 @@ const TransactionsListPage = () => {
       {
         accessorFn: (row) => row?.amount ?? 0,
         id: 'total_bayar',
-        header: ({ column }) => <DataGridColumnHeader title="Total Bayar" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Total Harga" column={column} />,
         enableSorting: false,
         cell: ({ row }) => {
           const amt = Number(row.original?.amount || 0);
-          const total = Math.round(amt * 1.11);
+          const ppn = isPPNApplicable(row.original?.created_at) ? Math.round(amt * 0.11) : 0;
+          const total = amt + ppn;
           return new Intl.NumberFormat('id-ID').format(total);
         },
         meta: { headerClassName: 'min-w-[160px]' },

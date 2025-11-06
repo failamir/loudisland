@@ -15,3 +15,4 @@ yarn-error.log
 /.vscode
 /public/qrcodes
 .DS_Store
+.user.ini
