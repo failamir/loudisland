@@ -9,6 +9,7 @@ use App\Models\WithdrawalHistory;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class WithdrawalController extends Controller
 {
@@ -55,9 +56,14 @@ class WithdrawalController extends Controller
 
     public function index(Request $request)
     {
-        $query = Withdrawal::with(['created_by'])
+        if (Auth::id() == 1) {
+            $query = Withdrawal::with(['created_by'])
             ->orderByDesc('created_at');
-
+        } else {
+            $query = Withdrawal::with(['created_by'])
+                ->where('created_by_id', Auth::id())
+                ->orderByDesc('created_at');
+        }
         if ($request->filled('status')) {
             $query->where('status', (string) $request->get('status'));
         }
