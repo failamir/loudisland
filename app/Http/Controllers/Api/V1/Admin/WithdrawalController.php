@@ -91,7 +91,8 @@ class WithdrawalController extends Controller
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
         $netIncome = max(0, $grossSum - $profit);
 
-        $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
+        $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])
+            ->where('note', '!=', 'referral')->sum('amount');
         $available = max(0, $netIncome - $totalWithdrawn);
 
         return response()->json([
