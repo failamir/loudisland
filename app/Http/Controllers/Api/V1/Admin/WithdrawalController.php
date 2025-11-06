@@ -62,6 +62,7 @@ class WithdrawalController extends Controller
         } else {
             $query = Withdrawal::with(['created_by'])
                 ->where('created_by_id', Auth::id())
+                ->where('note', '!=', 'referral')
                 ->orderByDesc('created_at');
         }
         if ($request->filled('status')) {
