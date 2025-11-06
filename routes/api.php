@@ -114,6 +114,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::patch('referral-codes/mine', [ReferralCodeController::class, 'updateMine']);
         Route::get('referral-codes/transactions', [ReferralCodeController::class, 'transactions']);
         Route::get('referral/withdrawals', [ReferralCodeController::class, 'myWithdrawals']);
+
+        // Admin: approve/activate referral codes (requires Gate ability 'referral.manage')
+        Route::patch('admin/referral-codes/{id}/status', [ReferralCodeController::class, 'adminUpdateStatus']);
     });
 
     // Pendaftar

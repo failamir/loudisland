@@ -8,6 +8,7 @@ use App\Models\Referal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class ReferralCodeController extends Controller
 {
@@ -297,5 +298,31 @@ class ReferralCodeController extends Controller
             ->take($limit)
             ->get(['id','amount','bank','account_name','account_number','status','created_at']);
         return response()->json(['data' => $rows]);
+    }
+
+    public function adminUpdateStatus(Request $request, $id)
+    {
+        $user = $request->user('api') ?: $request->user();
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+        if (Gate::denies('referral.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $data = $request->validate([
+            'active' => 'required|boolean',
+        ]);
+
+        $row = ReferralCode::find($id);
+        if (!$row) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $row->update([
+            'active' => (bool) $data['active'],
+        ]);
+
+        return response()->json(['data' => $row->fresh()]);
     }
 }
