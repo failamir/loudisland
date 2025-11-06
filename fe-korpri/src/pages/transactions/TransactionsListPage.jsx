@@ -200,7 +200,7 @@ const TransactionsListPage = () => {
       {
         accessorKey: 'amount',
         id: 'amount',
-        header: ({ column }) => <DataGridColumnHeader title="Total Harga" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Harga" column={column} />,
         enableSorting: true,
         cell: ({ row }) => new Intl.NumberFormat('id-ID').format(row.original.amount || 0),
         meta: { headerClassName: 'min-w-[140px]' },
@@ -220,7 +220,7 @@ const TransactionsListPage = () => {
       {
         accessorFn: (row) => row?.amount ?? 0,
         id: 'total_bayar',
-        header: ({ column }) => <DataGridColumnHeader title="Total Bayar" column={column} />,
+        header: ({ column }) => <DataGridColumnHeader title="Total Harga" column={column} />,
         enableSorting: false,
         cell: ({ row }) => {
           const amt = Number(row.original?.amount || 0);
