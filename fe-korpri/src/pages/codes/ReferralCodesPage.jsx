@@ -20,6 +20,9 @@ const ReferralCodesPage = () => {
   const [adminLoading, setAdminLoading] = useState(false);
   const [wdList, setWdList] = useState([]);
   const [wdLoading, setWdLoading] = useState(false);
+  // my referral withdrawals (history)
+  const [myWd, setMyWd] = useState([]);
+  const [myWdLoading, setMyWdLoading] = useState(false);
 
   const [check, setCheck] = useState('');
   const [prefix, setPrefix] = useState('REF');
@@ -109,7 +112,20 @@ const ReferralCodesPage = () => {
     }
   };
 
-  useEffect(() => { fetchAdmin(); fetchWithdrawals(); }, []);
+  const fetchMyWithdrawals = async () => {
+    setMyWdLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/referral/withdrawals?per_page=50`, { headers });
+      const data = await res.json().catch(()=>({}));
+      if (res.ok) {
+        setMyWd(Array.isArray(data?.data) ? data.data : []);
+      }
+    } finally {
+      setMyWdLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchAdmin(); fetchWithdrawals(); fetchMyWithdrawals(); }, []);
 
   const onToggle = async (row) => {
     try {
@@ -267,6 +283,40 @@ const ReferralCodesPage = () => {
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="space-y-3">
+        <h2 className="text-lg font-medium">Riwayat Tarik Saldo (Referral)</h2>
+        {myWdLoading && <div className="text-sm text-gray-600">Loading...</div>}
+        <div className="overflow-x-auto border rounded">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="text-left px-3 py-2">#</th>
+                <th className="text-left px-3 py-2">Tanggal</th>
+                <th className="text-left px-3 py-2">Amount</th>
+                <th className="text-left px-3 py-2">Bank</th>
+                <th className="text-left px-3 py-2">Account</th>
+                <th className="text-left px-3 py-2">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {myWd.length === 0 && (
+                <tr><td className="px-3 py-3 text-gray-600" colSpan={6}>Tidak ada riwayat penarikan.</td></tr>
+              )}
+              {myWd.map((w, idx) => (
+                <tr key={w.id || idx} className="border-t">
+                  <td className="px-3 py-2">{idx + 1}</td>
+                  <td className="px-3 py-2">{new Date(w.created_at).toLocaleString('id-ID')}</td>
+                  <td className="px-3 py-2">{new Intl.NumberFormat('id-ID').format(w.amount || 0)}</td>
+                  <td className="px-3 py-2">{w.bank}</td>
+                  <td className="px-3 py-2">{w.account_name} / {w.account_number}</td>
+                  <td className="px-3 py-2">{w.status}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <div className="space-y-2">

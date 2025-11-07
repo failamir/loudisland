@@ -24,6 +24,8 @@ import PermissionsListPage from '@/pages/permissions/PermissionsListPage';
 import RolesListPage from '@/pages/roles/RolesListPage';
 import RacepackListPage from '@/pages/racepacks/RacepackListPage';
 import ReferralCodesPage from '@/pages/codes/ReferralCodesPage';
+import ReferralDashboard from '@/pages/referral/ReferralDashboard.jsx';
+import ReferralRegister from '@/pages/referral/ReferralRegister.jsx';
 import PromoCodesPage from '@/pages/codes/PromoCodesPage';
 
 const AppRoutingSetup = () => {
@@ -113,6 +115,8 @@ const AppRoutingSetup = () => {
           <Route path="/nomor-punggung" element={<NomorPunggungListPage />} />
           <Route path="/nomor-punggung/pair" element={<NomorPunggungPairPage />} />
           <Route path="/referral-codes" element={<ReferralCodesPage />} />
+          <Route path="/referral" element={<ReferralDashboard />} />
+          <Route path="/referral/register" element={<ReferralRegister />} />
           <Route path="/promo-codes" element={<PromoCodesPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
