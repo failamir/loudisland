@@ -1,10 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { isValidCodeFormat, normalizeCode, parseCodeType } from '@/utils';
 import * as authHelper from '@/auth/_helpers';
+import { useAuthContext } from '@/auth/useAuthContext';
 
 const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
 const ReferralCodesPage = () => {
+  const { currentUser } = useAuthContext();
+  const isSuperAdmin = currentUser?.email === 'admin@superadmin.com';
   const auth = useMemo(() => authHelper.getAuth(), []);
   const headers = useMemo(() => ({
     'Content-Type': 'application/json',
@@ -58,6 +61,7 @@ const ReferralCodesPage = () => {
         return;
       }
       fetchAdmin();
+      fetchAdminActive();
     } catch (_) {
       alert('Gagal approve');
     }
@@ -148,7 +152,12 @@ const ReferralCodesPage = () => {
     }
   };
 
-  useEffect(() => { fetchAdmin(); fetchAdminActive(); fetchWithdrawals(); fetchMyWithdrawals(); }, []);
+  useEffect(() => {
+    fetchAdmin();
+    fetchAdminActive();
+    fetchMyWithdrawals();
+    if (isSuperAdmin) fetchWithdrawals();
+  }, [isSuperAdmin]);
 
   const onToggle = async (row) => {
     try {
@@ -180,8 +189,8 @@ const ReferralCodesPage = () => {
           <a href="/referral" className="text-blue-600 hover:underline text-sm">Dashboard</a>
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
-
-        {/*  {adminEnabled && (
+      </div>
+      {adminEnabled && (
         <div className="space-y-3">
           <h2 className="text-lg font-medium">Admin: Referral Active</h2>
           {adminActiveLoading && <div className="text-sm text-gray-600">Loading...</div>}
@@ -217,7 +226,7 @@ const ReferralCodesPage = () => {
             </table>
           </div>
         </div>
-      )}*/}
+      )}
 
       <div className="grid md:grid-cols-2 gap-4">
         {adminEnabled && (
@@ -267,7 +276,7 @@ const ReferralCodesPage = () => {
           </div>
         )}
 
-        {adminEnabled && (
+        {adminEnabled && isSuperAdmin && (
           <div className="space-y-3">
             <h2 className="text-lg font-medium">Admin: Verify Withdrawals (all)</h2>
             {wdLoading && <div className="text-sm text-gray-600">Loading...</div>}
@@ -348,9 +357,9 @@ const ReferralCodesPage = () => {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-lg font-medium">Riwayat Tarik Saldo (Referral){adminEnabled ? ' - Admin' : ''}</h2>
-        {(!adminEnabled && myWdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
-        {(adminEnabled && wdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
+        <h2 className="text-lg font-medium">Riwayat Tarik Saldo (Referral){adminEnabled && isSuperAdmin ? ' - Admin' : ''}</h2>
+        {(!(adminEnabled && isSuperAdmin) && myWdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
+        {(adminEnabled && isSuperAdmin && wdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
         <div className="overflow-x-auto border rounded">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
@@ -364,10 +373,10 @@ const ReferralCodesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {(adminEnabled ? wdList : myWd).length === 0 && (
+              {(adminEnabled && isSuperAdmin ? wdList : myWd).length === 0 && (
                 <tr><td className="px-3 py-3 text-gray-600" colSpan={6}>Tidak ada riwayat penarikan.</td></tr>
               )}
-              {(adminEnabled ? wdList : myWd).map((w, idx) => (
+              {(adminEnabled && isSuperAdmin ? wdList : myWd).map((w, idx) => (
                 <tr key={w.id || idx} className="border-t">
                   <td className="px-3 py-2">{idx + 1}</td>
                   <td className="px-3 py-2">{w.created_at ? new Date(w.created_at).toLocaleString('id-ID') : '-'}</td>
@@ -382,7 +391,7 @@ const ReferralCodesPage = () => {
         </div>
       </div>
 
-      {/*   <div className="space-y-2">
+      <div className="space-y-2">
         <h2 className="text-lg font-medium">Validate a Code (client-side)</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <label className="flex flex-col gap-1">
@@ -406,10 +415,11 @@ const ReferralCodesPage = () => {
             </div>
           </div>
         )}
-      </div> */}
+      </div>
 
       <p className="text-xs text-gray-500">Manage kode milik Anda. Untuk approval admin, gunakan endpoint admin atau halaman admin (jika tersedia).</p>
     </div>
+
   );
 };
 
