@@ -34,6 +34,13 @@ const ReferralCodesPage = () => {
   const [prefix, setPrefix] = useState('REF');
   const normalizedPrefix = useMemo(() => normalizeCode(prefix), [prefix]);
 
+  const displayCode = (c) => {
+    if (!c) return '';
+    const s = String(c);
+    const idx = s.indexOf('-');
+    return idx > -1 ? s.slice(idx + 1) : s;
+  };
+
   const fetchMine = async () => {
     setLoading(true);
     setError(null);
@@ -216,7 +223,7 @@ const ReferralCodesPage = () => {
                     <td className="px-3 py-2">{idx + 1}</td>
                     <td className="px-3 py-2">{r.user?.name || '-'}</td>
                     <td className="px-3 py-2">{r.user?.email || '-'}</td>
-                    <td className="px-3 py-2 font-mono">{r.code}</td>
+                    <td className="px-3 py-2 font-mono">{displayCode(r.code)}</td>
                     <td className="px-3 py-2">{r.used_count ?? 0}/{r.usage_limit ?? '-'}</td>
                     <td className="px-3 py-2">{(r.valid_from || '-') + ' s/d ' + (r.valid_to || '-')}</td>
                     <td className="px-3 py-2">{r.active ? 'Yes' : 'No'}</td>
@@ -256,7 +263,7 @@ const ReferralCodesPage = () => {
                     <td className="px-3 py-2">{idx + 1}</td>
                     <td className="px-3 py-2">{r.user?.name || '-'}</td>
                     <td className="px-3 py-2">{r.user?.email || '-'}</td>
-                    <td className="px-3 py-2 font-mono">{r.code}</td>
+                    <td className="px-3 py-2 font-mono">{displayCode(r.code)}</td>
                     <td className="px-3 py-2">{r.used_count ?? 0}/{r.usage_limit ?? '-'}</td>
                     <td className="px-3 py-2">{(r.valid_from || '-') + ' s/d ' + (r.valid_to || '-')}</td>
                     <td className="px-3 py-2">{r.active ? 'Yes' : 'No'}</td>
@@ -341,7 +348,7 @@ const ReferralCodesPage = () => {
             {(adminEnabled ? adminActiveList : list).map((row, idx) => (
               <tr key={row.id || idx} className="border-t">
                 <td className="px-3 py-2">{idx + 1}</td>
-                <td className="px-3 py-2 font-mono">{row.code}</td>
+                <td className="px-3 py-2 font-mono">{displayCode(row.code)}</td>
                 <td className="px-3 py-2">{row.used_count ?? 0}/{row.usage_limit ?? '-'}</td>
                 <td className="px-3 py-2">{(row.valid_from || '-') + ' s/d ' + (row.valid_to || '-')}</td>
                 <td className="px-3 py-2">{row.active ? 'Yes' : 'No'}</td>
