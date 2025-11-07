@@ -181,44 +181,6 @@ const ReferralCodesPage = () => {
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
 
-        {/*  {adminEnabled && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-medium">Admin: Referral Active</h2>
-          {adminActiveLoading && <div className="text-sm text-gray-600">Loading...</div>}
-          <div className="overflow-x-auto border rounded">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="text-left px-3 py-2">#</th>
-                  <th className="text-left px-3 py-2">User</th>
-                  <th className="text-left px-3 py-2">Email</th>
-                  <th className="text-left px-3 py-2">Code</th>
-                  <th className="text-left px-3 py-2">Usage</th>
-                  <th className="text-left px-3 py-2">Valid</th>
-                  <th className="text-left px-3 py-2">Active</th>
-                </tr>
-              </thead>
-              <tbody>
-                {adminActiveList.length === 0 && (
-                  <tr><td className="px-3 py-3 text-gray-600" colSpan={7}>Tidak ada data aktif.</td></tr>
-                )}
-                {adminActiveList.map((r, idx) => (
-                  <tr key={r.id || idx} className="border-t">
-                    <td className="px-3 py-2">{idx + 1}</td>
-                    <td className="px-3 py-2">{r.user?.name || '-'}</td>
-                    <td className="px-3 py-2">{r.user?.email || '-'}</td>
-                    <td className="px-3 py-2 font-mono">{r.code}</td>
-                    <td className="px-3 py-2">{r.used_count ?? 0}/{r.usage_limit ?? '-'}</td>
-                    <td className="px-3 py-2">{(r.valid_from || '-') + ' s/d ' + (r.valid_to || '-')}</td>
-                    <td className="px-3 py-2">{r.active ? 'Yes' : 'No'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}*/}
-
       <div className="grid md:grid-cols-2 gap-4">
         {adminEnabled && (
           <div className="space-y-3">
