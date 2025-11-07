@@ -26,10 +26,10 @@ class ReferralWithdrawalController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        // Calculate available balance
+        // Calculate available balance (treat 'queued' as reserved)
         $totalEarning = (int) Referal::where('user_id_referral', $user->id)->sum('value');
         $totalWithdrawn = (int) ReferralWithdrawal::where('user_id', $user->id)
-            ->whereIn('status', ['approved', 'paid'])
+            ->whereIn('status', ['queued', 'approved', 'paid'])
             ->sum('amount');
         $available = max(0, $totalEarning - $totalWithdrawn);
 
@@ -162,7 +162,7 @@ class ReferralWithdrawalController extends Controller
 
         $totalEarning = (int) Referal::where('user_id_referral', $user->id)->sum('value');
         $totalWithdrawn = (int) ReferralWithdrawal::where('user_id', $user->id)
-            ->whereIn('status', ['approved', 'paid'])
+            ->whereIn('status', ['queued', 'approved', 'paid'])
             ->sum('amount');
         $available = max(0, $totalEarning - $totalWithdrawn);
 

@@ -226,8 +226,9 @@ class ReferralCodeController extends Controller
 
         // augment with balance (using new referral_withdrawals table)
         $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
+        // include 'queued' as reserved so available decreases while pending
         $withdrawn = (int) \App\Models\ReferralWithdrawal::where('user_id', $user->id)
-            ->whereIn('status', ['approved', 'paid'])
+            ->whereIn('status', ['queued', 'approved', 'paid'])
             ->sum('amount');
         $available = max(0, $sum - $withdrawn);
         // recent uses list (desc by tanggal) with per_page limit (default 50)
