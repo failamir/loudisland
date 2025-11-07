@@ -337,10 +337,10 @@ const ReferralCodesPage = () => {
             </tr>
           </thead>
           <tbody>
-            {list.length === 0 && (
+            {(adminEnabled ? adminActiveList : list).length === 0 && (
               <tr><td className="px-3 py-3 text-gray-600" colSpan={6}>Belum ada referral code.</td></tr>
             )}
-            {list.map((row, idx) => (
+            {(adminEnabled ? adminActiveList : list).map((row, idx) => (
               <tr key={row.id || idx} className="border-t">
                 <td className="px-3 py-2">{idx + 1}</td>
                 <td className="px-3 py-2 font-mono">{row.code}</td>
@@ -359,8 +359,9 @@ const ReferralCodesPage = () => {
       </div>
 
       <div className="space-y-3">
-        <h2 className="text-lg font-medium">Riwayat Tarik Saldo (Referral)</h2>
-        {myWdLoading && <div className="text-sm text-gray-600">Loading...</div>}
+        <h2 className="text-lg font-medium">Riwayat Tarik Saldo (Referral){adminEnabled ? ' - Admin' : ''}</h2>
+        {(!adminEnabled && myWdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
+        {(adminEnabled && wdLoading) && <div className="text-sm text-gray-600">Loading...</div>}
         <div className="overflow-x-auto border rounded">
           <table className="min-w-full text-sm">
             <thead className="bg-gray-50">
@@ -374,13 +375,13 @@ const ReferralCodesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {myWd.length === 0 && (
+              {(adminEnabled ? wdList : myWd).length === 0 && (
                 <tr><td className="px-3 py-3 text-gray-600" colSpan={6}>Tidak ada riwayat penarikan.</td></tr>
               )}
-              {myWd.map((w, idx) => (
+              {(adminEnabled ? wdList : myWd).map((w, idx) => (
                 <tr key={w.id || idx} className="border-t">
                   <td className="px-3 py-2">{idx + 1}</td>
-                  <td className="px-3 py-2">{new Date(w.created_at).toLocaleString('id-ID')}</td>
+                  <td className="px-3 py-2">{w.created_at ? new Date(w.created_at).toLocaleString('id-ID') : '-'}</td>
                   <td className="px-3 py-2">{new Intl.NumberFormat('id-ID').format(w.amount || 0)}</td>
                   <td className="px-3 py-2">{w.bank}</td>
                   <td className="px-3 py-2">{w.account_name} / {w.account_number}</td>
