@@ -59,7 +59,7 @@ const ReferralCodesPage = () => {
 
   const onWdAction = async (w, action) => {
     try {
-      const res = await fetch(`${API_URL}/withdrawals/${w.id}/status`, {
+      const res = await fetch(`${API_URL}/admin/referral-withdrawals/${w.id}/status`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ action }),
@@ -99,7 +99,7 @@ const ReferralCodesPage = () => {
   const fetchWithdrawals = async () => {
     setWdLoading(true);
     try {
-      const res = await fetch(`${API_URL}/withdrawals?status=queued&per_page=50`, { headers });
+      const res = await fetch(`${API_URL}/admin/referral-withdrawals?status=queued&per_page=50`, { headers });
       const data = await res.json().catch(()=>({}));
       if (res.ok) {
         setWdList(Array.isArray(data?.data) ? data.data : []);

@@ -25,6 +25,7 @@ use App\Http\Controllers\Api\V1\Admin\WithdrawalController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApiController;
 use App\Http\Controllers\Api\V1\Admin\PromoCodeApplyController;
 use App\Http\Controllers\Api\V1\Admin\ReferralCodeController;
+use App\Http\Controllers\Api\V1\Admin\ReferralWithdrawalController;
 use App\Http\Controllers\Api\V1\Admin\PasswordResetApiController;
 
 // use Illuminate\Http\Client\Http;
@@ -108,17 +109,22 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::post('referral-codes', [ReferralCodeController::class, 'store']);
         Route::patch('referral-codes/{id}', [ReferralCodeController::class, 'update']);
         Route::delete('referral-codes/{id}', [ReferralCodeController::class, 'destroy']);
-        // Referral balance summary for current user
-        Route::get('referral/balance', [ReferralCodeController::class, 'balance']);
         // Referral profile + dashboard
         Route::get('referral-codes/mine', [ReferralCodeController::class, 'mine']);
         Route::patch('referral-codes/mine', [ReferralCodeController::class, 'updateMine']);
         Route::get('referral-codes/transactions', [ReferralCodeController::class, 'transactions']);
-        Route::get('referral/withdrawals', [ReferralCodeController::class, 'myWithdrawals']);
 
         // Admin: approve/activate referral codes (requires Gate ability 'referral.manage')
         Route::get('admin/referral-codes', [ReferralCodeController::class, 'adminIndex']);
         Route::patch('admin/referral-codes/{id}/status', [ReferralCodeController::class, 'adminUpdateStatus']);
+
+        // Referral Withdrawals (separate from main withdrawals)
+        Route::post('referral/withdrawals', [ReferralWithdrawalController::class, 'store']);
+        Route::get('referral/withdrawals', [ReferralWithdrawalController::class, 'index']);
+        Route::get('referral/balance', [ReferralWithdrawalController::class, 'balance']);
+        // Admin: manage referral withdrawals
+        Route::get('admin/referral-withdrawals', [ReferralWithdrawalController::class, 'adminIndex']);
+        Route::patch('admin/referral-withdrawals/{id}/status', [ReferralWithdrawalController::class, 'adminUpdateStatus']);
     });
 
     // Pendaftar

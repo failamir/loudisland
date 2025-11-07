@@ -171,30 +171,6 @@ class ReferralCodeController extends Controller
         return response()->json(['message' => 'Deleted']);
     }
 
-    public function balance(Request $request)
-    {
-        $user = $request->user('api') ?: $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
-        $count = (int) Referal::where('user_id_referral', $user->id)->count();
-        $withdrawn = (int) \App\Models\Withdrawal::where('created_by_id', $user->id)
-            ->where('status', 'paid')
-            ->where('note', 'referral')
-            ->sum('amount');
-        $available = max(0, $sum - $withdrawn);
-
-        return response()->json([
-            'data' => [
-                'balance' => $sum,
-                'total_uses' => $count,
-                'withdrawn_referral' => $withdrawn,
-                'available_referral' => $available,
-            ],
-        ]);
-    }
 
     public function validatePublic(Request $request)
     {
@@ -248,11 +224,10 @@ class ReferralCodeController extends Controller
             return response()->json(['message' => 'Referral belum terdaftar untuk akun ini. Silakan daftar terlebih dahulu.'], 404);
         }
 
-        // augment with balance
+        // augment with balance (using new referral_withdrawals table)
         $sum = (int) Referal::where('user_id_referral', $user->id)->sum('value');
-        $withdrawn = (int) \App\Models\Withdrawal::where('created_by_id', $user->id)
-            ->where('note', 'referral')
-            ->where('status', 'paid')
+        $withdrawn = (int) \App\Models\ReferralWithdrawal::where('user_id', $user->id)
+            ->whereIn('status', ['approved', 'paid'])
             ->sum('amount');
         $available = max(0, $sum - $withdrawn);
         // recent uses list (desc by tanggal) with per_page limit (default 50)
@@ -330,20 +305,6 @@ class ReferralCodeController extends Controller
         return response()->json(['data' => $rows]);
     }
 
-    // List my withdrawals (for dashboard history)
-    public function myWithdrawals(Request $request)
-    {
-        $user = $request->user('api') ?: $request->user();
-        if (!$user) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-        $limit = max(1, (int) $request->get('per_page', 20));
-        $rows = \App\Models\Withdrawal::where('created_by_id', $user->id)
-            ->orderByDesc('created_at')
-            ->take($limit)
-            ->get(['id','amount','bank','account_name','account_number','status','created_at']);
-        return response()->json(['data' => $rows]);
-    }
 
     public function adminUpdateStatus(Request $request, $id)
     {
@@ -351,9 +312,9 @@ class ReferralCodeController extends Controller
         if (!$user) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
-        // if (Gate::denies('referral.manage')) {
-        //     return response()->json(['message' => 'Forbidden'], 403);
-        // }
+        if (Gate::denies('referral.manage')) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
 
         $data = $request->validate([
             'active' => 'required|boolean',
