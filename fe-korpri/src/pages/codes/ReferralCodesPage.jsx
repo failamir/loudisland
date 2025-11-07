@@ -180,6 +180,7 @@ const ReferralCodesPage = () => {
           <a href="/referral" className="text-blue-600 hover:underline text-sm">Dashboard</a>
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         {adminEnabled && (
