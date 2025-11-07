@@ -219,6 +219,13 @@ class ReferralCodeController extends Controller
         $code = strtoupper(trim($data['code']));
         $row = ReferralCode::whereRaw('UPPER(code) = ?', [$code])->first();
         if (!$row) {
+            // fallback: body-only match (suffix after dash)
+            $body = preg_replace('/[^A-Z0-9]/', '', $code);
+            if ($body !== '') {
+                $row = ReferralCode::whereRaw('UPPER(code) LIKE ?', ['%-' . $body])->first();
+            }
+        }
+        if (!$row) {
             return response()->json(['valid' => false, 'reason' => 'not_found']);
         }
         $now = now();

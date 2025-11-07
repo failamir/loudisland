@@ -13,7 +13,17 @@ class PromoCodeApplyController extends Controller
 {
     protected function findByCode(string $code): ?PromoCode
     {
-        return PromoCode::whereRaw('LOWER(code) = ?', [strtolower(trim($code))])->first();
+        $input = strtoupper(trim($code));
+        $exact = PromoCode::whereRaw('UPPER(code) = ?', [$input])->first();
+        if ($exact) {
+            return $exact;
+        }
+        // Fallback: body-only (match suffix after dash)
+        $body = preg_replace('/[^A-Z0-9]/', '', $input);
+        if ($body === '') {
+            return null;
+        }
+        return PromoCode::whereRaw('UPPER(code) LIKE ?', ['%-' . $body])->first();
     }
 
     protected function computeDiscount(PromoCode $promo, float $baseAmount): array
@@ -136,6 +146,13 @@ class PromoCodeApplyController extends Controller
                 // Not a promo? Try referral code in the same endpoint
                 $refCode = strtoupper(trim($data['code']));
                 $ref = ReferralCode::whereRaw('UPPER(code) = ?', [$refCode])->first();
+                if (!$ref) {
+                    // Fallback: body-only suffix match
+                    $body = preg_replace('/[^A-Z0-9]/', '', $refCode);
+                    if ($body !== '') {
+                        $ref = ReferralCode::whereRaw('UPPER(code) LIKE ?', ['%-' . $body])->first();
+                    }
+                }
                 if (!$ref) {
                     return response()->json([
                         'status' => 'error',
