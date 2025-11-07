@@ -93,7 +93,7 @@ class ReferralCodeController extends Controller
                 // no dash provided, treat as body and add default prefix
                 $body = preg_replace('/[^A-Z0-9]/', '', $norm);
                 $body = substr($body, 0, 24);
-                $norm = ($body !== '' ? $body : $this->randomBody(8));
+                $norm = 'REF-' . ($body !== '' ? $body : $this->randomBody(8));
             }
             $code = $norm;
         } else {
@@ -102,7 +102,16 @@ class ReferralCodeController extends Controller
 
         // Validate pattern PREFIX-BODY with body length 4..24
         if (!preg_match('/^[A-Z0-9]+-[A-Z0-9]{4,24}$/', $code)) {
-            return response()->json(['message' => 'Format kode tidak valid. Gunakan PREFIX-XXXXXXXX (4-24 karakter).'], 422);
+            // Fallback: if user entered body-only, auto-prefix REF- when body length valid
+            $bodyOnly = strtoupper(trim((string) ($data['code'] ?? '')));
+            $bodyOnly = preg_replace('/[^A-Z0-9]/', '', $bodyOnly);
+            if ($bodyOnly !== '' && strlen($bodyOnly) >= 4 && strlen($bodyOnly) <= 24) {
+                $code = 'REF-' . $bodyOnly;
+            }
+
+            if (!preg_match('/^[A-Z0-9]+-[A-Z0-9]{4,24}$/', $code)) {
+                return response()->json(['message' => 'Format kode tidak valid. Gunakan PREFIX-XXXXXXXX (4-24 karakter).'], 422);
+            }
         }
 
         // Ensure unique (case-insensitive)
@@ -116,7 +125,7 @@ class ReferralCodeController extends Controller
             'code' => $code,
             // Default inactive; admin will approve/activate later
             'active' => false,
-            'usage_limit' => $data['usage_limit'] ?? null,
+            'usage_limit' => $data['usage_limit'] ?? 1000,
             'used_count' => 0,
             'valid_from' => $data['valid_from'] ?? null,
             'valid_to' => $data['valid_to'] ?? null,
