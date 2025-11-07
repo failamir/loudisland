@@ -59,6 +59,7 @@ const ReferralCodesPage = () => {
         return;
       }
       fetchAdmin();
+      fetchAdminActive();
     } catch (_) {
       alert('Gagal approve');
     }
