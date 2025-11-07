@@ -182,7 +182,7 @@ const ReferralCodesPage = () => {
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
 
-      {adminEnabled && (
+        {/*  {adminEnabled && (
         <div className="space-y-3">
           <h2 className="text-lg font-medium">Admin: Referral Active</h2>
           {adminActiveLoading && <div className="text-sm text-gray-600">Loading...</div>}
@@ -218,7 +218,7 @@ const ReferralCodesPage = () => {
             </table>
           </div>
         </div>
-      )}
+      )}*/}
 
       {adminEnabled && (
         <div className="space-y-3">
