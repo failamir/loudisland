@@ -18,8 +18,11 @@ const ReferralCodesPage = () => {
   const [adminList, setAdminList] = useState([]);
   const [adminEnabled, setAdminEnabled] = useState(false);
   const [adminLoading, setAdminLoading] = useState(false);
+  const [adminActiveList, setAdminActiveList] = useState([]);
+  const [adminActiveLoading, setAdminActiveLoading] = useState(false);
   const [wdList, setWdList] = useState([]);
   const [wdLoading, setWdLoading] = useState(false);
+  const [wdStatus, setWdStatus] = useState('queued');
   // my referral withdrawals (history)
   const [myWd, setMyWd] = useState([]);
   const [myWdLoading, setMyWdLoading] = useState(false);
@@ -99,10 +102,30 @@ const ReferralCodesPage = () => {
     }
   };
 
+  const fetchAdminActive = async () => {
+    setAdminActiveLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/admin/referral-codes?per_page=100&active=true`, { headers });
+      if (res.status === 403) {
+        setAdminEnabled(false);
+        setAdminActiveLoading(false);
+        return;
+      }
+      const data = await res.json().catch(()=>({}));
+      if (res.ok) {
+        setAdminEnabled(true);
+        setAdminActiveList(Array.isArray(data?.data) ? data.data : []);
+      }
+    } finally {
+      setAdminActiveLoading(false);
+    }
+  };
+
   const fetchWithdrawals = async () => {
     setWdLoading(true);
     try {
-      const res = await fetch(`${API_URL}/admin/referral-withdrawals?status=queued&per_page=50`, { headers });
+      const qs = new URLSearchParams({ per_page: '50', ...(wdStatus ? { status: wdStatus } : {}) });
+      const res = await fetch(`${API_URL}/admin/referral-withdrawals?${qs.toString()}`, { headers });
       const data = await res.json().catch(()=>({}));
       if (res.ok) {
         setWdList(Array.isArray(data?.data) ? data.data : []);
@@ -125,7 +148,8 @@ const ReferralCodesPage = () => {
     }
   };
 
-  useEffect(() => { fetchAdmin(); fetchWithdrawals(); fetchMyWithdrawals(); }, []);
+  useEffect(() => { fetchAdmin(); fetchAdminActive(); fetchWithdrawals(); fetchMyWithdrawals(); }, []);
+  useEffect(() => { fetchWithdrawals(); }, [wdStatus]);
 
   const onToggle = async (row) => {
     try {
@@ -157,6 +181,44 @@ const ReferralCodesPage = () => {
           <a href="/referral" className="text-blue-600 hover:underline text-sm">Dashboard</a>
           <a href="/referral/register" className="text-blue-600 hover:underline text-sm">Register</a>
         </div>
+
+      {adminEnabled && (
+        <div className="space-y-3">
+          <h2 className="text-lg font-medium">Admin: Referral Active</h2>
+          {adminActiveLoading && <div className="text-sm text-gray-600">Loading...</div>}
+          <div className="overflow-x-auto border rounded">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left px-3 py-2">#</th>
+                  <th className="text-left px-3 py-2">User</th>
+                  <th className="text-left px-3 py-2">Email</th>
+                  <th className="text-left px-3 py-2">Code</th>
+                  <th className="text-left px-3 py-2">Usage</th>
+                  <th className="text-left px-3 py-2">Valid</th>
+                  <th className="text-left px-3 py-2">Active</th>
+                </tr>
+              </thead>
+              <tbody>
+                {adminActiveList.length === 0 && (
+                  <tr><td className="px-3 py-3 text-gray-600" colSpan={7}>Tidak ada data aktif.</td></tr>
+                )}
+                {adminActiveList.map((r, idx) => (
+                  <tr key={r.id || idx} className="border-t">
+                    <td className="px-3 py-2">{idx + 1}</td>
+                    <td className="px-3 py-2">{r.user?.name || '-'}</td>
+                    <td className="px-3 py-2">{r.user?.email || '-'}</td>
+                    <td className="px-3 py-2 font-mono">{r.code}</td>
+                    <td className="px-3 py-2">{r.used_count ?? 0}/{r.usage_limit ?? '-'}</td>
+                    <td className="px-3 py-2">{(r.valid_from || '-') + ' s/d ' + (r.valid_to || '-')}</td>
+                    <td className="px-3 py-2">{r.active ? 'Yes' : 'No'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {adminEnabled && (
         <div className="space-y-3">
@@ -208,6 +270,17 @@ const ReferralCodesPage = () => {
       {adminEnabled && (
         <div className="space-y-3">
           <h2 className="text-lg font-medium">Admin: Verify Withdrawals (queued)</h2>
+          <div className="flex items-center gap-2 text-sm">
+            <span>Filter status:</span>
+            <select className="border rounded px-2 py-1" value={wdStatus} onChange={(e)=>setWdStatus(e.target.value)}>
+              <option value="">All</option>
+              <option value="queued">queued</option>
+              <option value="approved">approved</option>
+              <option value="paid">paid</option>
+              <option value="rejected">rejected</option>
+              <option value="canceled">canceled</option>
+            </select>
+          </div>
           {wdLoading && <div className="text-sm text-gray-600">Loading...</div>}
           <div className="overflow-x-auto border rounded">
             <table className="min-w-full text-sm">
@@ -319,7 +392,7 @@ const ReferralCodesPage = () => {
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/*   <div className="space-y-2">
         <h2 className="text-lg font-medium">Validate a Code (client-side)</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <label className="flex flex-col gap-1">
@@ -343,7 +416,7 @@ const ReferralCodesPage = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       <p className="text-xs text-gray-500">Manage kode milik Anda. Untuk approval admin, gunakan endpoint admin atau halaman admin (jika tersedia).</p>
     </div>
