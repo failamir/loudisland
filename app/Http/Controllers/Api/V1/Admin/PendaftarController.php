@@ -1907,11 +1907,13 @@ class PendaftarController extends Controller
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
             $updateTrx = Transaksi::where('invoice', $no_invoice)->update([
-                'payment_url' => $paymentUrl,
-                'type' => $type,
+                'payment_url'   => $paymentUrl,
+                'type'          => $type,
                 'promo_code_id' => $promo_code_id,
-                'discount' => $discount,
-                'final_price' => $final_price,
+                'discount'      => $discount,
+                'service_fee'   => $fee_service,
+                'ppn'           => $ppn,
+                'final_price'   => $final_price,
             ]);
 
             // dd($updateTrx);

@@ -48,6 +48,8 @@ class Transaksi extends Model implements HasMedia
         'amount',
         'final_price',
         'discount',
+        'service_fee',
+        'ppn',
         'promo_code_id',
         'type',
         'note',
