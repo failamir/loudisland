@@ -22,7 +22,7 @@ const ReferralCodesPage = () => {
   const [adminActiveLoading, setAdminActiveLoading] = useState(false);
   const [wdList, setWdList] = useState([]);
   const [wdLoading, setWdLoading] = useState(false);
-  const [wdStatus, setWdStatus] = useState('queued');
+  // admin withdrawals: fetch all statuses
   // my referral withdrawals (history)
   const [myWd, setMyWd] = useState([]);
   const [myWdLoading, setMyWdLoading] = useState(false);
@@ -124,7 +124,7 @@ const ReferralCodesPage = () => {
   const fetchWithdrawals = async () => {
     setWdLoading(true);
     try {
-      const qs = new URLSearchParams({ per_page: '50', ...(wdStatus ? { status: wdStatus } : {}) });
+      const qs = new URLSearchParams({ per_page: '50' });
       const res = await fetch(`${API_URL}/admin/referral-withdrawals?${qs.toString()}`, { headers });
       const data = await res.json().catch(()=>({}));
       if (res.ok) {
@@ -149,7 +149,6 @@ const ReferralCodesPage = () => {
   };
 
   useEffect(() => { fetchAdmin(); fetchAdminActive(); fetchWithdrawals(); fetchMyWithdrawals(); }, []);
-  useEffect(() => { fetchWithdrawals(); }, [wdStatus]);
 
   const onToggle = async (row) => {
     try {
@@ -220,12 +219,13 @@ const ReferralCodesPage = () => {
         </div>
       )}*/}
 
-      {adminEnabled && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-medium">Admin: Approval Referral (pending)</h2>
-          {adminLoading && <div className="text-sm text-gray-600">Loading...</div>}
-          <div className="overflow-x-auto border rounded">
-            <table className="min-w-full text-sm">
+      <div className="grid md:grid-cols-2 gap-4">
+        {adminEnabled && (
+          <div className="space-y-3">
+            <h2 className="text-lg font-medium">Admin: Approval Referral (pending)</h2>
+            {adminLoading && <div className="text-sm text-gray-600">Loading...</div>}
+            <div className="overflow-x-auto border rounded">
+              <table className="min-w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-3 py-2">#</th>
@@ -262,28 +262,17 @@ const ReferralCodesPage = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {adminEnabled && (
-        <div className="space-y-3">
-          <h2 className="text-lg font-medium">Admin: Verify Withdrawals (queued)</h2>
-          <div className="flex items-center gap-2 text-sm">
-            <span>Filter status:</span>
-            <select className="border rounded px-2 py-1" value={wdStatus} onChange={(e)=>setWdStatus(e.target.value)}>
-              <option value="">All</option>
-              <option value="queued">queued</option>
-              <option value="approved">approved</option>
-              <option value="paid">paid</option>
-              <option value="rejected">rejected</option>
-              <option value="canceled">canceled</option>
-            </select>
-          </div>
-          {wdLoading && <div className="text-sm text-gray-600">Loading...</div>}
-          <div className="overflow-x-auto border rounded">
-            <table className="min-w-full text-sm">
+        {adminEnabled && (
+          <div className="space-y-3">
+            <h2 className="text-lg font-medium">Admin: Verify Withdrawals (all)</h2>
+            {wdLoading && <div className="text-sm text-gray-600">Loading...</div>}
+            <div className="overflow-x-auto border rounded">
+              <table className="min-w-full text-sm">
               <thead className="bg-gray-50">
                 <tr>
                   <th className="text-left px-3 py-2">#</th>
@@ -315,10 +304,10 @@ const ReferralCodesPage = () => {
                   </tr>
                 ))}
               </tbody>
-            </table>
+              </table>
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
 
       {loading && <div className="text-sm text-gray-600">Loading...</div>}
