@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
 
 class ReferralCodeController extends Controller
 {
@@ -125,6 +126,35 @@ class ReferralCodeController extends Controller
                 'account_number' => $data['account_number'] ?? null,
             ],
         ]);
+
+        // Notify admins about new referral registration (pending approval)
+        try {
+            $subject = 'New Referral Registration (Pending)';
+            $body = "ReferralCode ID: {$row->id}\n" .
+                    "User ID: {$user->id}\n" .
+                    "User: {$user->name} <{$user->email}>\n" .
+                    "Code: {$row->code}\n" .
+                    "Active: {$row->active}\n" .
+                    "Created At: {$row->created_at}";
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        } catch (\Throwable $_) {
+            // ignore mail failures silently
+        }
+
+        // Assign role Refer Pending (id 3) on registration
+        try {
+            if (method_exists($user->roles(), 'syncWithoutDetaching')) {
+                $user->roles()->syncWithoutDetaching([3]);
+            } else {
+                if (!$user->roles()->where('roles.id', 3)->exists()) {
+                    $user->roles()->attach(3);
+                }
+            }
+        } catch (\Throwable $_) {
+            // ignore role attach failures silently
+        }
 
         return response()->json(['data' => $row], 201);
     }
@@ -329,6 +359,43 @@ class ReferralCodeController extends Controller
         $row->update([
             'active' => (bool) $data['active'],
         ]);
+
+        // On approve: switch roles Refer Pending (3) -> Refer Approve (4)
+        if ((bool) $data['active']) {
+            $u = \App\Models\User::find($row->user_id);
+            if ($u) {
+                try {
+                    $u->roles()->detach(3);
+                    if (method_exists($u->roles(), 'syncWithoutDetaching')) {
+                        $u->roles()->syncWithoutDetaching([4]);
+                    } else {
+                        if (!$u->roles()->where('roles.id', 4)->exists()) {
+                            $u->roles()->attach(4);
+                        }
+                    }
+                } catch (\Throwable $_) {
+                    // ignore role updates silently
+                }
+            }
+        }
+
+        // Notify about approval status change
+        try {
+            $subject = 'Referral Code Approval Updated';
+            $statusText = ((bool)$data['active']) ? 'APPROVED' : 'DEACTIVATED';
+            $owner = \App\Models\User::find($row->user_id);
+            $body = "ReferralCode ID: {$row->id}\n" .
+                    "User ID: {$row->user_id}\n" .
+                    "Code: {$row->code}\n" .
+                    "New Status: {$statusText}\n" .
+                    "Owner: " . ($owner ? ($owner->name . ' <' . $owner->email . '>') : '-') . "\n" .
+                    "Updated At: " . now();
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        } catch (\Throwable $_) {
+            // ignore mail failures silently
+        }
 
         return response()->json(['data' => $row->fresh()]);
     }

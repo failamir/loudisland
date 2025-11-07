@@ -10,6 +10,7 @@ use App\Models\Participant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 
 class WithdrawalController extends Controller
 {
@@ -171,6 +172,20 @@ class WithdrawalController extends Controller
             ]);
         });
 
+        $subject = 'New Withdrawal Requested';
+        $body = "ID: {$withdrawal->id}\n" .
+                "Amount: {$withdrawal->amount}\n" .
+                "Bank: {$withdrawal->bank}\n" .
+                "Account Name: {$withdrawal->account_name}\n" .
+                "Account Number: {$withdrawal->account_number}\n" .
+                "Status: {$withdrawal->status}\n" .
+                "Note: " . ($withdrawal->note ?? '-') . "\n" .
+                "Requested By User ID: " . ($userId ?? '-') . "\n" .
+                "Created At: {$withdrawal->created_at}";
+        Mail::raw($body, function ($message) use ($subject) {
+            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+        });
+
         return response()->json([
             'message' => 'Withdrawal berhasil diajukan',
             'data' => $withdrawal->load('created_by'),
@@ -223,6 +238,20 @@ class WithdrawalController extends Controller
                     'total_withdrawn' => $totalWithdrawn,
                 ],
             ]);
+        });
+
+        $subject = 'Withdrawal Status Updated';
+        $body = "ID: {$withdrawal->id}\n" .
+                "New Status: {$data['action']}\n" .
+                "Amount: {$withdrawal->amount}\n" .
+                "Bank: {$withdrawal->bank}\n" .
+                "Account Name: {$withdrawal->account_name}\n" .
+                "Account Number: {$withdrawal->account_number}\n" .
+                "Note: " . (($data['note'] ?? $withdrawal->note) ?? '-') . "\n" .
+                "Updated By User ID: " . ($userId ?? '-') . "\n" .
+                "Updated At: " . now();
+        Mail::raw($body, function ($message) use ($subject) {
+            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
         });
 
         return response()->json([
