@@ -93,7 +93,7 @@ class ReferralCodeController extends Controller
                 // no dash provided, treat as body and add default prefix
                 $body = preg_replace('/[^A-Z0-9]/', '', $norm);
                 $body = substr($body, 0, 24);
-                $norm = 'REF-' . ($body !== '' ? $body : $this->randomBody(8));
+                $norm = ($body !== '' ? $body : $this->randomBody(8));
             }
             $code = $norm;
         } else {
