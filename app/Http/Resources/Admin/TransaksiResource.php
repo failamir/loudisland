@@ -33,6 +33,11 @@ class TransaksiResource extends JsonResource
             }
         }
 
+        // Flatten promo code string for FE consumption
+        if (!array_key_exists('promo_code', $data)) {
+            $data['promo_code'] = optional($this->whenLoaded('promoCode'))->code ?? null;
+        }
+
         return $data;
     }
 }

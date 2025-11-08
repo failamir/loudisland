@@ -104,6 +104,11 @@ class Transaksi extends Model implements HasMedia
         return $this->hasMany(Participant::class, 'transaction_id');
     }
 
+    public function promoCode()
+    {
+        return $this->belongsTo(PromoCode::class, 'promo_code_id');
+    }
+
     protected function serializeDate(DateTimeInterface $date)
     {
         return $date->format('Y-m-d H:i:s');
