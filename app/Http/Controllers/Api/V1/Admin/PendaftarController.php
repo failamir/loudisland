@@ -1807,8 +1807,41 @@ class PendaftarController extends Controller
             // determine type and promo/referral id from FE (supports snake_case and camelCase)
             $type = $request->input('type', 'promo');
             $promo_code_id = $request->input('promo_code_id') ?? $request->input('promoCodeId');
-            // compute discount only for promo type with valid promo_code_id
+            // Enforce ticket restriction for promo/referral by allowed_events metadata
+            try {
+                $participantTicketIds = array_map(function ($p) {
+                    return (int) ($p['ticketId'] ?? 0);
+                }, $data['participants']);
+                $allowed = [];
+                if (!empty($promo_code_id)) {
+                    if ($type === 'promo') {
+                        $pmodel = \App\Models\PromoCode::find($promo_code_id);
+                        if ($pmodel && is_array($pmodel->metadata)) {
+                            $allowed = $pmodel->metadata['allowed_events'] ?? [];
+                        }
+                    } elseif ($type === 'referral') {
+                        $rmodel = \App\Models\ReferralCode::find($promo_code_id);
+                        if ($rmodel && is_array($rmodel->metadata)) {
+                            $allowed = $rmodel->metadata['allowed_events'] ?? [];
+                        }
+                    }
+                }
+                if (is_array($allowed) && !empty($allowed)) {
+                    $allowedInt = array_map('intval', $allowed);
+                    foreach ($participantTicketIds as $tid) {
+                        if (!in_array((int) $tid, $allowedInt, true)) {
+                            return response()->json([
+                                'message' => $type === 'referral' ? 'Kode referal hanya berlaku untuk tiket UMUM.' : 'Promo ini hanya berlaku untuk tiket tertentu.',
+                                'disallowed_ticket_id' => $tid,
+                            ], 422);
+                        }
+                    }
+                }
+            } catch (\Throwable $e) { /* silent validation failure, do not block payment */
+            }
+            // compute discount for promo/referral
             $discount = 0;
+            $refDiscount = null; // for referral per-item adjustment
             if ($type === 'promo' && !empty($promo_code_id)) {
                 $discountType = PromoCode::find($promo_code_id)->discount_type ?? null;
                 if ($discountType == 'fixed') {
@@ -1818,6 +1851,23 @@ class PendaftarController extends Controller
                     $discountAmount = PromoCode::find($promo_code_id)->amount ?? 0;
                     $discount = (float) $total_payment * ((float) $discountAmount / 100);
                 }
+            } elseif ($type === 'referral' && !empty($promo_code_id)) {
+                // Fixed referral discount per qualifying ticket (id=2). Default 25,000; can override via metadata.referral_discount
+                $refDiscount = 25000;
+                try {
+                    $refModel = \App\Models\ReferralCode::find($promo_code_id);
+                    if ($refModel && is_array($refModel->metadata) && isset($refModel->metadata['referral_discount'])) {
+                        $refDiscount = (int) $refModel->metadata['referral_discount'];
+                    }
+                } catch (\Throwable $e) { /* ignore */
+                }
+                $qualifying = 0;
+                foreach ($data['participants'] as $p) {
+                    if ((int)($p['ticketId'] ?? 0) === 2) {
+                        $qualifying++;
+                    }
+                }
+                $discount = max(0, $refDiscount * $qualifying);
             }
 
             // Apply discount proportionally to each ticket item in item_details so prices are net of discount
@@ -1828,26 +1878,38 @@ class PendaftarController extends Controller
                 }
             }
             if ($discount > 0 && $originalSum > 0) {
-                $remaining = (int) round($discount);
-                foreach ($itemDetails as $idx => $it) {
-                    if (isset($it['id']) && strpos($it['id'], 'event-') === 0) {
-                        // Proportional share of discount for this item
-                        $price = (int) ($it['price'] ?? 0);
-                        $share = (int) floor(($price / $originalSum) * $discount);
-                        // If this is the last event item, adjust to consume any remainder
-                        $isLast = true;
-                        for ($j = $idx + 1; $j < count($itemDetails); $j++) {
-                            if (isset($itemDetails[$j]['id']) && strpos($itemDetails[$j]['id'], 'event-') === 0) {
-                                $isLast = false;
-                                break;
+                if ($type === 'referral' && $refDiscount !== null) {
+                    // Apply per-item reduction only to ticket id 2 items
+                    $remaining = (int) round($discount);
+                    foreach ($itemDetails as $idx => $it) {
+                        if (isset($it['id']) && $it['id'] === 'event-2' && $remaining > 0) {
+                            $price = (int) ($it['price'] ?? 0);
+                            $share = min((int) $refDiscount, $remaining);
+                            $itemDetails[$idx]['price'] = (int) max(0, $price - $share);
+                            $remaining -= $share;
+                        }
+                    }
+                } else {
+                    // Proportional for promo
+                    $remaining = (int) round($discount);
+                    foreach ($itemDetails as $idx => $it) {
+                        if (isset($it['id']) && strpos($it['id'], 'event-') === 0) {
+                            $price = (int) ($it['price'] ?? 0);
+                            $share = (int) floor(($price / $originalSum) * $discount);
+                            $isLast = true;
+                            for ($j = $idx + 1; $j < count($itemDetails); $j++) {
+                                if (isset($itemDetails[$j]['id']) && strpos($itemDetails[$j]['id'], 'event-') === 0) {
+                                    $isLast = false;
+                                    break;
+                                }
                             }
+                            if ($isLast) {
+                                $share = $remaining;
+                            }
+                            $newPrice = max(0, $price - $share);
+                            $itemDetails[$idx]['price'] = (int) $newPrice;
+                            $remaining -= $share;
                         }
-                        if ($isLast) {
-                            $share = $remaining;
-                        }
-                        $newPrice = max(0, $price - $share);
-                        $itemDetails[$idx]['price'] = (int) $newPrice;
-                        $remaining -= $share;
                     }
                 }
             }
@@ -2214,18 +2276,23 @@ class PendaftarController extends Controller
             $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
         }
 
-        // Credit referral per ticket after participants finalized
+        // Credit referral per qualifying ticket (ticket_id==2) after participants finalized
         try {
-            // Count tickets with active status ('1')
+            // Count tickets with active status ('1') and ticket_id == 2
             $ticketCount = $participants->filter(function ($pp) {
-                return (string) ($pp->status ?? '0') === '1';
+                return (string) ($pp->status ?? '0') === '1' && (int) ($pp->ticket_id ?? 0) === 2;
             })->count();
             if ($ticketCount === 0) {
-                // Fallback: try participants JSON
+                // Fallback: try participants JSON and count only ticketId==2
                 $decoded = null;
                 try { $decoded = json_decode($trx->getAttributes()['participants'] ?? 'null', true); } catch (\Throwable $e) {}
                 if (is_array($decoded) && count($decoded) > 0) {
-                    $ticketCount = count($decoded);
+                    $ticketCount = 0;
+                    foreach ($decoded as $p) {
+                        if ((int) ($p['ticketId'] ?? 0) === 2) {
+                            $ticketCount++;
+                        }
+                    }
                 }
             }
 
