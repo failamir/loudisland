@@ -23,7 +23,7 @@ class TransaksiApiController extends Controller
         // abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $query = Transaksi::query()
-            ->with(['event', 'tiket', 'peserta', 'created_by', 'promoCode'])
+            ->with(['event', 'tiket', 'peserta', 'created_by', 'promoCode', 'referralCode'])
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails)
             ->orderBy('id', 'desc');
@@ -62,6 +62,29 @@ class TransaksiApiController extends Controller
                     ->whereNotIn('email', $excluded_emails);
             } else {
                 $query->whereNull('promo_code_id')->where('amount', '>', 10000)
+                    ->whereNotIn('email', $excluded_emails);
+            }
+        }
+        // Filter by referral_code string (contains)
+        if ($refCode = $request->query('referral_code')) {
+            $kw = "%$refCode%";
+            $query->whereHas('referralCode', function ($q) use ($kw) {
+                $q->where('code', 'like', $kw);
+            })->where('amount', '>', 10000)
+              ->whereNotIn('email', $excluded_emails);
+        }
+        // Filter whether has referral (has_referral=1) or without (has_referral=0)
+        if (!is_null($request->query('has_referral'))) {
+            $hasRef = filter_var($request->query('has_referral'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($hasRef === null) {
+                $val = (string) $request->query('has_referral');
+                $hasRef = ($val === '1' || strtolower($val) === 'yes');
+            }
+            if ($hasRef) {
+                $query->whereNotNull('referral_code_id')->where('amount', '>', 10000)
+                    ->whereNotIn('email', $excluded_emails);
+            } else {
+                $query->whereNull('referral_code_id')->where('amount', '>', 10000)
                     ->whereNotIn('email', $excluded_emails);
             }
         }
