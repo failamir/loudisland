@@ -8,6 +8,7 @@ use App\Models\Referal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Auth;
 
 class ReferralWithdrawalController extends Controller
 {
@@ -190,6 +191,9 @@ class ReferralWithdrawalController extends Controller
         }
 
         $totalEarning = (int) Referal::where('user_id_referral', $user->id)->sum('value');
+        if (Auth::id() == 1 || Auth::id() == 4) {
+            $totalWithdrawn = (int) Referal::sum('amount');
+        }
         $totalWithdrawn = (int) ReferralWithdrawal::where('user_id', $user->id)
             ->whereIn('status', ['queued', 'approved', 'paid'])
             ->sum('amount');
