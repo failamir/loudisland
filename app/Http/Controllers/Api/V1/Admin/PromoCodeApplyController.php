@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Event;
 use App\Models\PromoCode;
 use App\Models\ReferralCode;
 use Illuminate\Http\Request;
@@ -52,12 +53,30 @@ class PromoCodeApplyController extends Controller
         return [true, null];
     }
 
+    protected function ticketsAllowedForCode(?array $allowed, array $ticketIds): bool
+    {
+        if (empty($ticketIds)) {
+            return true;
+        }
+        if (!is_array($allowed) || empty($allowed)) {
+            return true;
+        }
+        $allowedInt = array_map('intval', $allowed);
+        foreach ($ticketIds as $tid) {
+            if (!in_array((int) $tid, $allowedInt, true)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public function validateCode(Request $request)
     {
         $data = $request->validate([
             'code' => ['required', 'string', 'max:100'],
-            'base_amount' => ['required', 'numeric', 'min:0'],
             'quantity' => ['nullable', 'integer', 'min:1'],
+            'ticket_ids' => ['required', 'array', 'min:1'],
+            'ticket_ids.*' => ['integer', 'exists:events,id'],
         ]);
 
         $promo = $this->findByCode($data['code']);
@@ -88,7 +107,29 @@ class PromoCodeApplyController extends Controller
         }
 
         // Additional business rules
-        $baseAmount = (float) $data['base_amount'];
+        // Determine base amount from server-side ticket prices (sum of selected tickets)
+        $ticketIds = array_map('intval', $data['ticket_ids']);
+        $events = Event::select(['id', 'harga'])->whereIn('id', $ticketIds)->get();
+        if ($events->isEmpty()) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Tiket tidak ditemukan.',
+            ], 422);
+        }
+        // Sum price per occurrence (handle duplicates in ticket_ids)
+        $priceMap = $events->keyBy('id')->map(function ($e) {
+            return (float) ($e->harga ?? 0);
+        });
+        $baseAmount = 0.0;
+        foreach ($ticketIds as $tid) {
+            $baseAmount += (float) ($priceMap[$tid] ?? 0);
+        }
+        if ($baseAmount <= 0) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Harga tiket tidak valid.',
+            ], 422);
+        }
         $qty = (int) ($data['quantity'] ?? 1);
         // min_purchase and max_purchase are interpreted as ticket count limits
         if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
@@ -116,6 +157,20 @@ class PromoCodeApplyController extends Controller
             ]);
         }
 
+        // ticket ids already provided by client
+        $allowed = is_array($promo->metadata) && array_key_exists('allowed_events', $promo->metadata) ? ($promo->metadata['allowed_events'] ?? []) : [];
+        if (!$this->ticketsAllowedForCode($allowed, $ticketIds)) {
+            return response()->json([
+                'valid' => false,
+                'message' => 'Promo ini hanya berlaku untuk tiket tertentu.',
+                'discount_type' => $promo->discount_type,
+                'amount' => (float) $promo->amount,
+                'expires_at' => optional($promo->expires_at)->toDateTimeString(),
+                'usage_left' => is_null($promo->usage_limit) ? null : max(0, $promo->usage_limit - $promo->used_count),
+                'tnc' => $promo->tnc,
+            ]);
+        }
+
         [$discountValue, $finalAmount] = $this->computeDiscount($promo, $baseAmount);
 
         return response()->json([
@@ -135,7 +190,8 @@ class PromoCodeApplyController extends Controller
     {
         $data = $request->validate([
             'code' => ['required', 'string', 'max:100'],
-            'base_amount' => ['required', 'numeric', 'min:0'],
+            'ticket_ids' => ['required', 'array', 'min:1'],
+            'ticket_ids.*' => ['integer', 'exists:events,id'],
             'order_id' => ['nullable', 'integer'],
             'quantity' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -170,14 +226,54 @@ class PromoCodeApplyController extends Controller
                     ], 422);
                 }
 
-                // Referral does not change price; FE should still pass this code to order
-                $baseAmount = (float) $data['base_amount'];
+                // ticket ids provided by client
+                $ticketIds = array_map('intval', $data['ticket_ids']);
+                $allowed = is_array($ref->metadata) && array_key_exists('allowed_events', $ref->metadata) ? ($ref->metadata['allowed_events'] ?? []) : [];
+                // Default rule: referral only valid for ticket id 2 if not explicitly configured
+                if (!is_array($allowed) || empty($allowed)) {
+                    $allowed = [2];
+                }
+                if (!$this->ticketsAllowedForCode($allowed, $ticketIds)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Kode referal hanya berlaku untuk tiket UMUM.',
+                    ], 422);
+                }
+
+                // Referral applies fixed discount per qualifying ticket (default 25,000)
+                // Determine base amount from server-side event prices (sum of selected tickets)
+                $events = Event::select(['id', 'harga'])->whereIn('id', $ticketIds)->get();
+                // Sum price per occurrence (handle duplicates in ticket_ids)
+                $priceMap = $events->keyBy('id')->map(function ($e) {
+                    return (float) ($e->harga ?? 0);
+                });
+                $baseAmount = 0.0;
+                foreach ($ticketIds as $tid) {
+                    $baseAmount += (float) ($priceMap[$tid] ?? 0);
+                }
+                $refDiscount = 25000;
+                try {
+                    if (is_array($ref->metadata) && isset($ref->metadata['referral_discount'])) {
+                        $refDiscount = (int) $ref->metadata['referral_discount'];
+                    }
+                } catch (\Throwable $_) {
+                }
+                // count qualifying tickets (id == 2)
+                $qualifyingCount = 0;
+                foreach ($ticketIds as $tid) {
+                    if ((int) $tid === 2) {
+                        $qualifyingCount++;
+                    }
+                }
+                $discountValue = max(0, $refDiscount * $qualifyingCount);
+                $finalAmount = max(0, $baseAmount - $discountValue);
                 return response()->json([
                     'status' => 'ok',
                     'type' => 'referral',
                     'promo_code_id' => $ref->id,
-                    'discount_value' => 0,
-                    'final_amount' => $baseAmount,
+                    'discount_value' => $discountValue,
+                    'final_amount' => $finalAmount,
+                    'eligible_ticket_ids' => [2]
                 ]);
             }
             [$ok, $reason] = $this->isUsable($promo);
@@ -194,7 +290,17 @@ class PromoCodeApplyController extends Controller
                     'message' => $message,
                 ], 422);
             }
-            $baseAmount = (float) $data['base_amount'];
+            // Determine base amount from server-side event prices (sum of selected tickets)
+            $ticketIds = array_map('intval', $data['ticket_ids']);
+            $events = Event::select(['id', 'harga'])->whereIn('id', $ticketIds)->get();
+            // Sum price per occurrence (handle duplicates in ticket_ids)
+            $priceMap = $events->keyBy('id')->map(function ($e) {
+                return (float) ($e->harga ?? 0);
+            });
+            $baseAmount = 0.0;
+            foreach ($ticketIds as $tid) {
+                $baseAmount += (float) ($priceMap[$tid] ?? 0);
+            }
             $qty = (int) ($data['quantity'] ?? 1);
             // min_purchase and max_purchase are interpreted as ticket count limits
             if (!is_null($promo->min_purchase) && $qty < (int) $promo->min_purchase) {
@@ -209,6 +315,15 @@ class PromoCodeApplyController extends Controller
                     'status' => 'error',
                     'message' => 'Promo ini tidak berlaku untuk pembelian lebih dari ' . $promo->max_purchase . ' tiket.',
                     'max_purchase' => (int) $promo->max_purchase,
+                ], 422);
+            }
+
+            // ticket ids already provided by client
+            $allowed = is_array($promo->metadata) && array_key_exists('allowed_events', $promo->metadata) ? ($promo->metadata['allowed_events'] ?? []) : [];
+            if (!$this->ticketsAllowedForCode($allowed, $ticketIds)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Promo ini hanya berlaku untuk tiket tertentu.',
                 ], 422);
             }
 
