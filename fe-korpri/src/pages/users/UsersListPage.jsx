@@ -212,10 +212,10 @@ export default function UsersListPage() {
         enableSorting: false,
         cell: ({ row }) => (
           <div className="flex gap-1">
-            <button className="btn btn-xs btn-light" onClick={() => onEdit(row.original)}>
+            <button type="button" className="btn btn-xs btn-light" onClick={() => onEdit(row.original)}>
               <KeenIcon icon="pencil" /> Edit
             </button>
-            <button className="btn btn-xs btn-danger" onClick={() => onDelete(row.original)}>
+            <button type="button" className="btn btn-xs btn-danger" onClick={() => onDelete(row.original)}>
               <KeenIcon icon="trash" /> Hapus
             </button>
           </div>
@@ -237,7 +237,11 @@ export default function UsersListPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') setGridKey((k) => k + 1);
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                setGridKey((k) => k + 1);
+              }
             }}
           />
         </label>
@@ -247,15 +251,16 @@ export default function UsersListPage() {
             <option key={r.id ?? r.name ?? r.title} value={r.id ?? ''}>{r.title || r.name}</option>
           ))}
         </select>
-        <button className="btn btn-sm btn-primary" onClick={() => setGridKey((k) => k + 1)} disabled={loading}>
+        <button type="button" className="btn btn-sm btn-primary" onClick={() => setGridKey((k) => k + 1)} disabled={loading}>
           <KeenIcon icon="magnifier" />
           Search
         </button>
-        <button className="btn btn-sm btn-success" onClick={onAdd}>
+        <button type="button" className="btn btn-sm btn-success" onClick={onAdd}>
           <KeenIcon icon="plus" /> Tambah
         </button>
         {(search || roleId) && (
           <button
+            type="button"
             className="btn btn-sm btn-light"
             onClick={() => {
               setSearch('');
