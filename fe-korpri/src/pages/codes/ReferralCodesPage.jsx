@@ -398,7 +398,7 @@ const ReferralCodesPage = () => {
         </div>
       </div>
 
-      <div className="space-y-2">
+      {/* <div className="space-y-2">
         <h2 className="text-lg font-medium">Validate a Code (client-side)</h2>
         <div className="grid sm:grid-cols-3 gap-4">
           <label className="flex flex-col gap-1">
@@ -422,7 +422,7 @@ const ReferralCodesPage = () => {
             </div>
           </div>
         )}
-      </div>
+      </div> */}
 
       <p className="text-xs text-gray-500">Manage kode milik Anda. Untuk approval admin, gunakan endpoint admin atau halaman admin (jika tersedia).</p>
     </div>
