@@ -190,7 +190,8 @@ class PromoCodeApplyController extends Controller
     {
         $data = $request->validate([
             'code' => ['required', 'string', 'max:100'],
-            'ticket_ids' => ['required', 'array', 'min:1'],
+            // FE may send empty array: handle gracefully
+            'ticket_ids' => ['nullable', 'array'],
             'ticket_ids.*' => ['integer', 'exists:events,id'],
             'order_id' => ['nullable', 'integer'],
             'quantity' => ['nullable', 'integer', 'min:0'],
@@ -227,7 +228,18 @@ class PromoCodeApplyController extends Controller
                 }
 
                 // ticket ids provided by client
-                $ticketIds = array_map('intval', $data['ticket_ids']);
+                $ticketIds = array_map('intval', $data['ticket_ids'] ?? []);
+                // If FE sends empty list, return zero discount and eligible info directly
+                if (empty($ticketIds)) {
+                    return response()->json([
+                        'status' => 'ok',
+                        'type' => 'referral',
+                        'promo_code_id' => $ref->id,
+                        'discount_value' => 0,
+                        'final_amount' => 0,
+                        'eligible_ticket_ids' => [2],
+                    ]);
+                }
                 $allowed = is_array($ref->metadata) && array_key_exists('allowed_events', $ref->metadata) ? ($ref->metadata['allowed_events'] ?? []) : [];
                 // Default rule: referral only valid for ticket id 2 if not explicitly configured
                 if (!is_array($allowed) || empty($allowed)) {
