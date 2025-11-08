@@ -190,9 +190,10 @@ class ReferralWithdrawalController extends Controller
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
-        $totalEarning = (int) Referal::where('user_id_referral', $user->id)->sum('value');
         if (Auth::id() == 1 || Auth::id() == 4) {
-            $totalEarning = (int) Referal::sum('value');
+            $totalEarning = (int) Referal::where('user_id_referral', '!=', null)->sum('value');
+        } else {
+            $totalEarning = (int) Referal::where('user_id_referral', $user->id)->sum('value');
         }
         $totalWithdrawn = (int) ReferralWithdrawal::where('user_id', $user->id)
             ->whereIn('status', ['queued', 'approved', 'paid'])
