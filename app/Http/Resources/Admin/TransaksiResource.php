@@ -38,6 +38,11 @@ class TransaksiResource extends JsonResource
             $data['promo_code'] = optional($this->whenLoaded('promoCode'))->code ?? null;
         }
 
+        // Flatten referral code string for FE consumption
+        if (!array_key_exists('referral_code', $data)) {
+            $data['referral_code'] = optional($this->whenLoaded('referralCode'))->code ?? null;
+        }
+
         return $data;
     }
 }

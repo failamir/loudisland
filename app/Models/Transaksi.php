@@ -51,6 +51,7 @@ class Transaksi extends Model implements HasMedia
         'service_fee',
         'ppn',
         'promo_code_id',
+        'referral_code_id',
         'type',
         'note',
         'snap_token',
@@ -107,6 +108,11 @@ class Transaksi extends Model implements HasMedia
     public function promoCode()
     {
         return $this->belongsTo(PromoCode::class, 'promo_code_id');
+    }
+
+    public function referralCode()
+    {
+        return $this->belongsTo(ReferralCode::class, 'referral_code_id');
     }
 
     protected function serializeDate(DateTimeInterface $date)

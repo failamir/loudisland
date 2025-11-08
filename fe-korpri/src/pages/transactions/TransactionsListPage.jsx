@@ -23,6 +23,8 @@ const TransactionsListPage = () => {
   const [dateTo, setDateTo] = useState('');
   const [hasPromo, setHasPromo] = useState(''); // '', '1', '0'
   const [promoCode, setPromoCode] = useState('');
+  const [hasReferral, setHasReferral] = useState(''); // '', '1', '0'
+  const [referralCode, setReferralCode] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(null);
@@ -73,6 +75,8 @@ const TransactionsListPage = () => {
         keyword: search || undefined,
         has_promo: hasPromo || undefined,
         promo_code: promoCode || undefined,
+        has_referral: hasReferral || undefined,
+        referral_code: referralCode || undefined,
         ...params,
       };
       const res = await axios.get(`${API_URL}/transactions`, { params: finalParams });
@@ -196,6 +200,14 @@ const TransactionsListPage = () => {
         header: ({ column }) => <DataGridColumnHeader title="Promo Code" column={column} />,
         enableSorting: true,
         cell: ({ row }) => row.original?.promo_code ?? '-',
+        meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
+        accessorKey: 'referral_code',
+        id: 'referral_code',
+        header: ({ column }) => <DataGridColumnHeader title="Referral Code" column={column} />,
+        enableSorting: true,
+        cell: ({ row }) => row.original?.referral_code ?? '-',
         meta: { headerClassName: 'min-w-[160px]' },
       },
       {
@@ -346,6 +358,29 @@ const TransactionsListPage = () => {
           />
         </label>
 
+        {/* Referral filters */}
+        <select
+          className="select select-sm"
+          value={hasReferral}
+          onChange={(e) => setHasReferral(e.target.value)}
+        >
+          <option value="">Semua Referral</option>
+          <option value="1">Dengan Referral</option>
+          <option value="0">Tanpa Referral</option>
+        </select>
+        <label className="input input-sm">
+          <KeenIcon icon="user" />
+          <input
+            type="text"
+            placeholder="Referral Code..."
+            value={referralCode}
+            onChange={(e) => setReferralCode(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') fetchData();
+            }}
+          />
+        </label>
+
         <button className="btn btn-sm btn-primary" onClick={() => fetchData()} disabled={loading}>
           <KeenIcon icon="magnifier" />
           Cari
@@ -359,6 +394,8 @@ const TransactionsListPage = () => {
             setDateTo('');
             setHasPromo('');
             setPromoCode('');
+            setHasReferral('');
+            setReferralCode('');
             fetchData({ status: undefined, date_from: undefined, date_to: undefined, keyword: undefined, invoice: undefined });
           }}
           disabled={loading}
