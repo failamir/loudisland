@@ -245,12 +245,7 @@ class PromoCodeApplyController extends Controller
                 if (!is_array($allowed) || empty($allowed)) {
                     $allowed = [2];
                 }
-                if (!$this->ticketsAllowedForCode($allowed, $ticketIds)) {
-                    return response()->json([
-                        'status' => 'error',
-                        'message' => 'Kode referal hanya berlaku untuk tiket UMUM.',
-                    ], 422);
-                }
+                // Do not reject when there are non-eligible tickets present; discount will apply only to eligible ones
 
                 // Referral applies fixed discount per qualifying ticket (default 25,000)
                 // Determine base amount from server-side event prices (sum of selected tickets)

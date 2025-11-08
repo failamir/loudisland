@@ -1828,13 +1828,19 @@ class PendaftarController extends Controller
                 }
                 if (is_array($allowed) && !empty($allowed)) {
                     $allowedInt = array_map('intval', $allowed);
-                    foreach ($participantTicketIds as $tid) {
-                        if (!in_array((int) $tid, $allowedInt, true)) {
-                            return response()->json([
-                                'message' => $type === 'referral' ? 'Kode referal hanya berlaku untuk tiket UMUM.' : 'Promo ini hanya berlaku untuk tiket tertentu.',
-                                'disallowed_ticket_id' => $tid,
-                            ], 422);
+                    if ($type === 'promo') {
+                        // Promo: strict — all must be allowed
+                        foreach ($participantTicketIds as $tid) {
+                            if (!in_array((int) $tid, $allowedInt, true)) {
+                                return response()->json([
+                                    'message' => 'Promo ini hanya berlaku untuk tiket tertentu.',
+                                    'disallowed_ticket_id' => $tid,
+                                ], 422);
+                            }
                         }
+                    } else if ($type === 'referral') {
+                        // Referral: relaxed — allow mixed tickets; discount will apply only to eligible (handled below)
+                        // No rejection here.
                     }
                 }
             } catch (\Throwable $e) { /* silent validation failure, do not block payment */
