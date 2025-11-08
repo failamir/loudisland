@@ -21,6 +21,8 @@ const TransactionsListPage = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
+  const [hasPromo, setHasPromo] = useState(''); // '', '1', '0'
+  const [promoCodeId, setPromoCodeId] = useState('');
   const [detailOpen, setDetailOpen] = useState(false);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState(null);
@@ -69,6 +71,8 @@ const TransactionsListPage = () => {
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         keyword: search || undefined,
+        has_promo: hasPromo || undefined,
+        promo_code_id: promoCodeId || undefined,
         ...params,
       };
       const res = await axios.get(`${API_URL}/transactions`, { params: finalParams });
@@ -185,6 +189,14 @@ const TransactionsListPage = () => {
           ) : '-';
         },
         meta: { headerClassName: 'min-w-[160px]' },
+      },
+      {
+        accessorKey: 'promo_code_id',
+        id: 'promo_code_id',
+        header: ({ column }) => <DataGridColumnHeader title="Promo Code ID" column={column} />,
+        enableSorting: true,
+        cell: ({ row }) => row.original?.promo_code_id ?? '-',
+        meta: { headerClassName: 'min-w-[140px]' },
       },
       {
         accessorFn: (row) => row,
@@ -311,6 +323,29 @@ const TransactionsListPage = () => {
           onChange={(e) => setDateTo(e.target.value)}
         />
 
+        {/* Promo filters */}
+        <select
+          className="select select-sm"
+          value={hasPromo}
+          onChange={(e) => setHasPromo(e.target.value)}
+        >
+          <option value="">Semua Promo</option>
+          <option value="1">Dengan Promo</option>
+          <option value="0">Tanpa Promo</option>
+        </select>
+        <label className="input input-sm">
+          <KeenIcon icon="tag" />
+          <input
+            type="text"
+            placeholder="Promo Code ID..."
+            value={promoCodeId}
+            onChange={(e) => setPromoCodeId(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') fetchData();
+            }}
+          />
+        </label>
+
         <button className="btn btn-sm btn-primary" onClick={() => fetchData()} disabled={loading}>
           <KeenIcon icon="magnifier" />
           Cari
@@ -322,6 +357,8 @@ const TransactionsListPage = () => {
             setStatusFilter('');
             setDateFrom('');
             setDateTo('');
+            setHasPromo('');
+            setPromoCodeId('');
             fetchData({ status: undefined, date_from: undefined, date_to: undefined, keyword: undefined, invoice: undefined });
           }}
           disabled={loading}
