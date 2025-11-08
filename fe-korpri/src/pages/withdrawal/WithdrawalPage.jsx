@@ -11,6 +11,7 @@ const WithdrawalPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [summary, setSummary] = useState({ total_income: 0, total_withdrawn: 0, available_balance: 0 });
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [referral, setReferral] = useState({ total_earning: 0, total_withdrawn: 0, available_balance: 0 });
   const [list, setList] = useState([]);
   const [listLoading, setListLoading] = useState(false);
   const [listError, setListError] = useState('');
@@ -56,19 +57,31 @@ const WithdrawalPage = () => {
     try {
       setSummaryLoading(true);
       // Align total income source with Dashboard: use /total-income
-      const [incomeRes, summaryRes] = await Promise.all([
+      const auth = getAuth();
+      const [incomeRes, summaryRes, referralRes] = await Promise.all([
         axios.get(`${API_URL}/total-income`),
         axios.get(`${API_URL}/withdrawals/summary`),
+        axios.get(`${API_URL}/referral/balance`, {
+          headers: auth?.access_token ? { Authorization: `Bearer ${auth.access_token}` } : undefined,
+        }).catch((e) => ({ data: { data: { total_earning: 0, total_withdrawn: 0, available_balance: 0 } }, __err: e })),
       ]);
       const incomeVal = incomeRes?.data?.total_income ?? 0;
       const s = summaryRes?.data?.data || {};
+      const r = referralRes?.data?.data || { total_earning: 0, total_withdrawn: 0, available_balance: 0 };
       const totalIncome = Number(incomeVal) || 0;
       const totalWithdrawn = Number(s.total_withdrawn || 0);
-      const available = Math.max(0, totalIncome - totalWithdrawn);
+      const availableBase = Math.max(0, totalIncome - totalWithdrawn);
+      const referralAvail = Number(r.available_balance || 0);
+      const available = Math.max(0, availableBase - referralAvail);
       setSummary({
         total_income: totalIncome,
         total_withdrawn: totalWithdrawn,
         available_balance: available,
+      });
+      setReferral({
+        total_earning: Number(r.total_earning || 0),
+        total_withdrawn: Number(r.total_withdrawn || 0),
+        available_balance: referralAvail,
       });
     } catch (err) {
       const status = err?.response?.status;
@@ -76,6 +89,7 @@ const WithdrawalPage = () => {
       console.error('[withdrawals:summary] error', status, msg, err?.response?.data);
       alert(`Gagal mengambil ringkasan${status ? ` (${status})` : ''}: ${msg}`);
       setSummary({ total_income: 0, total_withdrawn: 0, available_balance: 0 });
+      setReferral({ total_earning: 0, total_withdrawn: 0, available_balance: 0 });
     } finally {
       setSummaryLoading(false);
     }
@@ -267,6 +281,13 @@ const WithdrawalPage = () => {
             <div className="card-body">
               <div className="text-gray-600">Total Withdrawal</div>
               <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(summary.total_withdrawn)} IDR</div>
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-body">
+              <div className="text-gray-600">Total Referral</div>
+              <div className="text-xl font-semibold">{summaryLoading ? '...' : new Intl.NumberFormat('id-ID').format(referral.available_balance)} IDR</div>
             </div>
           </div>
 
