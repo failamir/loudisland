@@ -23,7 +23,7 @@ class TransaksiApiController extends Controller
         // abort_if(Gate::denies('transaksi_access'), Response::HTTP_FORBIDDEN, '403 Forbidden');
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $query = Transaksi::query()
-            ->with(['event', 'tiket', 'peserta', 'created_by'])
+            ->with(['event', 'tiket', 'peserta', 'created_by', 'promoCode'])
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails)
             ->orderBy('id', 'desc');
@@ -36,6 +36,34 @@ class TransaksiApiController extends Controller
         if ($invoice = $request->query('invoice')) {
             $query->where('invoice', 'like', "%$invoice%")->where('amount', '>', 10000)
                 ->whereNotIn('email', $excluded_emails);
+        }
+        // Filter by promo_code_id exact match
+        if ($promoId = $request->query('promo_code_id')) {
+            $query->where('promo_code_id', $promoId)->where('amount', '>', 10000)
+                ->whereNotIn('email', $excluded_emails);
+        }
+        // Filter by promo_code string (contains)
+        if ($promoCode = $request->query('promo_code')) {
+            $kw = "%$promoCode%";
+            $query->whereHas('promoCode', function ($q) use ($kw) {
+                $q->where('code', 'like', $kw);
+            })->where('amount', '>', 10000)
+              ->whereNotIn('email', $excluded_emails);
+        }
+        // Filter whether has promo (has_promo=1) or without (has_promo=0)
+        if (!is_null($request->query('has_promo'))) {
+            $hasPromo = filter_var($request->query('has_promo'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($hasPromo === null) {
+                $val = (string) $request->query('has_promo');
+                $hasPromo = ($val === '1' || strtolower($val) === 'yes');
+            }
+            if ($hasPromo) {
+                $query->whereNotNull('promo_code_id')->where('amount', '>', 10000)
+                    ->whereNotIn('email', $excluded_emails);
+            } else {
+                $query->whereNull('promo_code_id')->where('amount', '>', 10000)
+                    ->whereNotIn('email', $excluded_emails);
+            }
         }
         // Generic keyword: search by invoice or peserta name
         if ($keyword = $request->query('keyword')) {
