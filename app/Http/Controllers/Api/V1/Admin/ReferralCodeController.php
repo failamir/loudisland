@@ -101,16 +101,16 @@ class ReferralCodeController extends Controller
         }
 
         // Validate pattern PREFIX-BODY with body length 4..24
-        if (!preg_match('/^[A-Z0-9]+-[A-Z0-9]{4,24}$/', $code)) {
+        if (!preg_match('/^(?:[A-Z0-9]+-[A-Z0-9]{4,24}|[A-Z0-9]{4,24})$/', $code)) {
             // Fallback: if user entered body-only, auto-prefix REF- when body length valid
             $bodyOnly = strtoupper(trim((string) ($data['code'] ?? '')));
             $bodyOnly = preg_replace('/[^A-Z0-9]/', '', $bodyOnly);
             if ($bodyOnly !== '' && strlen($bodyOnly) >= 4 && strlen($bodyOnly) <= 24) {
-                $code = 'REF-' . $bodyOnly;
+                $code = $bodyOnly;
             }
 
-            if (!preg_match('/^[A-Z0-9]+-[A-Z0-9]{4,24}$/', $code)) {
-                return response()->json(['message' => 'Format kode tidak valid. Gunakan PREFIX-XXXXXXXX (4-24 karakter).'], 422);
+            if (!preg_match('/^(?:[A-Z0-9]+-[A-Z0-9]{4,24}|[A-Z0-9]{4,24})$/', $code)) {
+                return response()->json(['message' => 'Format kode tidak valid. Gunakan PREFIX-XXXXXXXX atau XXXXXXXX (4-24 karakter).'], 422);
             }
         }
 
