@@ -2391,7 +2391,11 @@ class PendaftarController extends Controller
         }, explode(',', env('EMAIL_TESTING', ''))));
 
         $sumFinal = 0;
+        $countRefer = 0;
         foreach ($participants as $pp) {
+            if ($pp->ticket_id == 2) {
+                $countRefer++;
+            }
             $statusVal = (string) ($pp->status ?? '0');
             $newFinal = 0;
             if ($statusVal === '1') {
@@ -2403,7 +2407,10 @@ class PendaftarController extends Controller
                     }
                 }
                 if ($price > 0) {
-                    $calc = ($price - 5000) - ($price * 0.016);
+                    $calc = ($price - 5000) - ($price * 0.02);
+                    $calc += ($calc * 0.11);
+                    $priceRefer = 5000 * $countRefer;
+                    $calc -= $priceRefer;
                     if (is_finite($calc)) {
                         $newFinal = (int) round($calc);
                     }
