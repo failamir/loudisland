@@ -246,7 +246,7 @@ class PromoCodeApplyController extends Controller
                 if (count($ticketIds) !== 1 || !$this->ticketsAllowedForCode($allowed, $ticketIds)) {
                     return response()->json([
                         'status' => 'error',
-                        'message' => 'Kode referal hanya berlaku untuk pembelian 1 tiket UMUM (id=2).',
+                        'message' => 'Kode referal hanya berlaku untuk pembelian 1 tiket UMUM.',
                     ], 422);
                 }
 
@@ -261,7 +261,7 @@ class PromoCodeApplyController extends Controller
                 foreach ($ticketIds as $tid) {
                     $baseAmount += (float) ($priceMap[$tid] ?? 0);
                 }
-                $refDiscount = 25000;
+                $refDiscount = 25000; // base discount configured for referral
                 try {
                     if (is_array($ref->metadata) && isset($ref->metadata['referral_discount'])) {
                         $refDiscount = (int) $ref->metadata['referral_discount'];
