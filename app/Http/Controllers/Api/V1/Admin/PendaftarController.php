@@ -2396,6 +2396,34 @@ class PendaftarController extends Controller
             return strtolower(trim($e));
         }, explode(',', env('EMAIL_TESTING', ''))));
 
+        // Precompute total active price for proportional promo discount
+        $totalActivePrice = 0.0;
+        foreach ($participants as $pp0) {
+            $statusVal0 = (string) ($pp0->status ?? '0');
+            if ($statusVal0 === '1') {
+                $p0 = (float) ($pp0->amount ?? 0);
+                if ($p0 <= 0 && $pp0->ticket_id) {
+                    $ev0 = Event::select(['id','harga'])->find($pp0->ticket_id);
+                    if ($ev0 && $ev0->harga) {
+                        $p0 = (float) $ev0->harga;
+                    }
+                }
+                if ($p0 > 0) {
+                    $totalActivePrice += $p0;
+                }
+            }
+        }
+        // Resolve referral per-ticket discount amount if needed
+        $referralPerTicket = 25000;
+        if ($trx->type === 'referral' && !empty($trx->promo_code_id)) {
+            try {
+                $refModel = \App\Models\ReferralCode::find($trx->promo_code_id);
+                if ($refModel && is_array($refModel->metadata) && isset($refModel->metadata['referral_discount'])) {
+                    $referralPerTicket = (int) $refModel->metadata['referral_discount'];
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
         $sumFinal = 0;
         $countRefer = 0;
         foreach ($participants as $pp) {
@@ -2413,10 +2441,20 @@ class PendaftarController extends Controller
                     }
                 }
                 if ($price > 0) {
-                    $calc = ($price - 5000) - ($price * 0.02);
+                    // Apply discount per participant to get net price
+                    $net = $price;
+                    if ($trx->type === 'referral' && (int)($pp->ticket_id ?? 0) === 2) {
+                        $net = max(0, $net - $referralPerTicket);
+                    } elseif ($trx->type === 'promo' && (float)($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
+                        $share = ($price / $totalActivePrice) * (float) $trx->discount;
+                        $net = max(0, $net - $share);
+                    }
+
+                    // Compute final using post-discount net
+                    $calc = ($net - 5000) - ($net * 0.02);
                     $calc += ($calc * 0.11);
-                    $priceRefer = 5000 * $countRefer;
-                    $calc -= $priceRefer;
+                    // $priceRefer = 5000 * $countRefer;
+                    // $calc -= $priceRefer;
                     if (is_finite($calc)) {
                         $newFinal = (int) round($calc);
                     }
