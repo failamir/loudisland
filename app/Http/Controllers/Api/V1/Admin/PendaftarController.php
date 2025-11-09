@@ -2464,7 +2464,13 @@ class PendaftarController extends Controller
             }
             $pEmail = strtolower(trim((string) ($pp->email ?? '')));
             if ($pEmail !== '' && in_array($pEmail, $excludedEmails, true)) {
-                $newFinal = 0;
+                // For testing emails: keep net ticket price (original minus discount), no fees/ppn adjustments
+                if (isset($net)) {
+                    $newFinal = (int) round(max(0, $net));
+                } else {
+                    // Fallback to price when net not set
+                    $newFinal = (int) round(max(0, $price));
+                }
             }
             if ((int)($pp->final_price ?? 0) !== (int)$newFinal) {
                 $pp->final_price = $newFinal;
@@ -2475,7 +2481,26 @@ class PendaftarController extends Controller
 
         $trxEmail = strtolower(trim((string) ($trx->email ?? '')));
         if ($trxEmail !== '' && in_array($trxEmail, $excludedEmails, true)) {
+            // For testing transactions: sum net ticket prices per participant
             $sumFinal = 0;
+            foreach ($participants as $ppx) {
+                $statusValX = (string) ($ppx->status ?? '0');
+                if ($statusValX !== '1') { continue; }
+                $px = (float) ($ppx->amount ?? 0);
+                if ($px <= 0 && $ppx->ticket_id) {
+                    $evx = Event::select(['id','harga'])->find($ppx->ticket_id);
+                    if ($evx && $evx->harga) { $px = (float) $evx->harga; }
+                }
+                if ($px <= 0) { continue; }
+                $netx = $px;
+                if ($trx->type === 'referral' && (int)($ppx->ticket_id ?? 0) === 2) {
+                    $netx = max(0, $netx - $referralPerTicket);
+                } elseif ($trx->type === 'promo' && (float)($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
+                    $sharex = ($px / $totalActivePrice) * (float) $trx->discount;
+                    $netx = max(0, $netx - $sharex);
+                }
+                $sumFinal += (int) round($netx);
+            }
         }
 
         $trx->update([
