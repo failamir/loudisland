@@ -1778,8 +1778,8 @@ class PendaftarController extends Controller
             $isTesting = in_array(Auth::user()->email, $emailTesting);
 
             if ($isTesting) {
-                $total_payment = 1000;
-                $amount = 1000;
+                $total_payment = 26000;
+                $amount = 26000;
                 foreach ($data['participants'] as $idx => $p) {
                     $tid = $p['ticketId'];
                     $itemDetails[] = [
