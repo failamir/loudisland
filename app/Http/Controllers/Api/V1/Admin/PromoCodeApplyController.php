@@ -241,11 +241,14 @@ class PromoCodeApplyController extends Controller
                     ]);
                 }
                 $allowed = is_array($ref->metadata) && array_key_exists('allowed_events', $ref->metadata) ? ($ref->metadata['allowed_events'] ?? []) : [];
-                // Default rule: referral only valid for ticket id 2 if not explicitly configured
-                if (!is_array($allowed) || empty($allowed)) {
-                    $allowed = [2];
+                if (!is_array($allowed) || empty($allowed)) { $allowed = [2]; }
+                // Referral strict rule: exactly 1 ticket and it must be allowed (default id=2)
+                if (count($ticketIds) !== 1 || !$this->ticketsAllowedForCode($allowed, $ticketIds)) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Kode referal hanya berlaku untuk pembelian 1 tiket UMUM (id=2).',
+                    ], 422);
                 }
-                // Do not reject when there are non-eligible tickets present; discount will apply only to eligible ones
 
                 // Referral applies fixed discount per qualifying ticket (default 25,000)
                 // Determine base amount from server-side event prices (sum of selected tickets)

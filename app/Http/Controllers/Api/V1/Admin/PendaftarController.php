@@ -1828,19 +1828,22 @@ class PendaftarController extends Controller
                 }
                 if (is_array($allowed) && !empty($allowed)) {
                     $allowedInt = array_map('intval', $allowed);
-                    if ($type === 'promo') {
-                        // Promo: strict — all must be allowed
-                        foreach ($participantTicketIds as $tid) {
-                            if (!in_array((int) $tid, $allowedInt, true)) {
-                                return response()->json([
-                                    'message' => 'Promo ini hanya berlaku untuk tiket tertentu.',
-                                    'disallowed_ticket_id' => $tid,
-                                ], 422);
-                            }
+                    // Strict for both promo and referral: all tickets must be allowed
+                    foreach ($participantTicketIds as $tid) {
+                        if (!in_array((int) $tid, $allowedInt, true)) {
+                            return response()->json([
+                                'message' => $type === 'referral' ? 'Kode referal hanya berlaku untuk tiket UMUM.' : 'Promo ini hanya berlaku untuk tiket tertentu.',
+                                'disallowed_ticket_id' => $tid,
+                            ], 422);
                         }
-                    } else if ($type === 'referral') {
-                        // Referral: relaxed — allow mixed tickets; discount will apply only to eligible (handled below)
-                        // No rejection here.
+                    }
+                    // Additional strict rule for referral: must buy exactly 1 ticket and it must be id=2
+                    if ($type === 'referral') {
+                        if (count($participantTicketIds) !== 1 || (int)($participantTicketIds[0] ?? 0) !== 2) {
+                            return response()->json([
+                                'message' => 'Kode referal hanya berlaku untuk pembelian 1 tiket UMUM (id=2).',
+                            ], 422);
+                        }
                     }
                 }
             } catch (\Throwable $e) { /* silent validation failure, do not block payment */
