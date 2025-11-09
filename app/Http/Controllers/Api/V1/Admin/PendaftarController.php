@@ -1929,12 +1929,10 @@ class PendaftarController extends Controller
             }
 
             $ticket_price = $total_payment - $discount;
-            // dd($ticket_price);
-            // tambah 1.5 % di amount
-            $fee_service = $amount * 0.02;
-            // $fee_service = $fee_service * count($itemDetails);
+            // tambah 2 % dari ticket_price
+            $fee_service = $ticket_price * 0.02;
             $total_payment = $ticket_price + $fee_service;
-            //add service fee to itemDetails
+            // add service fee to itemDetails
             $itemDetails[] = [
                 'id' => 'service-fee',
                 'price' => (int) $fee_service,
@@ -1942,7 +1940,7 @@ class PendaftarController extends Controller
                 'name' => 'Service Fee',
             ];
 
-            //tambah PPN 11%
+            // tambah PPN 11%
             $ppn = $total_payment * 0.11;
             $total_payment += $ppn;
             $participant_count = count($data['participants']);
@@ -1974,12 +1972,10 @@ class PendaftarController extends Controller
                     'first_name'       => $user->name,
                     'email'            => $user->email,
                     'phone'            => $user->no_hp,
-                    'address' => $user->city . ',' . $user->province,
+                    'address'          => $user->city . ',' . $user->province,
                 ],
                 'item_details' => $itemDetails,
             ];
-
-            // $type is already determined above
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
             $updateTrx = Transaksi::where('invoice', $no_invoice)->update([
