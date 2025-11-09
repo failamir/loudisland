@@ -1826,15 +1826,22 @@ class PendaftarController extends Controller
                         }
                     }
                 }
-                if (is_array($allowed) && !empty($allowed)) {
+                // Default referral rule when not configured: only ticket id=2
+                if ($type === 'referral' && (!is_array($allowed) || empty($allowed))) {
+                    $allowed = [2];
+                }
+
+                if (is_array($allowed)) {
                     $allowedInt = array_map('intval', $allowed);
                     // Strict for both promo and referral: all tickets must be allowed
-                    foreach ($participantTicketIds as $tid) {
-                        if (!in_array((int) $tid, $allowedInt, true)) {
-                            return response()->json([
-                                'message' => $type === 'referral' ? 'Kode referal hanya berlaku untuk tiket UMUM.' : 'Promo ini hanya berlaku untuk tiket tertentu.',
-                                'disallowed_ticket_id' => $tid,
-                            ], 422);
+                    if (!empty($allowedInt)) {
+                        foreach ($participantTicketIds as $tid) {
+                            if (!in_array((int) $tid, $allowedInt, true)) {
+                                return response()->json([
+                                    'message' => $type === 'referral' ? 'Kode referal hanya berlaku untuk tiket UMUM.' : 'Promo ini hanya berlaku untuk tiket tertentu.',
+                                    'disallowed_ticket_id' => $tid,
+                                ], 422);
+                            }
                         }
                     }
                     // Additional strict rule for referral: must buy exactly 1 ticket and it must be id=2
@@ -1861,20 +1868,17 @@ class PendaftarController extends Controller
                     $discount = (float) $total_payment * ((float) $discountAmount / 100);
                 }
             } elseif ($type === 'referral' && !empty($promo_code_id)) {
-                // Fixed referral discount per qualifying ticket (id=2). Default 25,000; can override via metadata.referral_discount
-                $refDiscount = 25000;
+                // Referral discount per qualifying ticket (id=2): base 25,000 (buyer gets no extra 5,000)
+                $refDiscount = 25000; // base
                 try {
                     $refModel = \App\Models\ReferralCode::find($promo_code_id);
                     if ($refModel && is_array($refModel->metadata) && isset($refModel->metadata['referral_discount'])) {
                         $refDiscount = (int) $refModel->metadata['referral_discount'];
                     }
-                } catch (\Throwable $e) { /* ignore */
-                }
+                } catch (\Throwable $e) { /* ignore */ }
                 $qualifying = 0;
                 foreach ($data['participants'] as $p) {
-                    if ((int)($p['ticketId'] ?? 0) === 2) {
-                        $qualifying++;
-                    }
+                    if ((int)($p['ticketId'] ?? 0) === 2) { $qualifying++; }
                 }
                 $discount = max(0, $refDiscount * $qualifying);
             }
@@ -1890,10 +1894,11 @@ class PendaftarController extends Controller
                 if ($type === 'referral' && $refDiscount !== null) {
                     // Apply per-item reduction only to ticket id 2 items
                     $remaining = (int) round($discount);
+                    $perItemDiscount = (int) $refDiscount;
                     foreach ($itemDetails as $idx => $it) {
                         if (isset($it['id']) && $it['id'] === 'event-2' && $remaining > 0) {
                             $price = (int) ($it['price'] ?? 0);
-                            $share = min((int) $refDiscount, $remaining);
+                            $share = min($perItemDiscount, $remaining);
                             $itemDetails[$idx]['price'] = (int) max(0, $price - $share);
                             $remaining -= $share;
                         }
