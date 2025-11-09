@@ -73,9 +73,9 @@ class ReferralWithdrawalController extends Controller
                 "Status: {$withdrawal->status}\n" .
                 "Note: " . ($withdrawal->note ?? '-') . "\n" .
                 "Created At: {$withdrawal->created_at}";
-        // Mail::raw($body, function ($message) use ($subject) {
-        //     $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        // });
+        Mail::raw($body, function ($message) use ($subject) {
+            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+        });
 
         return response()->json([
             'message' => 'Withdrawal referral berhasil diajukan',
@@ -172,9 +172,9 @@ class ReferralWithdrawalController extends Controller
                 "Account Number: {$withdrawal->account_number}\n" .
                 "Note: " . (($data['note'] ?? $withdrawal->note) ?? '-') . "\n" .
                 "Updated At: " . now();
-        // Mail::raw($body, function ($message) use ($subject) {
-        //     $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        // });
+        Mail::raw($body, function ($message) use ($subject) {
+            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+        });
 
         return response()->json([
             'message' => 'Status withdrawal referral diperbarui',

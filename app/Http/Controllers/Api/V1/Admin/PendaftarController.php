@@ -2390,6 +2390,8 @@ class PendaftarController extends Controller
                 // ignore email send failure per participant
             }
         }
+        
+        return true;
     }
 
     protected function computeAndPersistFinalPrices(Transaksi $trx, $participants): void
