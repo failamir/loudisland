@@ -156,6 +156,7 @@ class PendaftarController extends Controller
 
         // Build base query for participants
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $includeTesting = (bool) $request->boolean('include_testing', false);
         $base = Participant::query()
             ->select(['id','transaction_id','participant_id','name','email','phone','ticket_id'])
             ->where('status', '1')
@@ -2676,6 +2677,7 @@ class PendaftarController extends Controller
         $search = $request->input('search');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
+        $includeTesting = (bool) $request->boolean('include_testing', false);
 
         // Define the emails to exclude from the query
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
@@ -2683,8 +2685,10 @@ class PendaftarController extends Controller
         // Perform the database query
         $base = Participant::with(['staff:id,name'])
             ->select('participants.*')
-            ->where('status', '1')
-            ->whereNotIn('email', $excluded_emails);
+            ->whereIn('status', [1, '1']);
+        if (!$includeTesting && !empty($excluded_emails)) {
+            $base->whereNotIn('email', $excluded_emails);
+        }
 
         if ($staffId) {
             $base->where('staff_user_id', $staffId);
@@ -2787,13 +2791,16 @@ class PendaftarController extends Controller
         $search = $request->input('search');
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
+        $includeTesting = (bool) $request->boolean('include_testing', false);
 
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
 
         $base = Participant::with(['staff:id,name'])
             ->select('participants.*')
-            ->where('status', '1')
-            ->whereNotIn('email', $excluded_emails);
+            ->whereIn('status', [1, '1']);
+        if (!$includeTesting && !empty($excluded_emails)) {
+            $base->whereNotIn('email', $excluded_emails);
+        }
 
         if ($staffId) {
             $base->where('staff_user_id', $staffId);
@@ -2849,6 +2856,7 @@ class PendaftarController extends Controller
             $base->where('status_racepack', $status);
         }
 
+        // Mirror list ordering for export
         $base->orderByDesc('racepack_at')->orderByDesc('id');
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
@@ -2870,7 +2878,8 @@ class PendaftarController extends Controller
             $eventIds = (clone $base)->select('ticket_id')->whereNotNull('ticket_id')->distinct()->pluck('ticket_id')->filter()->unique();
             $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
 
-            $base->chunkById(1000, function ($rows) use ($out, $eventMap) {
+            // Stream rows in chunks with ordering
+            (clone $base)->chunk(1000, function ($rows) use ($out, $eventMap) {
                 foreach ($rows as $p) {
                     $ticketName = null;
                     if ($p->ticket_id) {
@@ -2900,6 +2909,140 @@ class PendaftarController extends Controller
             });
 
             fclose($out);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
+    }
+
+    /**
+     * Export participants racepack list as Excel-compatible .xls (HTML table)
+     * GET /api/v1/racepacks/export-excel
+     * Shares the same filters as exportRacepacks. Optional: include_testing=1
+     */
+    public function exportRacepacksExcel(Request $request)
+    {
+        $status = $request->input('status');
+        $staffId = $request->input('staff_id');
+        $staffName = $request->input('staff_name');
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $includeTesting = (bool) $request->boolean('include_testing', false);
+
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+
+        $base = Participant::with(['staff:id,name'])
+            ->select('participants.*')
+            ->whereIn('status', [1, '1']);
+        if (!$includeTesting && !empty($excluded_emails)) {
+            $base->whereNotIn('email', $excluded_emails);
+        }
+
+        if ($staffId) {
+            $base->where('staff_user_id', $staffId);
+        }
+        if ($staffName) {
+            $base->where('racepack_by', 'like', "%{$staffName}%");
+        }
+        if ($search) {
+            $base->where(function ($q) use ($search) {
+                $q->where('participant_id', 'like', "%{$search}%")
+                  ->orWhere('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        if ($dateFrom || $dateTo) {
+            try {
+                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
+                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
+                $applyRange = function ($q, $column) use ($from, $to) {
+                    if ($from && $to) {
+                        $q->whereBetween($column, [$from, $to]);
+                    } elseif ($from) {
+                        $q->where($column, '>=', $from);
+                    } elseif ($to) {
+                        $q->where($column, '<=', $to);
+                    }
+                };
+                if ($status === 'sudah') {
+                    $applyRange($base, 'racepack_at');
+                } elseif ($status === 'belum') {
+                    $applyRange($base, 'created_at');
+                } else {
+                    $base->where(function ($w) use ($applyRange) {
+                        $w->where(function ($q1) use ($applyRange) {
+                            $q1->where('status_racepack', 'sudah');
+                            $applyRange($q1, 'racepack_at');
+                        })
+                        ->orWhere(function ($q2) use ($applyRange) {
+                            $q2->where('status_racepack', 'belum');
+                            $applyRange($q2, 'created_at');
+                        });
+                    });
+                }
+            } catch (\Throwable $e) {
+                // ignore invalid date
+            }
+        }
+
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
+        }
+
+        $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        $filename = 'participants-' . now()->format('Ymd-His') . '.xls';
+        $headers = [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($base) {
+            $out = fopen('php://output', 'w');
+            // Write UTF-8 BOM
+            fwrite($out, "\xEF\xBB\xBF");
+            fclose($out);
+
+            echo "<table border='1'>";
+            echo "<thead><tr>";
+            $headers = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
+            foreach ($headers as $h) { echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
+            echo "</tr></thead><tbody>";
+
+            $eventIds = (clone $base)->select('ticket_id')->whereNotNull('ticket_id')->distinct()->pluck('ticket_id')->filter()->unique();
+            $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+
+            (clone $base)->chunk(1000, function ($rows) use ($eventMap) {
+                foreach ($rows as $p) {
+                    $ticketName = null;
+                    if ($p->ticket_id) {
+                        if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
+                        elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
+                        else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+                    }
+                    $cells = [
+                        $p->participant_id,
+                        $p->name,
+                        $p->email,
+                        $p->phone,
+                        $p->province,
+                        $p->city,
+                        $ticketName,
+                        $p->shirt_size,
+                        $p->status_racepack,
+                        $p->racepack_by ?: optional($p->staff)->name,
+                        optional($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
+                    ];
+                    echo '<tr>';
+                    foreach ($cells as $c) {
+                        echo '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+                    }
+                    echo '</tr>';
+                }
+            });
+
+            echo "</tbody></table>";
         };
 
         return response()->streamDownload($callback, $filename, $headers);

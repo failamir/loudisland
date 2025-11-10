@@ -97,6 +97,20 @@ export default function UsersListPage() {
     }
   };
 
+  const onRevoke = async (user) => {
+    if (!confirm(`Revoke semua sesi/token untuk ${user.name}?`)) return;
+    try {
+      await axios.post(`${baseUrl}/admin/users/${user.id}/revoke-tokens`);
+      toast.success('Semua token user telah dicabut');
+      // tidak wajib reload list, tapi lakukan untuk jaga-jaga
+      setGridKey((k) => k + 1);
+    } catch (e) {
+      console.error('Revoke failed', e);
+      const msg = e?.response?.data?.message || 'Gagal mencabut token user';
+      toast.error(msg);
+    }
+  };
+
   const columns = useMemo(
     () => [
       {
@@ -214,6 +228,9 @@ export default function UsersListPage() {
           <div className="flex gap-1">
             <button type="button" className="btn btn-xs btn-light" onClick={() => onEdit(row.original)}>
               <KeenIcon icon="pencil" /> Edit
+            </button>
+            <button type="button" className="btn btn-xs btn-warning" onClick={() => onRevoke(row.original)}>
+              <KeenIcon icon="logout" /> Revoke Sessions
             </button>
             <button type="button" className="btn btn-xs btn-danger" onClick={() => onDelete(row.original)}>
               <KeenIcon icon="trash" /> Hapus

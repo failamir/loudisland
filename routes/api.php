@@ -39,7 +39,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     // Password reset (public)
     Route::post('password/forgot', [PasswordResetApiController::class, 'sendResetLink'])->name('auth.password.forgot');
     Route::post('password/reset', [PasswordResetApiController::class, 'resetPassword'])->name('auth.password.reset');
-    Route::middleware('auth:api')->group(function () {
+    Route::middleware(['auth:api', 'token.version'])->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         // Users API for FE admin
         Route::get('users', [UserApiController::class, 'index']);
@@ -64,6 +64,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
         // Racepack export (CSV) with same filters
         Route::get('racepacks/export', [PendaftarController::class, 'exportRacepacks'])->name('racepacks.export');
+        // Racepack export (Excel-compatible)
+        Route::get('racepacks/export-excel', [PendaftarController::class, 'exportRacepacksExcel'])->name('racepacks.exportExcel');
         // Staff list for racepack dropdown
         Route::get('staffs', [PendaftarController::class, 'staffList'])->name('racepacks.staffs');
 
@@ -119,6 +121,9 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         // Admin: approve/activate referral codes (requires Gate ability 'referral.manage')
         Route::get('admin/referral-codes', [ReferralCodeController::class, 'adminIndex']);
         Route::patch('admin/referral-codes/{id}/status', [ReferralCodeController::class, 'adminUpdateStatus']);
+
+        // Admin: revoke all JWT tokens of a user by bumping token_version
+        Route::post('admin/users/{user}/revoke-tokens', [UserApiController::class, 'revokeTokens'])->middleware('admin');
 
         // Referral Withdrawals (separate from main withdrawals)
         Route::post('referral/withdrawals', [ReferralWithdrawalController::class, 'store']);

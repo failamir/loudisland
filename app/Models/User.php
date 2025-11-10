@@ -5,7 +5,7 @@ namespace App\Models;
 use \DateTimeInterface;
 use App\Notifications\VerifyUserNotification;
 use Carbon\Carbon;
-use Hash;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -64,6 +64,7 @@ class User extends Authenticatable implements JWTSubject
         'event_id',
         'start_at',
         'finish_at',
+        'token_version',
     ];
 
     public function __construct(array $attributes = [])
@@ -142,6 +143,8 @@ class User extends Authenticatable implements JWTSubject
 
     public function getJWTCustomClaims()
     {
-        return [];
+        return [
+            'tv' => (int) ($this->token_version ?? 0),
+        ];
     }
 }

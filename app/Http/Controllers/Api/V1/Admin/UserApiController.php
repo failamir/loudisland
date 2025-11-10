@@ -106,4 +106,17 @@ class UserApiController extends Controller
     {
         return response()->json(Role::select(['id', 'title'])->orderBy('title')->get());
     }
+
+    public function revokeTokens(Request $request, User $user)
+    {
+        // increment token_version to invalidate all existing tokens (checked by middleware)
+        $current = (int) ($user->token_version ?? 0);
+        $user->token_version = $current + 1;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Semua token user telah dicabut',
+            'token_version' => (int) $user->token_version,
+        ]);
+    }
 }

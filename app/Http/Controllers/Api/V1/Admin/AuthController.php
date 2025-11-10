@@ -158,7 +158,7 @@ class AuthController extends Controller
         }
 
         // Issue JWT token
-        $token = JWTAuth::fromUser($user);
+        $token = JWTAuth::claims(['tv' => (int) ($user->token_version ?? 0)])->fromUser($user);
 
         $userPayload = $user->only(['id', 'name', 'email', 'uid']);
 
@@ -256,7 +256,7 @@ class AuthController extends Controller
                     // Tidak perlu update password
                 }
                 // Generate JWT token for authenticated user
-                $token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($user);
+                $token = \Tymon\JWTAuth\Facades\JWTAuth::claims(['tv' => (int) ($user->token_version ?? 0)])->fromUser($user);
             } catch (\GuzzleHttp\Exception\ClientException $e) {
                 $responseBody = (string) $e->getResponse()->getBody();
                 \Log::warning('Firebase token verification failed: ' . $responseBody);
@@ -288,7 +288,7 @@ class AuthController extends Controller
                 ], 404);
             }
             try {
-                if (!$token = auth('api')->attempt($credentials)) {
+                if (!$token = \Tymon\JWTAuth\Facades\JWTAuth::claims(['tv' => (int) ($user->token_version ?? 0)])->attempt($credentials)) {
                     return response()->json([
                         'message' => 'Username atau Password salah',
                         'data' => null,
@@ -387,7 +387,16 @@ class AuthController extends Controller
     public function refresh(Request $request)
     {
         try {
-            $newToken = auth('api')->refresh();
+            // Get current user first
+            $user = auth('api')->user();
+            if (!$user) {
+                return response()->json(['message' => 'User tidak terautentikasi'], 401);
+            }
+            // Invalidate current token
+            \Tymon\JWTAuth\Facades\JWTAuth::invalidate(\Tymon\JWTAuth\Facades\JWTAuth::getToken());
+            // Mint a brand new token with up-to-date token_version claim
+            $newToken = \Tymon\JWTAuth\Facades\JWTAuth::claims(['tv' => (int) ($user->token_version ?? 0)])
+                ->fromUser($user);
         } catch (JWTException $e) {
             return response()->json(['message' => 'Token invalid or expired'], 401);
         }
