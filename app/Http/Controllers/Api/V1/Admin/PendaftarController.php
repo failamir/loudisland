@@ -1653,13 +1653,20 @@ class PendaftarController extends Controller
         try {
             $user = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate();
             if (!$user) {
+                Log::warning('beliApi unauthorized: no user after parseToken');
                 return response()->json(['message' => 'Unauthorized'], 401);
             }
         } catch (\Throwable $e) {
+            Log::warning('beliApi auth exception', ['error' => $e->getMessage()]);
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $data = $request->all();
+        Log::info('beliApi request received', [
+            'userId' => $request->input('userId'),
+            'participants_count' => is_array($request->input('participants')) ? count($request->input('participants')) : null,
+            'ip' => $request->ip(),
+        ]);
         // Normalize camelCase in participants payload: shirtSize -> shirt_size
         if (isset($data['participants']) && is_array($data['participants'])) {
             foreach ($data['participants'] as &$p) {
@@ -1767,6 +1774,11 @@ class PendaftarController extends Controller
                 'expired_snap_time' => Carbon::now()->addMinutes(15),
                 // new column to be added by migration
                 'participants'  => json_encode($participantsAug),
+            ]);
+            Log::info('beliApi transaction created', [
+                'invoice' => $transaksi->invoice,
+                'amount' => (int) $transaksi->amount,
+                'user_id' => $transaksi->peserta_id,
             ]);
 
             // Build Midtrans payload with item_details per participant
@@ -1987,6 +1999,11 @@ class PendaftarController extends Controller
                 'ppn'           => $ppn,
                 'final_price'   => $final_price,
             ]);
+            Log::info('beliApi payment URL generated', [
+                'invoice' => $no_invoice,
+                'payment_url' => $paymentUrl,
+                'gross_amount' => (int) $gross_amount,
+            ]);
 
             // dd($updateTrx);
 
@@ -2003,8 +2020,17 @@ class PendaftarController extends Controller
             $resp->discount = $discount;
 
 
+            Log::info('beliApi response', [
+                'invoice' => $no_invoice,
+                'total_payment' => $total_payment,
+                'participants' => count($data['participants']),
+            ]);
             return response()->json($resp);
         } else {
+            Log::warning('beliApi validation failed', [
+                'errors' => $validator->errors()->all(),
+                'ip' => $request->ip(),
+            ]);
             return response()->json(['data' => $validator->errors()->all()]);
         }
     }
@@ -2023,11 +2049,20 @@ class PendaftarController extends Controller
     {
         // Pastikan content-type JSON
         if ($request->header('Content-Type') !== 'application/json') {
+            Log::warning('notificationHandler invalid content type', ['content_type' => $request->header('Content-Type')]);
             return response()->json(['message' => 'Invalid content type'], 400);
         }
 
         $payload      = $request->getContent();
         $notification = json_decode($payload);
+        Log::info('notificationHandler received', [
+            'order_id' => $notification->order_id ?? null,
+            'transaction_status' => $notification->transaction_status ?? null,
+            'payment_type' => $notification->payment_type ?? null,
+            'status_code' => $notification->status_code ?? null,
+            'gross_amount' => $notification->gross_amount ?? null,
+            'ip' => $request->ip(),
+        ]);
 
         // Validasi signature
         $validSignatureKey = hash(
@@ -2039,6 +2074,7 @@ class PendaftarController extends Controller
         );
 
         if (!hash_equals($validSignatureKey, $notification->signature_key)) {
+            Log::warning('notificationHandler invalid signature', ['order_id' => $notification->order_id ?? null]);
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
@@ -2050,6 +2086,7 @@ class PendaftarController extends Controller
         // Cari transaksi berdasarkan invoice
         $trx = Transaksi::where('invoice', $orderId)->first();
         if (!$trx) {
+            Log::warning('notificationHandler order not found', ['order_id' => $orderId]);
             return response()->json(['message' => 'Order not found'], 404);
         }
 
@@ -2068,14 +2105,17 @@ class PendaftarController extends Controller
             // Khusus credit card: challenge = pending
             if ($transaction === 'capture' && $type === 'credit_card' && $fraud === 'challenge') {
                 $trx->update(['status' => 'pending']);
+                Log::info('notificationHandler status updated', ['invoice' => $trx->invoice, 'status' => 'pending']);
             } else {
                 $trx->update(['status' => $statusMap[$transaction]]);
+                Log::info('notificationHandler status updated', ['invoice' => $trx->invoice, 'status' => $statusMap[$transaction]]);
             }
         }
 
         // Jalankan postPaymentSuccessActions hanya jika status akhir = success
         if ($trx->status == 'success') {
             $notif = $this->postPaymentSuccessActions($trx);
+            Log::info('notificationHandler postPaymentSuccessActions executed', ['invoice' => $trx->invoice, 'handled' => (bool) $notif]);
             if($notif){
                 return response()->json(['message' => 'OK']);
             }
@@ -2732,5 +2772,136 @@ class PendaftarController extends Controller
                 'total_umum' => $totalUmum,
             ],
         ]);
+    }
+
+    /**
+     * Export participants racepack list as CSV using the same filters as racepackList.
+     * GET /api/v1/racepacks/export
+     * Query params are identical to racepackList.
+     */
+    public function exportRacepacks(Request $request)
+    {
+        $status = $request->input('status');
+        $staffId = $request->input('staff_id');
+        $staffName = $request->input('staff_name');
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+
+        $base = Participant::with(['staff:id,name'])
+            ->select('participants.*')
+            ->where('status', '1')
+            ->whereNotIn('email', $excluded_emails);
+
+        if ($staffId) {
+            $base->where('staff_user_id', $staffId);
+        }
+        if ($staffName) {
+            $base->where('racepack_by', 'like', "%{$staffName}%");
+        }
+        if ($search) {
+            $base->where(function ($q) use ($search) {
+                $q->where('participant_id', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        if ($dateFrom || $dateTo) {
+            try {
+                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
+                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
+
+                $applyRange = function ($q, $column) use ($from, $to) {
+                    if ($from && $to) {
+                        $q->whereBetween($column, [$from, $to]);
+                    } elseif ($from) {
+                        $q->where($column, '>=', $from);
+                    } elseif ($to) {
+                        $q->where($column, '<=', $to);
+                    }
+                };
+
+                if ($status === 'sudah') {
+                    $applyRange($base, 'racepack_at');
+                } elseif ($status === 'belum') {
+                    $applyRange($base, 'created_at');
+                } else {
+                    $base->where(function ($w) use ($applyRange) {
+                        $w->where(function ($q1) use ($applyRange) {
+                            $q1->where('status_racepack', 'sudah');
+                            $applyRange($q1, 'racepack_at');
+                        })
+                        ->orWhere(function ($q2) use ($applyRange) {
+                            $q2->where('status_racepack', 'belum');
+                            $applyRange($q2, 'created_at');
+                        });
+                    });
+                }
+            } catch (\Throwable $e) {
+                // ignore invalid date
+            }
+        }
+
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
+        }
+
+        $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ];
+
+        $callback = function () use ($base) {
+            $out = fopen('php://output', 'w');
+            // UTF-8 BOM for Excel compatibility
+            fwrite($out, "\xEF\xBB\xBF");
+            // Header row
+            fputcsv($out, [
+                'Participant ID', 'Name', 'Email', 'Phone', 'Province', 'City', 'Jenis Tiket', 'Ukuran Jersey', 'Status', 'Staff', 'Racepack At'
+            ]);
+
+            // Preload event names map to avoid N+1
+            $eventIds = (clone $base)->select('ticket_id')->whereNotNull('ticket_id')->distinct()->pluck('ticket_id')->filter()->unique();
+            $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+
+            $base->chunkById(1000, function ($rows) use ($out, $eventMap) {
+                foreach ($rows as $p) {
+                    $ticketName = null;
+                    if ($p->ticket_id) {
+                        if ((int)$p->ticket_id === 1) {
+                            $ticketName = 'ASN';
+                        } elseif ((int)$p->ticket_id === 2) {
+                            $ticketName = 'UMUM';
+                        } else {
+                            $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id;
+                        }
+                    }
+                    $row = [
+                        $p->participant_id,
+                        $p->name,
+                        $p->email,
+                        $p->phone,
+                        $p->province,
+                        $p->city,
+                        $ticketName,
+                        $p->shirt_size,
+                        $p->status_racepack,
+                        $p->racepack_by ?: optional($p->staff)->name,
+                        optional($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
+                    ];
+                    fputcsv($out, $row);
+                }
+            });
+
+            fclose($out);
+        };
+
+        return response()->streamDownload($callback, $filename, $headers);
     }
 }

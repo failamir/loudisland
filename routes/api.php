@@ -62,6 +62,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
         // Racepack listing (filterable)
         Route::get('racepacks', [PendaftarController::class, 'racepackList'])->name('racepacks.index');
+        // Racepack export (CSV) with same filters
+        Route::get('racepacks/export', [PendaftarController::class, 'exportRacepacks'])->name('racepacks.export');
         // Staff list for racepack dropdown
         Route::get('staffs', [PendaftarController::class, 'staffList'])->name('racepacks.staffs');
 

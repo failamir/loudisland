@@ -306,6 +306,39 @@ export default function RacepackListPage() {
             </ToolbarHeading>
             <ToolbarActions>
               <button className="btn btn-sm btn-light" onClick={() => setGridKey((k) => k + 1)} disabled={loading}>Refresh</button>
+              <button
+                className="btn btn-sm btn-primary"
+                onClick={async () => {
+                  try {
+                    const params = {
+                      ...(status ? { status } : {}),
+                      ...(staffId ? { staff_id: staffId } : {}),
+                      ...(staffName ? { staff_name: staffName } : {}),
+                      ...(search ? { search } : {}),
+                      ...(dateFrom ? { date_from: dateFrom } : {}),
+                      ...(dateTo ? { date_to: dateTo } : {}),
+                    };
+                    const url = `${baseUrl}/racepacks/export`;
+                    const res = await axios.get(url, { params, responseType: 'blob' });
+                    const blob = new Blob([res.data], { type: 'text/csv;charset=utf-8;' });
+                    const href = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = href;
+                    const ts = new Date().toISOString().replace(/[:.]/g, '-');
+                    a.download = `participants-${ts}.csv`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(href);
+                  } catch (e) {
+                    console.error('Export failed', e);
+                    alert('Gagal export CSV. Coba lagi.');
+                  }
+                }}
+                disabled={loading}
+              >
+                <KeenIcon icon="download" /> Export CSV
+              </button>
             </ToolbarActions>
           </Toolbar>
         </Container>
