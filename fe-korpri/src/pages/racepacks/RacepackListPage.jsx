@@ -26,6 +26,7 @@ export default function RacepackListPage() {
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [eventsMap, setEventsMap] = useState({});
+  const [includeTesting, setIncludeTesting] = useState(false);
 
   // Format: "hari, dd-mm-yyyy : HH:mm" in Asia/Jakarta
   const formatIndoDateTime = (value) => {
@@ -56,6 +57,7 @@ export default function RacepackListPage() {
         search: search || undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
+        include_testing: includeTesting ? 1 : undefined,
       },
     });
     const rows = data?.data ?? [];
@@ -264,18 +266,22 @@ export default function RacepackListPage() {
         <button className="btn btn-sm btn-primary" onClick={() => setGridKey((k) => k + 1)} disabled={loading}>
           <KeenIcon icon="magnifier" /> Filter
         </button>
-        {(status || staffId || staffName || search || dateFrom || dateTo) && (
+        {(status || staffId || staffName || search || dateFrom || dateTo || includeTesting) && (
           <button
             className="btn btn-sm btn-light"
-            onClick={() => { setStatus(''); setStaffId(''); setStaffName(''); setSearch(''); setDateFrom(''); setDateTo(''); setGridKey((k) => k + 1); }}
+            onClick={() => { setStatus(''); setStaffId(''); setStaffName(''); setSearch(''); setDateFrom(''); setDateTo(''); setIncludeTesting(false); setGridKey((k) => k + 1); }}
             disabled={loading}
           >
             Clear
           </button>
         )}
+        <label className="checkbox checkbox-sm flex items-center gap-2">
+          <input type="checkbox" checked={includeTesting} onChange={(e) => setIncludeTesting(e.target.checked)} />
+          <span>Sertakan testing</span>
+        </label>
       </div>
     </div>
-  ), [search, status, staffId, staffName, staffOptions, dateFrom, dateTo, loading]);
+  ), [search, status, staffId, staffName, staffOptions, dateFrom, dateTo, includeTesting, loading]);
 
   return (
     <Fragment>
@@ -317,6 +323,7 @@ export default function RacepackListPage() {
                       ...(search ? { search } : {}),
                       ...(dateFrom ? { date_from: dateFrom } : {}),
                       ...(dateTo ? { date_to: dateTo } : {}),
+                      ...(includeTesting ? { include_testing: 1 } : {}),
                     };
                     const url = `${baseUrl}/racepacks/export-excel`;
                     const res = await axios.get(url, { params, responseType: 'blob' });
@@ -350,6 +357,7 @@ export default function RacepackListPage() {
                       ...(search ? { search } : {}),
                       ...(dateFrom ? { date_from: dateFrom } : {}),
                       ...(dateTo ? { date_to: dateTo } : {}),
+                      ...(includeTesting ? { include_testing: 1 } : {}),
                     };
                     const url = `${baseUrl}/racepacks/export`;
                     const res = await axios.get(url, { params, responseType: 'blob' });

@@ -48,6 +48,69 @@ class PendaftarController extends Controller
         \Midtrans\Config::$is3ds        = config('services.midtrans.is3ds');
     }
 
+    // Build the exact same base query used by racepackList for reuse in exports
+    private function buildRacepackBase(Request $request)
+    {
+        $status = $request->input('status');
+        $staffId = $request->input('staff_id');
+        $staffName = $request->input('staff_name');
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $includeTesting = (bool) $request->boolean('include_testing', false);
+
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+
+        $base = Participant::with(['staff:id,name'])
+            ->select('participants.*');
+        if (!$includeTesting && !empty($excluded_emails)) {
+            $base->whereNotIn('email', $excluded_emails);
+        }
+        if ($staffId) {
+            $base->where('staff_user_id', $staffId);
+        }
+        if ($staffName) {
+            $base->where('racepack_by', 'like', "%{$staffName}%");
+        }
+        if ($search) {
+            $base->where(function ($q) use ($search) {
+                $q->where('participant_id', 'like', "%{$search}%")
+                    ->orWhere('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+        if ($dateFrom || $dateTo) {
+            try {
+                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
+                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
+                $applyRange = function ($q, $column) use ($from, $to) {
+                    if ($from && $to) { $q->whereBetween($column, [$from, $to]); }
+                    elseif ($from) { $q->where($column, '>=', $from); }
+                    elseif ($to) { $q->where($column, '<=', $to); }
+                };
+                if ($status === 'sudah') {
+                    $applyRange($base, 'racepack_at');
+                } elseif ($status === 'belum') {
+                    $applyRange($base, 'created_at');
+                } else {
+                    $base->where(function ($w) use ($applyRange) {
+                        $w->where(function ($q1) use ($applyRange) {
+                            $q1->where('status_racepack', 'sudah');
+                            $applyRange($q1, 'racepack_at');
+                        })
+                        ->orWhere(function ($q2) use ($applyRange) {
+                            $q2->where('status_racepack', 'belum');
+                            $applyRange($q2, 'created_at');
+                        });
+                    });
+                }
+            } catch (\Throwable $e) { /* ignore */ }
+        }
+
+        return $base;
+    }
+
     /**
      * Build unified WhatsApp message text for payment success using the latest template.
      */
@@ -2679,73 +2742,7 @@ class PendaftarController extends Controller
         $dateTo = $request->input('date_to');
         $includeTesting = (bool) $request->boolean('include_testing', false);
 
-        // Define the emails to exclude from the query
-        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-
-        // Perform the database query
-        $base = Participant::with(['staff:id,name'])
-            ->select('participants.*')
-            ->whereIn('status', [1, '1']);
-        if (!$includeTesting && !empty($excluded_emails)) {
-            $base->whereNotIn('email', $excluded_emails);
-        }
-
-        if ($staffId) {
-            $base->where('staff_user_id', $staffId);
-        }
-        if ($staffName) {
-            $base->where('racepack_by', 'like', "%{$staffName}%");
-        }
-        if ($search) {
-            $base->where(function ($q) use ($search) {
-                $q->where('participant_id', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-        // Date range filtering
-        if ($dateFrom || $dateTo) {
-            try {
-                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
-                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
-
-                // Helper to apply between on a column
-                $applyRange = function ($q, $column) use ($from, $to) {
-                    if ($from && $to) {
-                        $q->whereBetween($column, [$from, $to]);
-                    } elseif ($from) {
-                        $q->where($column, '>=', $from);
-                    } elseif ($to) {
-                        $q->where($column, '<=', $to);
-                    }
-                };
-
-                if ($status === 'sudah') {
-                    // Filter by racepack_at (time when handed over)
-                    $applyRange($base, 'racepack_at');
-                } elseif ($status === 'belum') {
-                    // Filter by created_at (registration time) for belum (racepack_at is null)
-                    $applyRange($base, 'created_at');
-                } else {
-                    // No status filter selected: include both groups
-                    $base->where(function ($w) use ($applyRange) {
-                        // Sudah by racepack_at
-                        $w->where(function ($q1) use ($applyRange) {
-                            $q1->where('status_racepack', 'sudah');
-                            $applyRange($q1, 'racepack_at');
-                        })
-                        // Belum by created_at
-                        ->orWhere(function ($q2) use ($applyRange) {
-                            $q2->where('status_racepack', 'belum');
-                            $applyRange($q2, 'created_at');
-                        });
-                    });
-                }
-            } catch (\Throwable $e) {
-                // ignore invalid date
-            }
-        }
+        $base = $this->buildRacepackBase($request);
 
         // Compute totals regardless of status filter
         $totalSudah = (clone $base)->where('status_racepack', 'sudah')->count();
@@ -2780,84 +2777,6 @@ class PendaftarController extends Controller
 
     /**
      * Export participants racepack list as CSV using the same filters as racepackList.
-     * GET /api/v1/racepacks/export
-     * Query params are identical to racepackList.
-     */
-    public function exportRacepacks(Request $request)
-    {
-        $status = $request->input('status');
-        $staffId = $request->input('staff_id');
-        $staffName = $request->input('staff_name');
-        $search = $request->input('search');
-        $dateFrom = $request->input('date_from');
-        $dateTo = $request->input('date_to');
-        $includeTesting = (bool) $request->boolean('include_testing', false);
-
-        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-
-        $base = Participant::with(['staff:id,name'])
-            ->select('participants.*')
-            ->whereIn('status', [1, '1']);
-        if (!$includeTesting && !empty($excluded_emails)) {
-            $base->whereNotIn('email', $excluded_emails);
-        }
-
-        if ($staffId) {
-            $base->where('staff_user_id', $staffId);
-        }
-        if ($staffName) {
-            $base->where('racepack_by', 'like', "%{$staffName}%");
-        }
-        if ($search) {
-            $base->where(function ($q) use ($search) {
-                $q->where('participant_id', 'like', "%{$search}%")
-                    ->orWhere('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%")
-                    ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-        if ($dateFrom || $dateTo) {
-            try {
-                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
-                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
-
-                $applyRange = function ($q, $column) use ($from, $to) {
-                    if ($from && $to) {
-                        $q->whereBetween($column, [$from, $to]);
-                    } elseif ($from) {
-                        $q->where($column, '>=', $from);
-                    } elseif ($to) {
-                        $q->where($column, '<=', $to);
-                    }
-                };
-
-                if ($status === 'sudah') {
-                    $applyRange($base, 'racepack_at');
-                } elseif ($status === 'belum') {
-                    $applyRange($base, 'created_at');
-                } else {
-                    $base->where(function ($w) use ($applyRange) {
-                        $w->where(function ($q1) use ($applyRange) {
-                            $q1->where('status_racepack', 'sudah');
-                            $applyRange($q1, 'racepack_at');
-                        })
-                        ->orWhere(function ($q2) use ($applyRange) {
-                            $q2->where('status_racepack', 'belum');
-                            $applyRange($q2, 'created_at');
-                        });
-                    });
-                }
-            } catch (\Throwable $e) {
-                // ignore invalid date
-            }
-        }
-
-        if (in_array($status, ['sudah', 'belum'], true)) {
-            $base->where('status_racepack', $status);
-        }
-
-        // Mirror list ordering for export
-        $base->orderByDesc('racepack_at')->orderByDesc('id');
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
         $headers = [
@@ -2921,76 +2840,21 @@ class PendaftarController extends Controller
      */
     public function exportRacepacksExcel(Request $request)
     {
+        $base = $this->buildRacepackBase($request);
         $status = $request->input('status');
-        $staffId = $request->input('staff_id');
-        $staffName = $request->input('staff_name');
-        $search = $request->input('search');
-        $dateFrom = $request->input('date_from');
-        $dateTo = $request->input('date_to');
-        $includeTesting = (bool) $request->boolean('include_testing', false);
-
-        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-
-        $base = Participant::with(['staff:id,name'])
-            ->select('participants.*')
-            ->whereIn('status', [1, '1']);
-        if (!$includeTesting && !empty($excluded_emails)) {
-            $base->whereNotIn('email', $excluded_emails);
-        }
-
-        if ($staffId) {
-            $base->where('staff_user_id', $staffId);
-        }
-        if ($staffName) {
-            $base->where('racepack_by', 'like', "%{$staffName}%");
-        }
-        if ($search) {
-            $base->where(function ($q) use ($search) {
-                $q->where('participant_id', 'like', "%{$search}%")
-                  ->orWhere('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%");
-            });
-        }
-        if ($dateFrom || $dateTo) {
-            try {
-                $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
-                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
-                $applyRange = function ($q, $column) use ($from, $to) {
-                    if ($from && $to) {
-                        $q->whereBetween($column, [$from, $to]);
-                    } elseif ($from) {
-                        $q->where($column, '>=', $from);
-                    } elseif ($to) {
-                        $q->where($column, '<=', $to);
-                    }
-                };
-                if ($status === 'sudah') {
-                    $applyRange($base, 'racepack_at');
-                } elseif ($status === 'belum') {
-                    $applyRange($base, 'created_at');
-                } else {
-                    $base->where(function ($w) use ($applyRange) {
-                        $w->where(function ($q1) use ($applyRange) {
-                            $q1->where('status_racepack', 'sudah');
-                            $applyRange($q1, 'racepack_at');
-                        })
-                        ->orWhere(function ($q2) use ($applyRange) {
-                            $q2->where('status_racepack', 'belum');
-                            $applyRange($q2, 'created_at');
-                        });
-                    });
-                }
-            } catch (\Throwable $e) {
-                // ignore invalid date
-            }
-        }
-
-        if (in_array($status, ['sudah', 'belum'], true)) {
-            $base->where('status_racepack', $status);
-        }
+        if (in_array($status, ['sudah', 'belum'], true)) { $base->where('status_racepack', $status); }
 
         $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        if ($request->boolean('debug', false)) {
+            $count = (clone $base)->count();
+            $sample = (clone $base)->limit(5)->get(['id','participant_id','email','status_racepack']);
+            return response()->json([
+                'debug' => true,
+                'count' => $count,
+                'sample' => $sample,
+            ]);
+        }
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.xls';
         $headers = [
