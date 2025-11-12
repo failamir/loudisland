@@ -93,18 +93,9 @@ class PendaftarController extends Controller
                     $applyRange($base, 'racepack_at');
                 } elseif ($status === 'belum') {
                     $applyRange($base, 'created_at');
-                } else {
-                    $base->where(function ($w) use ($applyRange) {
-                        $w->where(function ($q1) use ($applyRange) {
-                            $q1->where('status_racepack', 'sudah');
-                            $applyRange($q1, 'racepack_at');
-                        })
-                        ->orWhere(function ($q2) use ($applyRange) {
-                            $q2->where('status_racepack', 'belum');
-                            $applyRange($q2, 'created_at');
-                        });
-                    });
                 }
+                // When status is empty/all, do NOT apply date filter to avoid filtering out all rows
+                // (the OR logic between sudah/belum with different date columns is too restrictive)
             } catch (\Throwable $e) { /* ignore */ }
         }
 
@@ -2774,9 +2765,41 @@ class PendaftarController extends Controller
             ],
         ]);
     }
-
     /**
      * Export participants racepack list as CSV using the same filters as racepackList.
+     * GET /api/v1/racepacks/export
+     * Query params are identical to racepackList.
+     */
+    public function exportRacepacks(Request $request)
+    {
+        $base = $this->buildRacepackBase($request);
+        $status = $request->input('status');
+        if (in_array($status, ['sudah', 'belum'], true)) { $base->where('status_racepack', $status); }
+
+        // Mirror list ordering for export
+        $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        // Debug mode: return count and sample rows instead of streaming
+        if ($request->boolean('debug', false)) {
+            $count = (clone $base)->count();
+            $sample = (clone $base)->limit(5)->get(['id','participant_id','email','status_racepack']);
+            $sql = $base->toSql();
+            $bindings = $base->getBindings();
+            return response()->json([
+                'debug' => true,
+                'count' => $count,
+                'sample' => $sample,
+                'sql' => $sql,
+                'bindings' => $bindings,
+            ]);
+        }
+
+        // Fetch all data (542 rows is safe for memory)
+        $participants = $base->get();
+        
+        // Preload event names map to avoid N+1
+        $eventIds = $participants->pluck('ticket_id')->filter()->unique();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
         $headers = [
@@ -2784,7 +2807,7 @@ class PendaftarController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function () use ($base) {
+        $callback = function () use ($participants, $eventMap) {
             $out = fopen('php://output', 'w');
             // UTF-8 BOM for Excel compatibility
             fwrite($out, "\xEF\xBB\xBF");
@@ -2793,39 +2816,28 @@ class PendaftarController extends Controller
                 'Participant ID', 'Name', 'Email', 'Phone', 'Province', 'City', 'Jenis Tiket', 'Ukuran Jersey', 'Status', 'Staff', 'Racepack At'
             ]);
 
-            // Preload event names map to avoid N+1
-            $eventIds = (clone $base)->select('ticket_id')->whereNotNull('ticket_id')->distinct()->pluck('ticket_id')->filter()->unique();
-            $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
-
-            // Stream rows in chunks with ordering
-            (clone $base)->chunk(1000, function ($rows) use ($out, $eventMap) {
-                foreach ($rows as $p) {
-                    $ticketName = null;
-                    if ($p->ticket_id) {
-                        if ((int)$p->ticket_id === 1) {
-                            $ticketName = 'ASN';
-                        } elseif ((int)$p->ticket_id === 2) {
-                            $ticketName = 'UMUM';
-                        } else {
-                            $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id;
-                        }
-                    }
-                    $row = [
-                        $p->participant_id,
-                        $p->name,
-                        $p->email,
-                        $p->phone,
-                        $p->province,
-                        $p->city,
-                        $ticketName,
-                        $p->shirt_size,
-                        $p->status_racepack,
-                        $p->racepack_by ?: optional($p->staff)->name,
-                        optional($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
-                    ];
-                    fputcsv($out, $row);
+            foreach ($participants as $p) {
+                $ticketName = null;
+                if ($p->ticket_id) {
+                    if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
+                    elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
+                    else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
                 }
-            });
+                $row = [
+                    $p->participant_id,
+                    $p->name,
+                    $p->email,
+                    $p->phone,
+                    $p->province,
+                    $p->city,
+                    $ticketName,
+                    $p->shirt_size,
+                    $p->status_racepack,
+                    $p->racepack_by ?: optional($p->staff)->name,
+                    $p->racepack_at ? \Carbon\Carbon::parse($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') : '',
+                ];
+                fputcsv($out, $row);
+            }
 
             fclose($out);
         };
@@ -2856,13 +2868,20 @@ class PendaftarController extends Controller
             ]);
         }
 
+        // Fetch all data (542 rows is safe for memory)
+        $participants = $base->get();
+        
+        // Preload event names map to avoid N+1
+        $eventIds = $participants->pluck('ticket_id')->filter()->unique();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+
         $filename = 'participants-' . now()->format('Ymd-His') . '.xls';
         $headers = [
             'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function () use ($base) {
+        $callback = function () use ($participants, $eventMap) {
             $out = fopen('php://output', 'w');
             // Write UTF-8 BOM
             fwrite($out, "\xEF\xBB\xBF");
@@ -2870,45 +2889,165 @@ class PendaftarController extends Controller
 
             echo "<table border='1'>";
             echo "<thead><tr>";
-            $headers = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
-            foreach ($headers as $h) { echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
+            $tableHeaders = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
+            foreach ($tableHeaders as $h) { echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
             echo "</tr></thead><tbody>";
 
-            $eventIds = (clone $base)->select('ticket_id')->whereNotNull('ticket_id')->distinct()->pluck('ticket_id')->filter()->unique();
-            $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
-
-            (clone $base)->chunk(1000, function ($rows) use ($eventMap) {
-                foreach ($rows as $p) {
-                    $ticketName = null;
-                    if ($p->ticket_id) {
-                        if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
-                        elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
-                        else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
-                    }
-                    $cells = [
-                        $p->participant_id,
-                        $p->name,
-                        $p->email,
-                        $p->phone,
-                        $p->province,
-                        $p->city,
-                        $ticketName,
-                        $p->shirt_size,
-                        $p->status_racepack,
-                        $p->racepack_by ?: optional($p->staff)->name,
-                        optional($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s'),
-                    ];
-                    echo '<tr>';
-                    foreach ($cells as $c) {
-                        echo '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
-                    }
-                    echo '</tr>';
+            foreach ($participants as $p) {
+                $ticketName = null;
+                if ($p->ticket_id) {
+                    if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
+                    elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
+                    else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
                 }
-            });
+                $cells = [
+                    $p->participant_id,
+                    $p->name,
+                    $p->email,
+                    $p->phone,
+                    $p->province,
+                    $p->city,
+                    $ticketName,
+                    $p->shirt_size,
+                    $p->status_racepack,
+                    $p->racepack_by ?: optional($p->staff)->name,
+                    $p->racepack_at ? \Carbon\Carbon::parse($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') : '',
+                ];
+                echo '<tr>';
+                foreach ($cells as $c) {
+                    echo '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+                }
+                echo '</tr>';
+            }
 
             echo "</tbody></table>";
         };
 
         return response()->streamDownload($callback, $filename, $headers);
+    }
+
+    /**
+     * Simple direct CSV download without streaming complexity
+     * GET /api/v1/racepacks/download-csv
+     */
+    public function downloadCsv(Request $request)
+    {
+        $base = $this->buildRacepackBase($request);
+        $status = $request->input('status');
+        if (in_array($status, ['sudah', 'belum'], true)) { 
+            $base->where('status_racepack', $status); 
+        }
+        $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        // Get all data
+        $participants = $base->get();
+        
+        // Preload events
+        $eventIds = $participants->pluck('ticket_id')->filter()->unique();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+
+        // Build CSV content
+        $csv = "\xEF\xBB\xBF"; // UTF-8 BOM
+        $csv .= "Participant ID,Name,Email,Phone,Province,City,Jenis Tiket,Ukuran Jersey,Status,Staff,Racepack At\n";
+        
+        foreach ($participants as $p) {
+            $ticketName = '';
+            if ($p->ticket_id) {
+                if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
+                elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
+                else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+            }
+            
+            $row = [
+                $p->participant_id ?? '',
+                $p->name ?? '',
+                $p->email ?? '',
+                $p->phone ?? '',
+                $p->province ?? '',
+                $p->city ?? '',
+                $ticketName,
+                $p->shirt_size ?? '',
+                $p->status_racepack ?? '',
+                $p->racepack_by ?: optional($p->staff)->name ?? '',
+                $p->racepack_at ? \Carbon\Carbon::parse($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') : '',
+            ];
+            
+            // Escape and quote fields
+            $escaped = array_map(function($field) {
+                $field = str_replace('"', '""', $field);
+                return '"' . $field . '"';
+            }, $row);
+            
+            $csv .= implode(',', $escaped) . "\n";
+        }
+
+        $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
+        
+        return response($csv, 200)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
+    }
+
+    /**
+     * Simple direct Excel download without streaming complexity
+     * GET /api/v1/racepacks/download-excel
+     */
+    public function downloadExcel(Request $request)
+    {
+        $base = $this->buildRacepackBase($request);
+        $status = $request->input('status');
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
+        }
+        $base->orderByDesc('racepack_at')->orderByDesc('id');
+
+        // Get all data
+        $participants = $base->get();
+
+        // Preload events
+        $eventIds = $participants->pluck('ticket_id')->filter()->unique();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+
+        // Build HTML table compatible with Excel
+        $html = "\xEF\xBB\xBF"; // UTF-8 BOM
+        $html .= "<table border='1'>";
+        $html .= "<thead><tr>";
+        $headers = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
+        foreach ($headers as $h) { $html .= '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
+        $html .= "</tr></thead><tbody>";
+
+        foreach ($participants as $p) {
+            $ticketName = '';
+            if ($p->ticket_id) {
+                if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
+                elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
+                else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+            }
+
+            $cells = [
+                $p->participant_id ?? '',
+                $p->name ?? '',
+                $p->email ?? '',
+                $p->phone ?? '',
+                $p->province ?? '',
+                $p->city ?? '',
+                $ticketName,
+                $p->shirt_size ?? '',
+                $p->status_racepack ?? '',
+                $p->racepack_by ?: optional($p->staff)->name ?? '',
+                $p->racepack_at ? \Carbon\Carbon::parse($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') : '',
+            ];
+
+            $html .= '<tr>';
+            foreach ($cells as $c) { $html .= '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>'; }
+            $html .= '</tr>';
+        }
+
+        $html .= "</tbody></table>";
+
+        $filename = 'participants-' . now()->format('Ymd-His') . '.xls';
+        return response($html, 200)
+            ->header('Content-Type', 'application/vnd.ms-excel; charset=UTF-8')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
     }
 }

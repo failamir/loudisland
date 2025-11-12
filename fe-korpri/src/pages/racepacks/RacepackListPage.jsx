@@ -212,6 +212,14 @@ export default function RacepackListPage() {
         meta: { headerClassName: 'min-w-[160px]' },
       },
       {
+        accessorKey: 'created_at',
+        id: 'created_at',
+        header: ({ column }) => <DataGridColumnHeader title="Tgl Pendaftaran" column={column} />,
+        enableSorting: true,
+        cell: ({ row }) => formatIndoDateTime(row.original.created_at),
+        meta: { headerClassName: 'min-w-[200px]' },
+      },
+      {
         accessorKey: 'racepack_at',
         id: 'racepack_at',
         header: ({ column }) => <DataGridColumnHeader title="Racepack At" column={column} />,

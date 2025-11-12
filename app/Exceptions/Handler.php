@@ -38,4 +38,28 @@ class Handler extends ExceptionHandler
             //
         });
     }
+
+    /**
+     * Render an exception into an HTTP response.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \Throwable  $exception
+     * @return \Symfony\Component\HttpFoundation\Response
+     *
+     * @throws \Throwable
+     */
+    public function render($request, Throwable $exception)
+    {
+        // For API routes, return JSON instead of redirect on auth errors
+        if ($request->is('api/*') || $request->expectsJson()) {
+            if ($exception instanceof \Illuminate\Auth\AuthenticationException) {
+                return response()->json([
+                    'message' => 'Unauthenticated.',
+                    'error' => 'Token tidak valid atau sudah kadaluarsa.'
+                ], 401);
+            }
+        }
+
+        return parent::render($request, $exception);
+    }
 }
