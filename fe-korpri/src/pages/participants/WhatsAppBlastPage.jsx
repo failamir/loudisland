@@ -22,6 +22,8 @@ const WhatsAppBlastPage = () => {
   const [testName, setTestName] = useState('');
   const [testParticipantId, setTestParticipantId] = useState('');
   const [testTicket, setTestTicket] = useState('');
+  const [testParticipantEmail, setTestParticipantEmail] = useState('');
+  const [testPurchaserEmail, setTestPurchaserEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
 
@@ -381,24 +383,55 @@ const WhatsAppBlastPage = () => {
     return digits;
   };
 
-  const buildPaymentSuccessTextFE = (name, participantId, ticketLabel) => {
-    const dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
+  const buildWhatsappTicketTextFE = (name, participantId, ticketLabel, participantEmail, purchaserEmail) => {
     const n = (name || '').trim() || 'Peserta';
-    const pid = participantId || 'PID-TEST';
+    const pid = String(participantId || 'PID-TEST');
     const t = ticketLabel || 'Tiket';
-    return [
-      `Halo Bapak/Ibu ${n},`,
-      'E-Ticket Mandalika Korpri Run Anda sudah terbit ✅',
-      '',
-      `🆔 ID Peserta: ${pid}`,
-      `👤 Nama: ${n}`,
-      `🎟️ Jenis Tiket: ${t}`,
-      '',
-      `Silakan cek email atau login ke https://daftar.mandalikakorprirun.com/dashboard/ untuk mengunduh QR E-Ticket.`,
-      '',
-      'Jika ada kendala, hubungi kami melalui WA ini.',
-      'Terima kasih 🙏',
-    ].join('\n');
+    const pidCode = pid.replace(/^PID-/, '');
+    const ticketUrl = `https://daftar.mandalikakorprirun.com/ticket?pid=${pidCode}`;
+    const hasBothEmails = Boolean((participantEmail || '').trim()) && Boolean((purchaserEmail || '').trim());
+    const same = hasBothEmails && (participantEmail || '').trim().toLowerCase() === (purchaserEmail || '').trim().toLowerCase();
+
+    const lines = [];
+    lines.push(`Halo Bapak/Ibu ${n},`);
+    lines.push('E-Ticket Mandalika Korpri Run Anda sudah terbit ✅');
+    lines.push('');
+    if (same) {
+      lines.push(`🆔 ID Peserta: ${pid}`);
+      lines.push(`👤 Nama: ${n}`);
+      lines.push(`🎟️ Jenis Tiket: ${t}`);
+      lines.push('');
+      lines.push('Unduh Tiket:');
+      lines.push(ticketUrl);
+      lines.push('');
+      lines.push('Jika ada kendala, hubungi kami melalui WA ini.');
+      lines.push('Terima kasih 🙏');
+    } else {
+      lines.push('[PENTING] Anda menerima E-Ticket ini karena data Anda didaftarkan oleh seorang Pemesan (atas nama Anda).');
+      lines.push('');
+      lines.push('Berikut adalah detail tiket Anda:');
+      lines.push('');
+      lines.push(`🆔 ID Peserta: ${pid}`);
+      lines.push(`👤 Nama: ${n}`);
+      lines.push(`🎟️ Jenis Tiket: ${t}`);
+      if ((purchaserEmail || '').trim()) {
+        lines.push(`📧 Dipesankan oleh: ${(purchaserEmail || '').trim()}`);
+      }
+      lines.push('');
+      lines.push('Anda TIDAK PERLU LOGIN untuk mengunduh tiket.');
+      lines.push('');
+      lines.push('Silakan gunakan link LANGSUNG di bawah ini untuk mengunduh E-Ticket Anda:');
+      lines.push(ticketUrl);
+      lines.push('');
+      lines.push('---');
+      lines.push('');
+      lines.push('Ada kendala?');
+      lines.push('• Jika terdapat KESALAHAN DATA (nama, no. HP, dll), silakan hubungi Pemesan.');
+      lines.push('• Jika LINK UNDUHAN bermasalah, bisa hubungi kami (Admin) melalui WA ini.');
+      lines.push('');
+      lines.push('Terima kasih 🙏');
+    }
+    return lines.join('\n');
   };
 
   const handleTestSend = async () => {
@@ -412,9 +445,8 @@ const WhatsAppBlastPage = () => {
         setTestSending(false);
         return;
       }
-      const dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
       const text = useTemplate
-        ? buildPaymentSuccessTextFE(testName, testParticipantId, testTicket)
+        ? buildWhatsappTicketTextFE(testName, testParticipantId, testTicket, testParticipantEmail, testPurchaserEmail)
         : (message || '').trim();
 
       if (!text) {
@@ -537,6 +569,14 @@ const WhatsAppBlastPage = () => {
                   <div>
                     <label className="form-label">Jenis Tiket</label>
                     <input type="text" className="input w-full" value={testTicket} onChange={e => setTestTicket(e.target.value)} placeholder="Contoh: 5K, 10K, Family" />
+                  </div>
+                  <div>
+                    <label className="form-label">Email Peserta</label>
+                    <input type="email" className="input w-full" value={testParticipantEmail} onChange={e => setTestParticipantEmail(e.target.value)} placeholder="email peserta (opsional)" />
+                  </div>
+                  <div>
+                    <label className="form-label">Email Pemesan</label>
+                    <input type="email" className="input w-full" value={testPurchaserEmail} onChange={e => setTestPurchaserEmail(e.target.value)} placeholder="email pemesan (opsional)" />
                   </div>
                 </div>
               )}
