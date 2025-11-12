@@ -376,6 +376,56 @@ class PendaftarController extends Controller
         $failed = 0;
 
         foreach ($list as $t) {
+            // If this transaction already has participants, send per-participant ticket message with direct link
+            $participants = $t->participants()->get(['participant_id','name','email','phone','ticket_id']);
+            if ($participants && $participants->count() > 0) {
+                foreach ($participants as $p) {
+                    $destPhone = $p->phone ?: ($t->no_hp ?? null);
+                    if (empty($destPhone)) {
+                        $failed++;
+                        $results[] = [
+                            'transaction_id' => $t->id,
+                            'invoice' => $t->invoice,
+                            'participant_id' => $p->participant_id,
+                            'phone' => $destPhone,
+                            'status' => 'error',
+                            'error' => 'No phone number',
+                        ];
+                        continue;
+                    }
+
+                    try {
+                        $msg = $text;
+                        if ($useTemplate || $msg === '') {
+                            $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : ($t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket');
+                            $purchaserEmail = $t->email ?? null;
+                            $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
+                        }
+                        $this->sendWhatsapp($destPhone, $msg, $dashboardUrl);
+                        $success++;
+                        $results[] = [
+                            'transaction_id' => $t->id,
+                            'invoice' => $t->invoice,
+                            'participant_id' => $p->participant_id,
+                            'phone' => $destPhone,
+                            'status' => 'success',
+                        ];
+                    } catch (\Throwable $e) {
+                        $failed++;
+                        $results[] = [
+                            'transaction_id' => $t->id,
+                            'invoice' => $t->invoice,
+                            'participant_id' => $p->participant_id,
+                            'phone' => $destPhone,
+                            'status' => 'error',
+                            'error' => $e->getMessage(),
+                        ];
+                    }
+                }
+                continue; // next transaction after processing its participants
+            }
+
+            // Fallback: no participant rows yet, keep previous transaction-level message
             $phone = $t->no_hp ?? null;
             if (empty($phone)) {
                 $failed++;
