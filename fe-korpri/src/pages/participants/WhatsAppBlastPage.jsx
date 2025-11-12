@@ -419,6 +419,11 @@ const WhatsAppBlastPage = () => {
       lines.push(`🆔 ID Peserta: ${pid}`);
       lines.push(`👤 Nama: ${n}`);
       lines.push(`🎟️ Jenis Tiket: ${t}`);
+      lines.push('');
+      lines.push('Silakan gunakan link LANGSUNG di bawah ini untuk mengunduh E-Ticket Anda:');
+      lines.push(ticketUrl);
+      lines.push('');
+      lines.push('---');
       if ((purchaserEmail || '').trim()) {
         lines.push(`📧 Dipesankan oleh: ${(purchaserEmail || '').trim()}`);
       }
