@@ -317,13 +317,14 @@ const WithdrawalPage = () => {
                       <th>Bank</th>
                       <th>Rekening</th>
                       <th>Nama Pemilik Rekening</th>
+                      <th>Catatan</th>
                       <th>Diajukan Oleh</th>
                     </tr>
                   </thead>
                   <tbody>
                     {list.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="text-center text-gray-500">Belum ada data</td>
+                        <td colSpan={8} className="text-center text-gray-500">Belum ada data</td>
                       </tr>
                     )}
                     {list.map((row) => (
@@ -337,6 +338,8 @@ const WithdrawalPage = () => {
                         </td>
                         <td>{row.bank || '-'}</td>
                         <td>{row.account_number || '-'}</td>
+                        <td>{row.account_name || '-'}</td>
+                        <td>{row.note || '-'}</td>
                         <td>{row.created_by?.name || '-'}</td>
                       </tr>
                     ))}
@@ -371,6 +374,7 @@ const WithdrawalPage = () => {
                     <th>Bank</th>
                     <th>Rekening</th>
                     <th>Nama Pemilik</th>
+                    <th>Catatan</th>
                     <th>Pemohon</th>
                     <th>Aksi</th>
                   </tr>
@@ -378,7 +382,7 @@ const WithdrawalPage = () => {
                 <tbody>
                   {list.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="text-center text-gray-500">Belum ada data</td>
+                      <td colSpan={9} className="text-center text-gray-500">Belum ada data</td>
                     </tr>
                   )}
                   {list.map((row) => {
@@ -393,6 +397,8 @@ const WithdrawalPage = () => {
                         <td>{row.status}</td>
                         <td>{row.bank || '-'}</td>
                         <td>{row.account_number || '-'}</td>
+                        <td>{row.account_name || '-'}</td>
+                        <td>{row.note || '-'}</td>
                         <td>{row.created_by?.name || '-'}</td>
                         <td>
                           <div className="flex flex-wrap gap-2">
