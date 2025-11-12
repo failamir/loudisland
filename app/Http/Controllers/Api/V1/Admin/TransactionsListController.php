@@ -49,6 +49,8 @@ class TransactionsListController extends Controller
                 'amount' => (int) $trx->amount,
                 'nama' => $trx->nama,
                 'no_hp' => $trx->no_hp,
+                'type' => $trx->type,
+                'is_offline' => ($trx->type === 'offline'),
                 'payment_type' => $trx->payment_type,
                 'created_at' => $trx->created_at,
                 'event' => $ev ? [

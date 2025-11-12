@@ -1,0 +1,4 @@
+invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
+INV-EXAMPLE001,U123,2,Andi Setiawan,andi@example.com,081234567890,3201010101010001,Jawa Barat,Bandung,M,200000,belum
+INV-EXAMPLE001,U123,2,Budi Santoso,budi@example.com,081234567891,3201010101010002,Jawa Barat,Bandung,L,200000,belum
+INV-EXAMPLE002,U789,1,Citra Lestari,citra@example.com,081298765432,3372010202020003,Jawa Tengah,Semarang,S,150000,belum

@@ -19,13 +19,15 @@ Route::post('bayar', 'PendaftarController@bayar')->name('bayar');
 Route::get('payment/success/{invoice}', 'PendaftarController@paymentSuccess')->name('payment.success');
 Auth::routes();
 
-//redirect /login dan /register ke https://daftar.mandalikakorprirun.com
-Route::get('/login', function () {
-    return redirect('https://daftar.mandalikakorprirun.com');
-});
-Route::get('/register', function () {
-    return redirect('https://daftar.mandalikakorprirun.com');
-});
+// redirect /login dan /register ke domain eksternal hanya di production
+if (app()->environment('production')) {
+    Route::get('/login', function () {
+        return redirect('https://daftar.mandalikakorprirun.com');
+    })->name('login');
+    Route::get('/register', function () {
+        return redirect('https://daftar.mandalikakorprirun.com');
+    })->name('register');
+}
 
 Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'middleware' => ['auth', 'admin']], function () {
     Route::get('/', 'HomeController@index')->name('home');
@@ -115,6 +117,10 @@ Route::group(['prefix' => 'admin', 'as' => 'admin.', 'namespace' => 'Admin', 'mi
     // QR Codes listing and bulk download
     Route::get('qrcodes', 'QrController@index')->name('qrcodes.index');
     Route::get('qrcodes/download-all', 'QrController@downloadAll')->name('qrcodes.downloadAll');
+
+    // Offline Purchase Import (CSV)
+    Route::get('offline-import', 'OfflinePurchaseImportController@index')->name('offline_import.index');
+    Route::post('offline-import', 'OfflinePurchaseImportController@store')->name('offline_import.store');
 });
 Route::group(['prefix' => 'profile', 'as' => 'profile.', 'namespace' => 'Auth', 'middleware' => ['auth']], function () {
     // Change password

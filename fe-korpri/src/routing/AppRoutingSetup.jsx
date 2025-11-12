@@ -14,6 +14,7 @@ import { AuthenticationWelcomeMessagePage, AuthenticationAccountDeactivatedPage,
 import OrderWizardModal from '@/pages/order/OrderWizardModal';
 import OrderSuccessPage from '@/pages/order/OrderSuccessPage';
 import TransactionsListPage from '@/pages/transactions/TransactionsListPage';
+import ImportOfflinePage from '@/pages/transactions/ImportOfflinePage';
 import TransactionDetailPage from '@/pages/transactions/TransactionDetailPage';
 import NomorPunggungListPage from '@/pages/NomorPunggungListPage';
 import NomorPunggungPairPage from '@/pages/nomor-punggung/NomorPunggungPairPage';
@@ -109,6 +110,7 @@ const AppRoutingSetup = () => {
           <Route path="/users" element={<UsersListPage />} />
           <Route path="/ticket" element={<TicketListPage />} />
           <Route path="/transactions" element={<TransactionsListPage />} />
+          <Route path="/transactions/import-offline" element={<ImportOfflinePage />} />
           <Route path="/transactions/:id" element={<TransactionDetailPage />} />
           <Route path="/participants/missing" element={<MissingParticipantsPage />} />
           <Route path="/participants/wa-blast" element={<WhatsAppBlastPage />} />

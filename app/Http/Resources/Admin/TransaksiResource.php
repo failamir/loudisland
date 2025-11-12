@@ -33,15 +33,16 @@ class TransaksiResource extends JsonResource
             }
         }
 
-        // Flatten promo code string for FE consumption
-        if (!array_key_exists('promo_code', $data)) {
-            $data['promo_code'] = optional($this->whenLoaded('promoCode'))->code ?? null;
-        }
+        // Normalize: always expose promo_code and referral_code as simple strings
+        // Even if relations are loaded and parent::toArray provided objects under these keys,
+        // overwrite them with the relation's code value to keep FE stable.
+        $promoRel = $this->whenLoaded('promoCode');
+        $data['promo_code'] = $promoRel ? ($promoRel->code ?? null)
+            : (is_string($data['promo_code'] ?? null) ? $data['promo_code'] : optional($this->promoCode)->code);
 
-        // Flatten referral code string for FE consumption
-        if (!array_key_exists('referral_code', $data)) {
-            $data['referral_code'] = optional($this->whenLoaded('referralCode'))->code ?? null;
-        }
+        $refRel = $this->whenLoaded('referralCode');
+        $data['referral_code'] = $refRel ? ($refRel->code ?? null)
+            : (is_string($data['referral_code'] ?? null) ? $data['referral_code'] : optional($this->referralCode)->code);
 
         return $data;
     }

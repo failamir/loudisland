@@ -30,6 +30,15 @@ const TransactionsListPage = () => {
   const [detailError, setDetailError] = useState(null);
   const [detail, setDetail] = useState(null);
   const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
+  // Backend web base (Laravel) derived from API_URL origin
+  const ADMIN_BASE = useMemo(() => {
+    try {
+      const u = new URL(API_URL);
+      return u.origin; // e.g. http://localhost:8000
+    } catch (_) {
+      return 'http://localhost';
+    }
+  }, [API_URL]);
 
   // Format: "hari, dd-mm-yyyy : HH:mm" in Asia/Jakarta
   const formatIndoDateTime = (value) => {
@@ -187,9 +196,14 @@ const TransactionsListPage = () => {
         cell: ({ row }) => {
           const inv = row.original.invoice;
           return inv ? (
-            <button type="button" className="text-primary underline" onClick={() => openInvoiceDetail(inv)}>
-              {inv}
-            </button>
+            <div className="flex items-center gap-2">
+              <button type="button" className="text-primary underline" onClick={() => openInvoiceDetail(inv)}>
+                {inv}
+              </button>
+              {row.original?.is_offline ? (
+                <span className="badge badge-light-dark rounded-[30px]">OFFLINE</span>
+              ) : null}
+            </div>
           ) : '-';
         },
         meta: { headerClassName: 'min-w-[160px]' },
@@ -436,6 +450,9 @@ const TransactionsListPage = () => {
               </ToolbarDescription>
             </ToolbarHeading>
             <ToolbarActions>
+              <Link className="btn btn-sm btn-light" to="/transactions/import-offline">
+                Import Offline
+              </Link>
               <button className="btn btn-sm btn-light" onClick={() => fetchData()} disabled={loading}>
                 Refresh
               </button>
