@@ -151,6 +151,11 @@ class PendaftarController extends Controller
             $lines[] = 'Unduh Tiket:';
             $lines[] = $ticketUrl;
             $lines[] = '';
+            $lines[] = 'Silakan gunakan link LANGSUNG di bawah ini untuk mengunduh E-Ticket Anda:';
+            $lines[] = $ticketUrl;
+            $lines[] = '';
+            $lines[] = '---';
+            $lines[] = '';
             $lines[] = 'Jika ada kendala, hubungi kami melalui WA ini.';
             $lines[] = 'Terima kasih 🙏';
         } else {
