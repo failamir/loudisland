@@ -1,2 +1,2 @@
 invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
-INV-EXAMPLE001,U123,2,Andi Setiawan,bdindo.offcial@gmail.com,083148263597,3201010101010001,Jawa Barat,Bandung,M,200000,belum
+INV-EXAMPLE001,U123,2,Andi Setiawan,ifailamir@gmail.com,083148263597,3201010101010001,Jawa Barat,Bandung,M,200000,belum
