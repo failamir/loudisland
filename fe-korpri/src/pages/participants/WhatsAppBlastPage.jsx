@@ -238,6 +238,19 @@ const WhatsAppBlastPage = () => {
     setSelectedCount(rows.length);
   };
 
+  // Ambil label tiket dari data peserta jika tersedia
+  const getTicketLabel = (row) => {
+    return (
+      row?.ticket_label ||
+      row?.ticket ||
+      row?.ticketType ||
+      row?.kategori ||
+      row?.category ||
+      row?.paket ||
+      'TIKET UNTUK UMUM'
+    );
+  };
+
   const handleBlast = async (tableRef) => {
     try {
       setLoading(true);
@@ -254,16 +267,45 @@ const WhatsAppBlastPage = () => {
         return;
       }
 
-      const payload = {
-        ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
-        use_default_template: useTemplate,
-        text: useTemplate ? undefined : (message || '')
-      };
-      const url = source === 'participants'
-        ? `${API_URL}/participants/whatsapp-blast`
-        : `${API_URL}/transactions/whatsapp-blast`;
-      const res = await axios.post(url, payload);
-      setBlastResult(res?.data || { status: 'ok' });
+      // FE-side kirim personalisasi jika sumber peserta dan pakai template E-Ticket
+      if (source === 'participants' && useTemplate) {
+        const results = [];
+        for (const row of selectedRows) {
+          const chatId = normalizePhoneLocal(row?.phone || '');
+          if (!chatId) {
+            results.push({ status: 'failed', participant_id: row?.participant_id, phone: row?.phone || '-', error: 'Nomor kosong/tidak valid' });
+            continue;
+          }
+          const text = buildWhatsappTicketTextFE(
+            row?.name,
+            row?.participant_id,
+            getTicketLabel(row),
+            row?.email,
+            row?.purchaser_email || row?.purchaserEmail || ''
+          );
+          try {
+            await axios.post(`${API_URL}/waha/sendText`, { chatId, text });
+            results.push({ status: 'success', participant_id: row?.participant_id, phone: row?.phone || '-' });
+          } catch (err) {
+            results.push({ status: 'failed', participant_id: row?.participant_id, phone: row?.phone || '-', error: err?.response?.data?.message || err?.message || 'Gagal kirim' });
+          }
+        }
+        const success = results.filter(r => r.status === 'success').length;
+        const failed = results.length - success;
+        setBlastResult({ total: results.length, success, failed, results });
+      } else {
+        // Jalur lama: serahkan ke backend (transaksi atau pesan custom)
+        const payload = {
+          ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
+          use_default_template: useTemplate,
+          text: useTemplate ? undefined : (message || '')
+        };
+        const url = source === 'participants'
+          ? `${API_URL}/participants/whatsapp-blast`
+          : `${API_URL}/transactions/whatsapp-blast`;
+        const res = await axios.post(url, payload);
+        setBlastResult(res?.data || { status: 'ok' });
+      }
       // Reload data jika perlu
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || 'Gagal mengirim WhatsApp');
@@ -278,17 +320,51 @@ const WhatsAppBlastPage = () => {
       setError(null);
       setBlastResult(null);
 
-      const payload = {
-        send_all: true,
-        search: search || undefined,
-        use_default_template: useTemplate,
-        text: useTemplate ? undefined : (message || '')
-      };
-      const url = source === 'participants'
-        ? `${API_URL}/participants/whatsapp-blast`
-        : `${API_URL}/transactions/whatsapp-blast`;
-      const res = await axios.post(url, payload);
-      setBlastResult(res?.data || { status: 'ok' });
+      // FE-side kirim personalisasi untuk semua hasil filter ketika sumber peserta & pakai template
+      if (source === 'participants' && useTemplate) {
+        const rows = filteredParticipants;
+        if (!rows || rows.length === 0) {
+          setError('Tidak ada data pada hasil filter');
+          setLoading(false);
+          return;
+        }
+        const results = [];
+        for (const row of rows) {
+          const chatId = normalizePhoneLocal(row?.phone || '');
+          if (!chatId) {
+            results.push({ status: 'failed', participant_id: row?.participant_id, phone: row?.phone || '-', error: 'Nomor kosong/tidak valid' });
+            continue;
+          }
+          const text = buildWhatsappTicketTextFE(
+            row?.name,
+            row?.participant_id,
+            getTicketLabel(row),
+            row?.email,
+            row?.purchaser_email || row?.purchaserEmail || ''
+          );
+          try {
+            await axios.post(`${API_URL}/waha/sendText`, { chatId, text });
+            results.push({ status: 'success', participant_id: row?.participant_id, phone: row?.phone || '-' });
+          } catch (err) {
+            results.push({ status: 'failed', participant_id: row?.participant_id, phone: row?.phone || '-', error: err?.response?.data?.message || err?.message || 'Gagal kirim' });
+          }
+        }
+        const success = results.filter(r => r.status === 'success').length;
+        const failed = results.length - success;
+        setBlastResult({ total: results.length, success, failed, results });
+      } else {
+        const payload = {
+          send_all: true,
+          search: search || undefined,
+          use_default_template: useTemplate,
+          text: useTemplate ? undefined : (message || '')
+        };
+        const url = source === 'participants'
+          ? `${API_URL}/participants/whatsapp-blast`
+          : `${API_URL}/transactions/whatsapp-blast`;
+        const res = await axios.post(url, payload);
+        setBlastResult(res?.data || { status: 'ok' });
+      }
     } catch (e) {
       setError(e?.response?.data?.message || e?.message || 'Gagal mengirim WhatsApp');
     } finally {
