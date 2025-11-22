@@ -2724,9 +2724,8 @@ class PendaftarController extends Controller
      */
     public function racepack(Request $request)
     {
-        $request->validate([
-            'participant_id' => 'required|string',
-        ]);
+        // Support both single participant_id and bulk participant_ids[]
+        // Single mode keeps backward-compatible behavior
 
         //cek apakah ada x-api-key dan benar
         if ($request->header('x-api-key') != env('X_API_KEY')) {
@@ -2738,6 +2737,62 @@ class PendaftarController extends Controller
         if (!$user) {
             return response()->json(['message' => 'User not found'], 404);
         }
+
+        $isBulk = is_array($request->input('participant_ids'));
+
+        if ($isBulk) {
+            // Bulk mode: validate array input
+            $request->validate([
+                'participant_ids' => 'required|array|min:1',
+                'participant_ids.*' => 'required|string',
+            ]);
+
+            $ids = $request->input('participant_ids');
+
+            $participants = Participant::whereIn('participant_id', $ids)->get()->keyBy('participant_id');
+
+            $updated = [];
+            $already = [];
+            $notFound = [];
+
+            foreach ($ids as $pid) {
+                $participant = $participants->get($pid);
+                if (!$participant) {
+                    $notFound[] = $pid;
+                    continue;
+                }
+
+                if ($participant->status_racepack == 'sudah') {
+                    $already[] = $pid;
+                    continue;
+                }
+
+                $participant->update([
+                    'status_racepack' => 'sudah',
+                    'staff_user_id' => $user->id ?? null,
+                    'racepack_by' => $user->name ?? null,
+                    'racepack_at' => now(),
+                ]);
+
+                $updated[] = $pid;
+            }
+
+            return response()->json([
+                'message' => 'Bulk racepack update processed',
+                'staff' => $user->name ?? null,
+                'updated_count' => count($updated),
+                'already_count' => count($already),
+                'not_found_count' => count($notFound),
+                'updated' => $updated,
+                'already' => $already,
+                'not_found' => $notFound,
+            ], 200);
+        }
+
+        // Single mode (backward compatible)
+        $request->validate([
+            'participant_id' => 'required|string',
+        ]);
 
         $participant = Participant::where('participant_id', $request->input('participant_id'))->first();
         if (!$participant) {
