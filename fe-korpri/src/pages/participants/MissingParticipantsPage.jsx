@@ -4,9 +4,11 @@ import { Container } from '@/components/container';
 import { Toolbar, ToolbarActions, ToolbarHeading } from '@/partials/toolbar';
 import { useLayout } from '@/providers';
 import { DataGrid, DataGridColumnHeader, KeenIcon } from '@/components';
+import { useAuthContext } from '@/auth';
 
 const MissingParticipantsPage = () => {
   const { currentLayout } = useLayout();
+  const { currentUser } = useAuthContext();
   const API_URL = import.meta.env.VITE_APP_API_URL || 'http://localhost:8000/api/v1';
 
   const [rows, setRows] = useState([]);
@@ -117,6 +119,20 @@ const MissingParticipantsPage = () => {
       meta: { headerClassName: 'min-w-[200px]' },
     },
   ], []);
+
+  // Hanya izinkan admin super untuk mengakses halaman ini
+  const isSuperAdmin = currentUser?.email === 'admin@superadmin.com';
+
+  if (!isSuperAdmin) {
+    return (
+      <Container>
+        <div className="card p-5">
+          <h2 className="text-lg font-semibold mb-2">Tidak ada akses</h2>
+          <p className="text-gray-600 text-sm">Halaman Missing Participants hanya dapat diakses oleh admin.</p>
+        </div>
+      </Container>
+    );
+  }
 
   const ToolbarContent = () => (
     <div className="card-header flex-wrap gap-2 border-b-0 px-5 w-full">
