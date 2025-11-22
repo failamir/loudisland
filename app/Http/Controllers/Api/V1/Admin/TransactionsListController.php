@@ -12,7 +12,7 @@ class TransactionsListController extends Controller
     // GET /api/v1/transactions/simple?status=success|pending|failed&per_page=20&page=1
     public function index(Request $request)
     {
-        $query = Transaksi::query()->with('event')->orderBy('id', 'desc');
+        $query = Transaksi::query()->with(['event', 'participants'])->orderBy('id', 'desc');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -42,6 +42,10 @@ class TransactionsListController extends Controller
                 }
             }
 
+            $participantNames = $trx->participants
+                ? $trx->participants->pluck('name')->filter()->take(3)->implode(', ')
+                : null;
+
             return [
                 'id' => $trx->id,
                 'invoice' => $trx->invoice,
@@ -49,6 +53,7 @@ class TransactionsListController extends Controller
                 'amount' => (int) $trx->amount,
                 'nama' => $trx->nama,
                 'no_hp' => $trx->no_hp,
+                'participant_name' => $participantNames,
                 'type' => $trx->type,
                 'is_offline' => ($trx->type === 'offline'),
                 'payment_type' => $trx->payment_type,

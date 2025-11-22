@@ -131,7 +131,8 @@ const WhatsAppBlastPage = () => {
       (t.invoice || '').toLowerCase().includes(s) ||
       ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
       (String(t.amount || '').toLowerCase().includes(s)) ||
-      (String(t.payment_type || '').toLowerCase().includes(s))
+      (String(t.payment_type || '').toLowerCase().includes(s)) ||
+      (t.participant_name || '').toLowerCase().includes(s)
     );
   }, [participants, search, source]);
 
@@ -198,6 +199,12 @@ const WhatsAppBlastPage = () => {
         accessorKey: 'nama',
         header: ({ column }) => <DataGridColumnHeader title="Nama Pembeli" column={column} />,
         cell: info => <div className="text-gray-800">{info.row.original?.nama || '-'}</div>,
+        meta: { headerClassName: 'min-w-[200px]' }
+      },
+      {
+        accessorKey: 'participant_name',
+        header: ({ column }) => <DataGridColumnHeader title="Nama Peserta" column={column} />,
+        cell: info => <div className="text-gray-800">{info.row.original?.participant_name || '-'}</div>,
         meta: { headerClassName: 'min-w-[200px]' }
       },
       {
