@@ -42,9 +42,20 @@ class TransactionsListController extends Controller
                 }
             }
 
-            // Ambil nama peserta dari relasi participants() (bukan kolom string `participants` di tabel transactions)
+            // Ambil daftar "Nama (No HP)" dari relasi participants() (bukan kolom string `participants` di tabel transactions)
             $participantNames = $trx->participants()
-                ->pluck('name')
+                ->get(['name', 'phone'])
+                ->map(function ($p) {
+                    $name = trim((string) ($p->name ?? ''));
+                    $phone = trim((string) ($p->phone ?? ''));
+                    if ($name && $phone) {
+                        return $name . ' (' . $phone . ')';
+                    }
+                    if ($name) {
+                        return $name;
+                    }
+                    return $phone;
+                })
                 ->filter()
                 ->implode(', ');
 
