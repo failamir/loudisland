@@ -43,7 +43,7 @@ class TransactionsListController extends Controller
             }
 
             $participantNames = $trx->participants
-                ? $trx->participants->pluck('name')->filter()->take(3)->implode(', ')
+                ? $trx->participants->pluck('name')->filter()->implode(', ')
                 : null;
 
             return [
