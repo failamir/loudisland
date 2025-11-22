@@ -285,6 +285,14 @@ class PendaftarController extends Controller
                     $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                 }
                 $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
+
+                // Update blast flags
+                $p->blast = 1;
+                $p->save();
+                if ($p->transaction_id) {
+                    Transaksi::where('id', $p->transaction_id)->update(['blast' => 1]);
+                }
+
                 $success++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
@@ -402,6 +410,12 @@ class PendaftarController extends Controller
                             $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                         }
                         $this->sendWhatsapp($destPhone, $msg, $dashboardUrl);
+
+                        // Update blast flags
+                        $p->blast = 1;
+                        $p->save();
+                        Transaksi::where('id', $t->id)->update(['blast' => 1]);
+
                         $success++;
                         $results[] = [
                             'transaction_id' => $t->id,
@@ -458,6 +472,10 @@ class PendaftarController extends Controller
                     $msg = implode("\n", $lines);
                 }
                 $this->sendWhatsapp($phone, $msg, $dashboardUrl);
+
+                // Update blast flag on transaction only (no participants yet)
+                Transaksi::where('id', $t->id)->update(['blast' => 1]);
+
                 $success++;
                 $results[] = [
                     'transaction_id' => $t->id,

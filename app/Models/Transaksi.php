@@ -72,6 +72,7 @@ class Transaksi extends Model implements HasMedia
         'email',
         'notifikasi',
         'participants',
+        'blast',
     ];
 
     public function registerMediaConversions(Media $media = null): void
