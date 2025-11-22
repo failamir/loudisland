@@ -96,7 +96,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         Route::get('pairings', [PendaftarController::class, 'listPairing'])->name('pairings');
 
         //partisipan tukar id partisipan racepack
-        Route::get('racepack', [PendaftarController::class, 'listRacepack'])->name('racepack');
+        Route::get('all-racepack', [PendaftarController::class, 'listAllRacepack'])->name('all-racepack');
         Route::post('racepack', [PendaftarController::class, 'racepack'])->name('racepack');
         Route::post('reset-racepack', [PendaftarController::class, 'resetRacepack'])->name('reset-racepack');
 

@@ -2824,6 +2824,60 @@ class PendaftarController extends Controller
         $listQuery->orderByDesc('racepack_at')->orderByDesc('id');
         $paginator = $listQuery->paginate($perPage);
 
+        $data = collect($paginator->items())->map(function ($p) {
+            return [
+                'name' => $p->name,
+                'phone' => $p->phone,
+                'participant_id' => $p->participant_id,
+                'shirt_size' => $p->shirt_size,
+                'status_racepack' => $p->status_racepack,
+            ];
+        });
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'total_sudah' => $totalSudah,
+                'total_belum' => $totalBelum,
+                'total_asn' => $totalAsn,
+                'total_umum' => $totalUmum,
+            ],
+        ]);
+    }
+
+    public function listAllRacepack(Request $request)
+    {
+        $perPage = (int) $request->input('per_page', 1000);
+        $status = $request->input('status');
+        $staffId = $request->input('staff_id');
+        $staffName = $request->input('staff_name');
+        $search = $request->input('search');
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        $includeTesting = (bool) $request->boolean('include_testing', false);
+
+        $base = $this->buildRacepackBase($request);
+
+        // Compute totals regardless of status filter
+        $totalSudah = (clone $base)->where('status_racepack', 'sudah')->count();
+        $totalBelum = (clone $base)->where('status_racepack', 'belum')->count();
+        // Compute totals per ticket type (ASN=1, UMUM=2) regardless of status filter
+        $totalAsn = (clone $base)->where('ticket_id', 1)->count();
+        $totalUmum = (clone $base)->where('ticket_id', 2)->count();
+
+        // Apply status for the listing (if provided)
+        $listQuery = clone $base;
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $listQuery->where('status_racepack', $status);
+        }
+
+        $listQuery->orderByDesc('racepack_at')->orderByDesc('id');
+        $paginator = $listQuery->paginate($perPage);
+
         return response()->json([
             'data' => $paginator->items(),
             'meta' => [
@@ -2838,6 +2892,7 @@ class PendaftarController extends Controller
             ],
         ]);
     }
+
     /**
      * Export participants racepack list as CSV using the same filters as racepackList.
      * GET /api/v1/racepacks/export
