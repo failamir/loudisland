@@ -2824,18 +2824,8 @@ class PendaftarController extends Controller
         $listQuery->orderByDesc('racepack_at')->orderByDesc('id');
         $paginator = $listQuery->paginate($perPage);
 
-        $data = collect($paginator->items())->map(function ($p) {
-            return [
-                'name' => $p->name,
-                'phone' => $p->phone,
-                'participant_id' => $p->participant_id,
-                'shirt_size' => $p->shirt_size,
-                'status_racepack' => $p->status_racepack,
-            ];
-        });
-
         return response()->json([
-            'data' => $data,
+            'data' => $paginator->items(),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
@@ -2878,8 +2868,18 @@ class PendaftarController extends Controller
         $listQuery->orderByDesc('racepack_at')->orderByDesc('id');
         $paginator = $listQuery->paginate($perPage);
 
+        $data = collect($paginator->items())->map(function ($p) {
+            return [
+                'name' => $p->name,
+                'phone' => $p->phone,
+                'participant_id' => $p->participant_id,
+                'shirt_size' => $p->shirt_size,
+                'status_racepack' => $p->status_racepack,
+            ];
+        });
+
         return response()->json([
-            'data' => $paginator->items(),
+            'data' => $data,
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
