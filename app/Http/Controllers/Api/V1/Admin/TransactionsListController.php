@@ -12,7 +12,7 @@ class TransactionsListController extends Controller
     // GET /api/v1/transactions/simple?status=success|pending|failed&per_page=20&page=1
     public function index(Request $request)
     {
-        $query = Transaksi::query()->with(['event', 'participants'])->orderBy('id', 'desc');
+        $query = Transaksi::query()->with(['event'])->orderBy('id', 'desc');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -42,9 +42,11 @@ class TransactionsListController extends Controller
                 }
             }
 
-            $participantNames = $trx->participants
-                ? $trx->participants->pluck('name')->filter()->implode(', ')
-                : null;
+            // Ambil nama peserta dari relasi participants() (bukan kolom string `participants` di tabel transactions)
+            $participantNames = $trx->participants()
+                ->pluck('name')
+                ->filter()
+                ->implode(', ');
 
             return [
                 'id' => $trx->id,
