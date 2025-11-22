@@ -42,20 +42,16 @@ class TransactionsListController extends Controller
                 }
             }
 
-            // Ambil daftar "Nama (No HP)" dari relasi participants() (bukan kolom string `participants` di tabel transactions)
-            $participantNames = $trx->participants()
-                ->get(['name', 'phone'])
-                ->map(function ($p) {
-                    $name = trim((string) ($p->name ?? ''));
-                    $phone = trim((string) ($p->phone ?? ''));
-                    if ($name && $phone) {
-                        return $name . ' (' . $phone . ')';
-                    }
-                    if ($name) {
-                        return $name;
-                    }
-                    return $phone;
-                })
+            // Ambil daftar nama dan nomor HP peserta dari relasi participants() (bukan kolom string `participants` di tabel transactions)
+            $participants = $trx->participants()->get(['name', 'phone']);
+            $participantNames = $participants
+                ->pluck('name')
+                ->map(fn($v) => trim((string) $v))
+                ->filter()
+                ->implode(', ');
+            $participantPhones = $participants
+                ->pluck('phone')
+                ->map(fn($v) => trim((string) $v))
                 ->filter()
                 ->implode(', ');
 
@@ -67,6 +63,7 @@ class TransactionsListController extends Controller
                 'nama' => $trx->nama,
                 'no_hp' => $trx->no_hp,
                 'participant_name' => $participantNames,
+                'participant_phones' => $participantPhones,
                 'type' => $trx->type,
                 'is_offline' => ($trx->type === 'offline'),
                 'payment_type' => $trx->payment_type,

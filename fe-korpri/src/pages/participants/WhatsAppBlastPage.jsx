@@ -132,7 +132,8 @@ const WhatsAppBlastPage = () => {
       ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
       (String(t.amount || '').toLowerCase().includes(s)) ||
       (String(t.payment_type || '').toLowerCase().includes(s)) ||
-      (t.participant_name || '').toLowerCase().includes(s)
+      (t.participant_name || '').toLowerCase().includes(s) ||
+      (t.participant_phones || '').toLowerCase().includes(s)
     );
   }, [participants, search, source]);
 
@@ -210,7 +211,20 @@ const WhatsAppBlastPage = () => {
       {
         accessorKey: 'no_hp',
         header: ({ column }) => <DataGridColumnHeader title="No HP" column={column} />,
-        cell: info => <div className="text-gray-700">{info.row.original?.no_hp || '-'}</div>,
+        cell: info => {
+          const noHp = info.row.original?.no_hp;
+          const participantPhones = info.row.original?.participant_phones;
+          return (
+            <div className="text-gray-700">
+              {noHp || '-'}
+              {participantPhones && (
+                <div className="text-xs text-gray-500 mt-1">
+                  {participantPhones}
+                </div>
+              )}
+            </div>
+          );
+        },
         meta: { headerClassName: 'min-w-[160px]' }
       },
       {
@@ -335,6 +349,68 @@ const WhatsAppBlastPage = () => {
     }
   };
 
+  const normalizePhoneLocal = (input) => {
+    const digits = String(input || '').replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.startsWith('0')) return '62' + digits.slice(1);
+    if (!digits.startsWith('62')) return '62' + digits.replace(/^0+/, '');
+    return digits;
+  };
+
+  const buildWhatsappTicketTextFE = (name, participantId, ticketLabel, participantEmail, purchaserEmail) => {
+    const nama = name || 'Peserta';
+    const id = participantId || '-';
+    const tiket = ticketLabel || '-';
+    const emailPeserta = participantEmail || '-';
+    const emailPemesan = purchaserEmail || '-';
+    return [
+      `Halo ${nama},`,
+      '',
+      'Terima kasih telah melakukan pendaftaran.',
+      `ID Peserta: ${id}`,
+      `Tiket: ${tiket}`,
+      `Email Peserta: ${emailPeserta}`,
+      `Email Pemesan: ${emailPemesan}`,
+      '',
+      'Sampai jumpa di event!',
+    ].join('\n');
+  };
+
+  const handleTestSend = async () => {
+    try {
+      setTestSending(true);
+      setTestResult(null);
+      setError(null);
+
+      const chatId = normalizePhoneLocal(testPhone);
+      if (!chatId || chatId.length < 8) {
+        setError('Nomor WhatsApp tidak valid');
+        setTestSending(false);
+        return;
+      }
+
+      const text = useTemplate
+        ? buildWhatsappTicketTextFE(testName, testParticipantId, testTicket, testParticipantEmail, testPurchaserEmail)
+        : (message || '').trim();
+
+      if (!text) {
+        setError('Pesan tidak boleh kosong');
+        setTestSending(false);
+        return;
+      }
+
+      const res = await axios.post(`${API_URL}/waha/sendText`, {
+        chatId,
+        text,
+      });
+      setTestResult({ status: 'ok', data: res?.data });
+    } catch (e) {
+      setTestResult({ status: 'error', message: e?.response?.data?.message || e?.message || 'Gagal kirim uji coba' });
+    } finally {
+      setTestSending(false);
+    }
+  };
+
   const ToolbarContent = () => {
     // Akses instance table dari DataGrid melalui context hook
     const { table } = useDataGrid();
@@ -391,44 +467,6 @@ const WhatsAppBlastPage = () => {
         </div>
       </div>
     );
-  };
-
-  // Helper untuk normalisasi nomor dan membangun template uji coba
-  const normalizePhoneLocal = (input) => {
-    const digits = String(input || '').replace(/\D/g, '');
-    if (!digits) return '';
-    if (digits.startsWith('0')) return '62' + digits.slice(1);
-    if (!digits.startsWith('62')) return '62' + digits.replace(/^0+/, '');
-    return digits;
-  };
-
-// ...
-      const chatId = normalizePhoneLocal(testPhone);
-      if (!chatId || chatId.length < 8) {
-        setError('Nomor WhatsApp tidak valid');
-        setTestSending(false);
-        return;
-      }
-      const text = useTemplate
-        ? buildWhatsappTicketTextFE(testName, testParticipantId, testTicket, testParticipantEmail, testPurchaserEmail)
-        : (message || '').trim();
-
-      if (!text) {
-        setError('Pesan tidak boleh kosong');
-        setTestSending(false);
-        return;
-      }
-
-      const res = await axios.post(`${API_URL}/waha/sendText`, {
-        chatId,
-        text,
-      });
-      setTestResult({ status: 'ok', data: res?.data });
-    } catch (e) {
-      setTestResult({ status: 'error', message: e?.response?.data?.message || e?.message || 'Gagal kirim uji coba' });
-    } finally {
-      setTestSending(false);
-    }
   };
 
   return (
