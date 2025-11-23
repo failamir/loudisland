@@ -65,7 +65,7 @@ class OfflinePurchaseImportController extends Controller
         foreach ($grouped as $invoice => $items) {
             try {
                 DB::transaction(function () use ($invoice, $items, &$created) {
-                    $first = $items->first();
+                    $first = collect($items)->first();
                     $uid = trim((string) $first['user_uid']);
                     if ($uid === '') {
                         throw new \RuntimeException('user_uid kosong untuk invoice '.$invoice);

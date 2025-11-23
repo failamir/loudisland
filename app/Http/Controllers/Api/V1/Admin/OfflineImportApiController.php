@@ -87,7 +87,7 @@ class OfflineImportApiController extends Controller
         foreach ($grouped as $invoice => $items) {
             try {
                 DB::transaction(function () use ($invoice, $items, &$created, $mode, $defaultUserUid, $defaultProvince, $defaultCity, $defaultTicketId, $defaultInvoice, &$allParticipantIds) {
-                    $first = $items->first();
+                    $first = collect($items)->first();
                     if ($mode === 'standard') {
                         $uid = trim((string) $first['user_uid']);
                     } else {
