@@ -1,0 +1,21 @@
+invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
+INV-BOOK3-0001,111,1,M. Arivin,failamir1@kukode.com,083148263597,0000000000001,Nusa Tenggara Barat,Kota Mataram,XL,0,belum
+INV-BOOK3-0002,111,1,Faoziah,failamir2@kukode.com,083148263597,0000000000002,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0003,111,1,Ni Komang Deby,failamir3@kukode.com,083148263597,0000000000003,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0004,111,1,Hartawan ramdan lubis,failamir4@kukode.com,083148263597,0000000000004,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0005,111,1,Anak Agung Gde Suharinata,failamir5@kukode.com,083148263597,0000000000005,Nusa Tenggara Barat,Kota Mataram,XL,0,belum
+INV-BOOK3-0006,111,1,Leo Putra Cahya,failamir6@kukode.com,083148263597,0000000000006,Nusa Tenggara Barat,Kota Mataram,XL,0,belum
+INV-BOOK3-0007,111,1,Wa'id Khairul Abadi,failamir7@kukode.com,083148263597,0000000000007,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0008,111,1,renny anggraeni,failamir8@kukode.com,083148263597,0000000000008,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0009,111,1,Oris Tamimi,failamir9@kukode.com,083148263597,0000000000009,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0010,111,1,ni komang budi astuti,failamir10@kukode.com,083148263597,0000000000010,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0011,111,1,I ketut Kariana,failamir11@kukode.com,083148263597,0000000000011,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0012,111,1,Regina Ibrahim,failamir12@kukode.com,083148263597,0000000000012,Nusa Tenggara Barat,Kota Mataram,S,0,belum
+INV-BOOK3-0013,111,1,Ananda Septiana Lestari,failamir13@kukode.com,083148263597,0000000000013,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0014,111,1,Lalu Akhmad Wiraganda H.,failamir14@kukode.com,083148263597,0000000000014,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0015,111,1,Urban Murdanil,failamir15@kukode.com,083148263597,0000000000015,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0016,111,1,Nengah Yudha,failamir16@kukode.com,083148263597,0000000000016,Nusa Tenggara Barat,Kota Mataram,XS,0,belum
+INV-BOOK3-0017,111,1,Ketut Sandiarta,failamir17@kukode.com,083148263597,0000000000017,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0018,111,1,Ni Ketut Sintha Febriani,failamir18@kukode.com,083148263597,0000000000018,Nusa Tenggara Barat,Kota Mataram,L,0,belum
+INV-BOOK3-0019,111,1,Winda Andi Apriani,failamir19@kukode.com,083148263597,0000000000019,Nusa Tenggara Barat,Kota Mataram,M,0,belum
+INV-BOOK3-0020,111,1,Akhmad Zaenal Fikri,failamir20@kukode.com,083148263597,0000000000020,Nusa Tenggara Barat,Kota Mataram,XL,0,belum
