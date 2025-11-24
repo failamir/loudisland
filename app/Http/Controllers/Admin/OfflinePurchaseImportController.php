@@ -59,13 +59,13 @@ class OfflinePurchaseImportController extends Controller
             return back()->withErrors(['csv_file' => 'CSV kosong atau tidak ada baris data.']);
         }
 
-        $grouped = collect($rows)->groupBy('invoice');
+        $grouped = collect(['ALL' => $rows]);
         $created = 0; $errors = [];
 
         foreach ($grouped as $invoice => $items) {
             try {
                 DB::transaction(function () use ($invoice, $items, &$created) {
-                    $first = $items->first();
+                    $first = collect($items)->first();
                     $uid = trim((string) $first['user_uid']);
                     if ($uid === '') {
                         throw new \RuntimeException('user_uid kosong untuk invoice '.$invoice);
@@ -108,12 +108,13 @@ class OfflinePurchaseImportController extends Controller
                         $amount += (int) ($r['amount'] ?? 0);
                     }
 
-                    $no_invoice = $invoice ?: ('TRX-'.Str::upper(Str::random(10)));
+                    $no_invoice = 'TRX-'.Str::upper(Str::random(10));
 
                     $trx = Transaksi::create([
                         'invoice' => $no_invoice,
                         'events' => json_encode(array_values(collect($ticketIds)->unique()->values()->all())),
-                        'peserta_id' => $user->id,
+                        'peserta_id' => 63,
+                        'created_by_id' => 63,
                         'amount' => $amount,
                         'final_price' => $amount,
                         'discount' => 0,
@@ -126,7 +127,7 @@ class OfflinePurchaseImportController extends Controller
                         'city' => $user->city,
                         'no_hp' => $user->no_hp,
                         'nik' => $user->nik,
-                        'email' => $user->email,
+                        'email' => 'ifailamir@gmail.com',
                         'nama' => $user->name,
                         'expired_snap_time' => Carbon::now(),
                         'participants' => json_encode($participants),

@@ -80,18 +80,14 @@ class OfflineImportApiController extends Controller
             return response()->json(['message' => 'ticket_id is required for this CSV format'], 422);
         }
 
-        $grouped = $mode === 'standard'
-            ? collect($rows)->groupBy('invoice')
-            : collect([ // For alt mode, treat whole file as one invoice group
-                ($defaultInvoice ?: 'TRX-'.Str::upper(Str::random(10))) => $rows
-            ]);
+        $grouped = collect(['ALL' => $rows]);
         $created = 0; $errors = [];
         $allParticipantIds = [];
 
         foreach ($grouped as $invoice => $items) {
             try {
                 DB::transaction(function () use ($invoice, $items, &$created, $mode, $defaultUserUid, $defaultProvince, $defaultCity, $defaultTicketId, $defaultInvoice, &$allParticipantIds) {
-                    $first = $items->first();
+                    $first = collect($items)->first();
                     if ($mode === 'standard') {
                         $uid = trim((string) $first['user_uid']);
                     } else {
@@ -166,7 +162,8 @@ class OfflineImportApiController extends Controller
                     $trx = Transaksi::create([
                         'invoice' => $no_invoice,
                         'events' => json_encode(array_values(collect($ticketIds)->unique()->values()->all())),
-                        'peserta_id' => $user->id,
+                        'peserta_id' => 63,
+                        'created_by_id' => 63,
                         'amount' => $amount,
                         'final_price' => $amount,
                         'discount' => 0,
@@ -179,7 +176,7 @@ class OfflineImportApiController extends Controller
                         'city' => $user->city,
                         'no_hp' => $user->no_hp,
                         'nik' => $user->nik,
-                        'email' => $user->email,
+                        'email' => 'ifailamir@gmail.com',
                         'nama' => $user->name,
                         'expired_snap_time' => Carbon::now(),
                         'participants' => json_encode($participants),

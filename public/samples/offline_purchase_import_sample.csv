@@ -1,11 +1,3 @@
 invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
-INV-EXAMPLE003,1111,1,Mira,failamir101@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE004,1112,1,Made Surya,failamir102@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE005,1113,1,Robi,failamir103@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE006,1114,1,Sumiati,failamir104@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE007,1115,1,Purnama,failamir105@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE008,1116,1,Dinda,failamir106@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE009,1117,1,vendika,failamir107@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE010,1118,1,Dira Widiantari,failamir108@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE011,1119,1,Andreean,failamir109@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
-INV-EXAMPLE012,1120,1,yamuna,failamir110@kukode.com,083148263597,,Nusa Tenggara Barat,Kabupaten Lombok Tengah,L,175000,belum
+INV-EXAMPLE001,111,1,ILHAM ERWIN,,082124703367,199305012023211013,DKI Jakarta,Jakarta Pusat,XL,0,belum
+INV-EXAMPLE002,222,1,ANDI HAKIM,hakimcinere@yahoo.com,081296052523,198607082010121001,DKI Jakarta,Jakarta Pusat,XL,0,belum
