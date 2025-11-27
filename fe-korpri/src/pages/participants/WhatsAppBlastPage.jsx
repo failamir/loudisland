@@ -364,15 +364,21 @@ const WhatsAppBlastPage = () => {
     const emailPeserta = participantEmail || '-';
     const emailPemesan = purchaserEmail || '-';
     return [
-      `Halo ${nama},`,
+      `Halo ${nama} 👋`,
       '',
-      'Terima kasih telah melakukan pendaftaran.',
+      'Selamat! Kamu sudah TERDAFTAR sebagai peserta KORPRI RUN MANDALIKA 🎉',
+      '',
       `ID Peserta: ${id}`,
       `Tiket: ${tiket}`,
       `Email Peserta: ${emailPeserta}`,
       `Email Pemesan: ${emailPemesan}`,
       '',
-      'Sampai jumpa di event!',
+      'Silakan tunjukkan QR kamu saat penukaran racepack di lokasi acara ya 🎽🏁',
+      '',
+      'Untuk info terbaru seputar jadwal, lokasi, dan update penting lainnya, jangan lupa follow Instagram resmi kami 📲:',
+      'https://www.instagram.com/korprirun.mandalika/',
+      '',
+      'Sampai jumpa di Mandalika! 🏃‍♂️🏃‍♀️',
     ].join('\n');
   };
 

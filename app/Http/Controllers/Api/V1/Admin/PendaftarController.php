@@ -1777,6 +1777,12 @@ class PendaftarController extends Controller
      */
     public function beliApi(Request $request)
     {
+        if ((int) env('REGISTRATION', 1) === 0) {
+            return response()->json([
+                'message' => 'pendaftaran ditutup, mohon hubungi admin untuk informasi lebih lanjut',
+            ], 403);
+        }
+
         // Authenticate via jwt-auth to be consistent with token issuer
         try {
             $user = \Tymon\JWTAuth\Facades\JWTAuth::parseToken()->authenticate();
@@ -2820,6 +2826,58 @@ class PendaftarController extends Controller
 
     public function resetRacepack(Request $request)
     {
+        // Support both single participant_id and bulk participant_ids[]
+
+        $isBulk = is_array($request->input('participant_ids'));
+
+        if ($isBulk) {
+            $request->validate([
+                'participant_ids' => 'required|array|min:1',
+                'participant_ids.*' => 'required|string',
+            ]);
+
+            $ids = $request->input('participant_ids');
+
+            $participants = Participant::whereIn('participant_id', $ids)->get()->keyBy('participant_id');
+
+            $resetList = [];
+            $notFound = [];
+            $unchanged = [];
+
+            foreach ($ids as $pid) {
+                $participant = $participants->get($pid);
+                if (!$participant) {
+                    $notFound[] = $pid;
+                    continue;
+                }
+
+                // If already belum, we mark as unchanged
+                if ($participant->status_racepack === 'belum' || $participant->status_racepack === null) {
+                    $unchanged[] = $pid;
+                    continue;
+                }
+
+                $participant->update([
+                    'status_racepack' => 'belum',
+                    'staff_user_id' => null,
+                    'racepack_by' => null,
+                    'racepack_at' => null,
+                ]);
+
+                $resetList[] = $pid;
+            }
+
+            return response()->json([
+                'message' => 'Bulk racepack reset processed',
+                'reset_count' => count($resetList),
+                'not_found_count' => count($notFound),
+                'unchanged_count' => count($unchanged),
+                'reset' => $resetList,
+                'not_found' => $notFound,
+                'unchanged' => $unchanged,
+            ], 200);
+        }
+
         $request->validate([
             'participant_id' => 'required|string',
         ]);
