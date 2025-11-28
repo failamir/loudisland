@@ -1,0 +1,11 @@
+invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
+,123456789,1,TEDY ANUGRAHA,iannhriadii@gmail.com,,197903102000121001,Nusa Tenggara Barat,Sumbawa,XXL,175000,belum
+,234567890,1,DIDIK ARGA WIJAYANTO,iannhriadii@gmail.com,,200205282025021001,Nusa Tenggara Barat,Sumbawa,L,175000,belum
+,345678901,1,ANUGRAH DWI SETYO,iannhriadii@gmail.com,,199212192018011001,Nusa Tenggara Barat,Sumbawa,L,175000,belum
+,456789012,1,AHMAD APRIAN HARIADI,iannhriadii@gmail.com,,200304122025061004,Nusa Tenggara Barat,Sumbawa,M,175000,belum
+,567890123,1,NAZARUL RAMA AGASHY,iannhriadii@gmail.com,,199602092022011001,Nusa Tenggara Barat,Sumbawa,XL,175000,belum
+,678901234,1,YASRIL UMAM TANTOWI,iannhriadii@gmail.com,,199910262025061010,Nusa Tenggara Barat,Sumbawa,L,175000,belum
+,789012345,1,IMAN NURZAMAN,iannhriadii@gmail.com,,200106302025061005,Nusa Tenggara Barat,Sumbawa,M,175000,belum
+,890123456,1,AHMAD FAUZAN,iannhriadii@gmail.com,,200407042025061002,Nusa Tenggara Barat,Sumbawa,S,175000,belum
+,901234567,1,LALU HARDIKA PUTRA NUGRAHA,iannhriadii@gmail.com,,200607192025061002,Nusa Tenggara Barat,Sumbawa,L,175000,belum
+,112233445,1,TANZILAL ARDO PAHRIAL,iannhriadii@gmail.com,,200408102025061001,Nusa Tenggara Barat,Sumbawa,S,175000,belum
