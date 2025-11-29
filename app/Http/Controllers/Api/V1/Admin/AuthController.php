@@ -343,9 +343,11 @@ class AuthController extends Controller
             }
         }
 
-        $user->load(['roles' => function ($q) {
-            $q->select('roles.id', 'title');
-        }]);
+        $user->load([
+            'roles' => function ($q) {
+                $q->select('roles.id', 'title');
+            }
+        ]);
 
         $userArray = $user->toArray();
         $userArray['roles'] = $user->roles->map(function ($r) {
@@ -387,18 +389,31 @@ class AuthController extends Controller
     public function refresh(Request $request)
     {
         try {
-            // Get current user first
-            $user = auth('api')->user();
+            // Refresh token (handles expiration)
+            // 'tv' claim is preserved because we added it to persistent_claims in config/jwt.php
+            $newToken = auth('api')->refresh();
+
+            // Get user from the new token
+            $user = auth('api')->setToken($newToken)->user();
+
             if (!$user) {
-                return response()->json(['message' => 'User tidak terautentikasi'], 401);
+                return response()->json(['message' => 'User not found'], 404);
             }
-            // Invalidate current token
-            \Tymon\JWTAuth\Facades\JWTAuth::invalidate(\Tymon\JWTAuth\Facades\JWTAuth::getToken());
-            // Mint a brand new token with up-to-date token_version claim
-            $newToken = \Tymon\JWTAuth\Facades\JWTAuth::claims(['tv' => (int) ($user->token_version ?? 0)])
-                ->fromUser($user);
+
+            // Check if the token version matches the user's current version
+            $payload = auth('api')->payload();
+            $tokenTv = (int) ($payload->get('tv') ?? 0);
+            $userTv = (int) ($user->token_version ?? 0);
+
+            if ($tokenTv !== $userTv) {
+                // Token version mismatch (e.g. user logged out or changed password)
+                // Invalidate the new token immediately
+                auth('api')->invalidate();
+                return response()->json(['message' => 'Token tidak valid (revoked)'], 401);
+            }
+
         } catch (JWTException $e) {
-            return response()->json(['message' => 'Token invalid or expired'], 401);
+            return response()->json(['message' => 'Token invalid atau sudah lewat batas refresh'], 401);
         }
 
         return response()->json([

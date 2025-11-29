@@ -167,6 +167,7 @@ return [
     */
 
     'persistent_claims' => [
+        'tv',
         // 'foo',
         // 'bar',
     ],
