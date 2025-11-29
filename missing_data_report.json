@@ -1,0 +1,1646 @@
+[
+  {
+    "source": "Book1.csv",
+    "row": 2,
+    "name": "MULYADI",
+    "nip": "196512311986061008"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 3,
+    "name": "NASRUDDIN",
+    "nip": "197210171993031003"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 4,
+    "name": "LILI DINIYATI SYAHMI",
+    "nip": "197110011992032006"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 5,
+    "name": "ARDY MANDALA D. TENDRI GILING",
+    "nip": "199010202015021001"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 6,
+    "name": "EVI ARMAYANTI",
+    "nip": "198406162023212040"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 7,
+    "name": "NUR UTAMI AYU NINGSIH",
+    "nip": "199508192025212014"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 8,
+    "name": "DARWIN SANTOSO",
+    "nip": "198505252025211032"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 9,
+    "name": "ROY MARTEN",
+    "nip": "199503052025211026"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 10,
+    "name": "MUHAMMAD RIDWAN",
+    "nip": "198306132011011010"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 11,
+    "name": "IRVAN SUANDI",
+    "nip": "198112072023211007"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 12,
+    "name": "ELSA HILDAYANTI",
+    "nip": "199611212025212022"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 13,
+    "name": "SURYO KRIDO LAKSONO",
+    "nip": "198004032005011013"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 14,
+    "name": "YULYARMAN",
+    "nip": "198007032010011019"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 15,
+    "name": "SAIDIL HUDRI",
+    "nip": "197803122010011013"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 16,
+    "name": "SUSMAYASARI",
+    "nip": "198609132020122003"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 17,
+    "name": "ELMI ELLYAWATI",
+    "nip": "199201122025062002"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 19,
+    "name": "BUDIANTON",
+    "nip": "198101162025211002"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 20,
+    "name": "MUSA",
+    "nip": "198809302025211027"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 21,
+    "name": "ILHAM ERWIN",
+    "nip": "199305012023211013"
+  },
+  {
+    "source": "Book1.csv",
+    "row": 22,
+    "name": "ANDI HAKIM",
+    "nip": "198607082010121001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 2,
+    "name": "Ismail Pakaya",
+    "nip": "196801131993031005"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 3,
+    "name": "Agus Triyono",
+    "nip": "196811021992031003"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 4,
+    "name": "Saiful Huda",
+    "nip": "198402282007121001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 5,
+    "name": "I Nyoman Bagus Sidantha",
+    "nip": "198307192007121001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 6,
+    "name": "Sonya Ermina",
+    "nip": "197002281993122001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 7,
+    "name": "I Made Aswin Radhitya",
+    "nip": "198909092014041001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 8,
+    "name": "Nila Pratiwi Ichsan",
+    "nip": "198102052007122001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 9,
+    "name": "Ari Azwar",
+    "nip": "198601152014031001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 10,
+    "name": "Budi Latif Hidayat",
+    "nip": "199108292020121010"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 11,
+    "name": "Danar Jati Panuntun",
+    "nip": "199704102020121007"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 12,
+    "name": "Abdul Hakim",
+    "nip": "199401082024211012"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 13,
+    "name": "Syarifudin",
+    "nip": "198801262023211008"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 14,
+    "name": "Hery Setyanto",
+    "nip": "198409182025211015"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 15,
+    "name": "Gandhi Prasena Guntur",
+    "nip": "199010252025211010"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 16,
+    "name": "Cornelius Kristiyanto Wichaksono",
+    "nip": "199107092025211015"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 17,
+    "name": "Vuti Rensa Utami",
+    "nip": "199505062024212031"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 18,
+    "name": "Rudy Christianto",
+    "nip": "-"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 19,
+    "name": "Asep Noor Hasan",
+    "nip": "197909012009121001"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 20,
+    "name": "Adliansyah",
+    "nip": "199008222025051000"
+  },
+  {
+    "source": "Book12.csv",
+    "row": 21,
+    "name": "Adhi Ardiansyah",
+    "nip": " "
+  },
+  {
+    "source": "Book2.csv",
+    "row": 2,
+    "name": "ILHAM ERWIN",
+    "nip": "199305012023211013"
+  },
+  {
+    "source": "Book2.csv",
+    "row": 3,
+    "name": "ANDI HAKIM",
+    "nip": "198607082010121001"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 2,
+    "name": "M. Arivin",
+    "nip": "0000000000001"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 3,
+    "name": "Faoziah",
+    "nip": "0000000000002"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 4,
+    "name": "Ni Komang Deby",
+    "nip": "0000000000003"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 5,
+    "name": "Hartawan ramdan lubis",
+    "nip": "0000000000004"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 6,
+    "name": "Anak Agung Gde Suharinata",
+    "nip": "0000000000005"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 7,
+    "name": "Leo Putra Cahya",
+    "nip": "0000000000006"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 8,
+    "name": "Wa'id Khairul Abadi",
+    "nip": "0000000000007"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 9,
+    "name": "renny anggraeni",
+    "nip": "0000000000008"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 10,
+    "name": "Oris Tamimi",
+    "nip": "0000000000009"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 11,
+    "name": "ni komang budi astuti",
+    "nip": "0000000000010"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 12,
+    "name": "I ketut Kariana",
+    "nip": "0000000000011"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 13,
+    "name": "Regina Ibrahim",
+    "nip": "0000000000012"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 14,
+    "name": "Ananda Septiana Lestari",
+    "nip": "0000000000013"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 15,
+    "name": "Lalu Akhmad Wiraganda H.",
+    "nip": "0000000000014"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 16,
+    "name": "Urban Murdanil",
+    "nip": "0000000000015"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 17,
+    "name": "Nengah Yudha",
+    "nip": "0000000000016"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 18,
+    "name": "Ketut Sandiarta",
+    "nip": "0000000000017"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 19,
+    "name": "Ni Ketut Sintha Febriani",
+    "nip": "0000000000018"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 20,
+    "name": "Winda Andi Apriani",
+    "nip": "0000000000019"
+  },
+  {
+    "source": "Book3.csv",
+    "row": 21,
+    "name": "Akhmad Zaenal Fikri",
+    "nip": "0000000000020"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 2,
+    "name": "M. Arivin",
+    "nip": "0000000000001"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 3,
+    "name": "Faoziah",
+    "nip": "0000000000002"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 4,
+    "name": "Ni Komang Deby",
+    "nip": "0000000000003"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 5,
+    "name": "Hartawan ramdan lubis",
+    "nip": "0000000000004"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 6,
+    "name": "Anak Agung Gde Suharinata",
+    "nip": "0000000000005"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 7,
+    "name": "Leo Putra Cahya",
+    "nip": "0000000000006"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 8,
+    "name": "Wa'id Khairul Abadi",
+    "nip": "0000000000007"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 9,
+    "name": "renny anggraeni",
+    "nip": "0000000000008"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 10,
+    "name": "Oris Tamimi",
+    "nip": "0000000000009"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 11,
+    "name": "ni komang budi astuti",
+    "nip": "0000000000010"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 12,
+    "name": "I ketut Kariana",
+    "nip": "0000000000011"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 13,
+    "name": "Regina Ibrahim",
+    "nip": "0000000000012"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 14,
+    "name": "Ananda Septiana Lestari",
+    "nip": "0000000000013"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 15,
+    "name": "Lalu Akhmad Wiraganda H.",
+    "nip": "0000000000014"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 16,
+    "name": "Urban Murdanil",
+    "nip": "0000000000015"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 17,
+    "name": "Nengah Yudha",
+    "nip": "0000000000016"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 18,
+    "name": "Ketut Sandiarta",
+    "nip": "0000000000017"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 19,
+    "name": "Ni Ketut Sintha Febriani",
+    "nip": "0000000000018"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 20,
+    "name": "Winda Andi Apriani",
+    "nip": "0000000000019"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 21,
+    "name": "Akhmad Zaenal Fikri",
+    "nip": "0000000000020"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 22,
+    "name": "Riris Rofi Majesti",
+    "nip": "0000000000021"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 23,
+    "name": "Bella Nindya",
+    "nip": "0000000000022"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 24,
+    "name": "Nanang Fahmi Muhtar",
+    "nip": "0000000000023"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 25,
+    "name": "Wisnu Mukti",
+    "nip": "0000000000024"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 26,
+    "name": "I gusti bagus satya",
+    "nip": "0000000000025"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 27,
+    "name": "Lanjar Juliantoro",
+    "nip": "0000000000026"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 28,
+    "name": "Hery Firmansyah",
+    "nip": "0000000000027"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 29,
+    "name": "Satria Juniawan",
+    "nip": "0000000000028"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 30,
+    "name": "SAPRI NURYADIN",
+    "nip": "0000000000029"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 31,
+    "name": "Anak Agung Gde Krisna",
+    "nip": "0000000000030"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 32,
+    "name": "Amam Saifulhaq",
+    "nip": "0000000000031"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 33,
+    "name": "I Nyoman Mudana",
+    "nip": "0000000000032"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 34,
+    "name": "Muhtarrudin",
+    "nip": "0000000000033"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 35,
+    "name": "Ramdiyansyah Lisnuvirganta",
+    "nip": "0000000000034"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 36,
+    "name": "Agusto Keny Jia",
+    "nip": "0000000000035"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 37,
+    "name": "Fikriyadi Nurzal",
+    "nip": "0000000000036"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 38,
+    "name": "Edward Awang Maha Putra",
+    "nip": "0000000000037"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 39,
+    "name": "KHAIRUL FAHMI",
+    "nip": "0000000000038"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 40,
+    "name": "M. FADHILAH LUTFI",
+    "nip": "0000000000039"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 41,
+    "name": "M. FAOZAN AZIM",
+    "nip": "0000000000040"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 42,
+    "name": "Udur Martionna",
+    "nip": "0000000000041"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 43,
+    "name": "Kadek Febytara Dewi Tiaksa Pande",
+    "nip": "0000000000042"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 44,
+    "name": "Anggi Virna Yuningsih",
+    "nip": "0000000000043"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 45,
+    "name": "BQ Juwita Dewi Nilamsari",
+    "nip": "0000000000044"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 46,
+    "name": "ARIANA DWI FEBRIANTI",
+    "nip": "0000000000045"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 47,
+    "name": "Dini Arta Putri",
+    "nip": "0000000000046"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 48,
+    "name": "Musni",
+    "nip": "0000000000047"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 49,
+    "name": "Reilita Dwi Arsitha",
+    "nip": "0000000000048"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 50,
+    "name": "Sri Nurhalimah",
+    "nip": "0000000000049"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 51,
+    "name": "Gede Wisnu Archana",
+    "nip": "0000000000050"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 52,
+    "name": "Nada Karina Sarinastiti",
+    "nip": "0000000000051"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 53,
+    "name": "Yuniar Pratiwi",
+    "nip": "0000000000052"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 54,
+    "name": "Arfa jalo eka prakasa utama",
+    "nip": "0000000000053"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 55,
+    "name": "Ilman Alia Yahya",
+    "nip": "0000000000054"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 56,
+    "name": "Indra Jita Wirakelana",
+    "nip": "0000000000055"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 57,
+    "name": "Zulya Wildaen",
+    "nip": "0000000000056"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 58,
+    "name": "Agus Fujianto",
+    "nip": "0000000000057"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 59,
+    "name": "Suluhuddin puji jagad",
+    "nip": "0000000000058"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 60,
+    "name": "Putu prana adhi saputra",
+    "nip": "0000000000059"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 61,
+    "name": "M. Fadli",
+    "nip": "0000000000060"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 62,
+    "name": "Lalu Herry Pratama",
+    "nip": "0000000000061"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 63,
+    "name": "komang bagus putra laksana",
+    "nip": "0000000000062"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 64,
+    "name": "lalu ziyat galih akbar",
+    "nip": "0000000000063"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 65,
+    "name": "putu arya sentosa",
+    "nip": "0000000000064"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 66,
+    "name": "I Putu Adi Putra Semadi",
+    "nip": "0000000000065"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 67,
+    "name": "Rahmatullah",
+    "nip": "0000000000066"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 68,
+    "name": "Hambali",
+    "nip": "0000000000067"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 69,
+    "name": "djoko muljanto",
+    "nip": "0000000000068"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 70,
+    "name": "Agil Septian Hariadi",
+    "nip": "0000000000069"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 71,
+    "name": "sahrul romi",
+    "nip": "0000000000070"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 72,
+    "name": "Olam bin Abdul Gani",
+    "nip": "0000000000071"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 73,
+    "name": "Iqbal Firdaus",
+    "nip": "0000000000072"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 74,
+    "name": "Muhamad Taufik Irsad Irham",
+    "nip": "0000000000073"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 75,
+    "name": "I Gede Siwantara",
+    "nip": "0000000000074"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 76,
+    "name": "I Gede Ghana Yasa",
+    "nip": "0000000000075"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 77,
+    "name": "Gede Pande Yuditya Permana",
+    "nip": "0000000000076"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 78,
+    "name": "Rian Samudra Aldy",
+    "nip": "0000000000077"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 79,
+    "name": "Galuh rahma aulia",
+    "nip": "0000000000078"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 80,
+    "name": "Nabil ari barry",
+    "nip": "0000000000079"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 81,
+    "name": "Gede Jorghi Saputra",
+    "nip": "0000000000080"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 82,
+    "name": "Krisnadhi Winangun",
+    "nip": "0000000000081"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 83,
+    "name": "I Gede Wiarta",
+    "nip": "0000000000082"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 84,
+    "name": "I Komang Aditya Yudistira",
+    "nip": "0000000000083"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 85,
+    "name": "M. HARI SUJUD KADARISWAN",
+    "nip": "0000000000084"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 86,
+    "name": "Muhammad Denny Arianto",
+    "nip": "0000000000085"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 87,
+    "name": "Ujang Wahyudi Hamid",
+    "nip": "0000000000086"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 88,
+    "name": "LALU AHMAD JANNATUL ADNAN",
+    "nip": "0000000000087"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 89,
+    "name": "Baiq Ria Safarini",
+    "nip": "0000000000088"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 90,
+    "name": "A'anggina Pebrianti Putri",
+    "nip": "0000000000089"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 91,
+    "name": "Ahmad Muballigin",
+    "nip": "0000000000090"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 92,
+    "name": "Lalu Muhammad Muzakkir",
+    "nip": "0000000000091"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 93,
+    "name": "MOH FARIS FARHAN",
+    "nip": "0000000000092"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 94,
+    "name": "I Putu Arya Pratama",
+    "nip": "0000000000093"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 95,
+    "name": "Haenah",
+    "nip": "0000000000094"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 96,
+    "name": "Pityan Mupid",
+    "nip": "0000000000095"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 97,
+    "name": "Prayogi Anugrah Arta eka saputra",
+    "nip": "0000000000096"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 98,
+    "name": "Muhamad Rizki Nul Asry",
+    "nip": "0000000000097"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 99,
+    "name": "Lalu Wahyu Dharma Trasna",
+    "nip": "0000000000098"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 100,
+    "name": "Dhoni Tegar Kurniawan",
+    "nip": "0000000000099"
+  },
+  {
+    "source": "Book3_import.csv",
+    "row": 101,
+    "name": "Muhlis",
+    "nip": "0000000000100"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 2,
+    "name": "M. Arivin",
+    "nip": "0000000000001"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 3,
+    "name": "Faoziah",
+    "nip": "0000000000002"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 4,
+    "name": "Ni Komang Deby",
+    "nip": "0000000000003"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 5,
+    "name": "Hartawan ramdan lubis",
+    "nip": "0000000000004"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 6,
+    "name": "Anak Agung Gde Suharinata",
+    "nip": "0000000000005"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 7,
+    "name": "Leo Putra Cahya",
+    "nip": "0000000000006"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 8,
+    "name": "Wa'id Khairul Abadi",
+    "nip": "0000000000007"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 9,
+    "name": "renny anggraeni",
+    "nip": "0000000000008"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 10,
+    "name": "Oris Tamimi",
+    "nip": "0000000000009"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 11,
+    "name": "ni komang budi astuti",
+    "nip": "0000000000010"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 12,
+    "name": "I ketut Kariana",
+    "nip": "0000000000011"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 13,
+    "name": "Regina Ibrahim",
+    "nip": "0000000000012"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 14,
+    "name": "Ananda Septiana Lestari",
+    "nip": "0000000000013"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 15,
+    "name": "Lalu Akhmad Wiraganda H.",
+    "nip": "0000000000014"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 16,
+    "name": "Urban Murdanil",
+    "nip": "0000000000015"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 17,
+    "name": "Nengah Yudha",
+    "nip": "0000000000016"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 18,
+    "name": "Ketut Sandiarta",
+    "nip": "0000000000017"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 19,
+    "name": "Ni Ketut Sintha Febriani",
+    "nip": "0000000000018"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 20,
+    "name": "Winda Andi Apriani",
+    "nip": "0000000000019"
+  },
+  {
+    "source": "Book3_offline_import.csv",
+    "row": 21,
+    "name": "Akhmad Zaenal Fikri",
+    "nip": "0000000000020"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 2,
+    "name": "Riris Rofi Majesti",
+    "nip": "0000000000021"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 3,
+    "name": "Bella Nindya",
+    "nip": "0000000000022"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 4,
+    "name": "Nanang Fahmi Muhtar",
+    "nip": "0000000000023"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 5,
+    "name": "Wisnu Mukti",
+    "nip": "0000000000024"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 6,
+    "name": "I gusti bagus satya",
+    "nip": "0000000000025"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 7,
+    "name": "Lanjar Juliantoro",
+    "nip": "0000000000026"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 8,
+    "name": "Hery Firmansyah",
+    "nip": "0000000000027"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 9,
+    "name": "Satria Juniawan",
+    "nip": "0000000000028"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 10,
+    "name": "SAPRI NURYADIN",
+    "nip": "0000000000029"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 11,
+    "name": "Anak Agung Gde Krisna",
+    "nip": "0000000000030"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 12,
+    "name": "Amam Saifulhaq",
+    "nip": "0000000000031"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 13,
+    "name": "I Nyoman Mudana",
+    "nip": "0000000000032"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 14,
+    "name": "Muhtarrudin",
+    "nip": "0000000000033"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 15,
+    "name": "Ramdiyansyah Lisnuvirganta",
+    "nip": "0000000000034"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 16,
+    "name": "Agusto Keny Jia",
+    "nip": "0000000000035"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 17,
+    "name": "Fikriyadi Nurzal",
+    "nip": "0000000000036"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 18,
+    "name": "Edward Awang Maha Putra",
+    "nip": "0000000000037"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 19,
+    "name": "KHAIRUL FAHMI",
+    "nip": "0000000000038"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 20,
+    "name": "M. FADHILAH LUTFI",
+    "nip": "0000000000039"
+  },
+  {
+    "source": "Book4.csv",
+    "row": 21,
+    "name": "M. FAOZAN AZIM",
+    "nip": "0000000000040"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 2,
+    "name": "Udur Martionna",
+    "nip": "0000000000041"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 3,
+    "name": "Kadek Febytara Dewi Tiaksa Pande",
+    "nip": "0000000000042"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 4,
+    "name": "Anggi Virna Yuningsih",
+    "nip": "0000000000043"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 5,
+    "name": "BQ Juwita Dewi Nilamsari",
+    "nip": "0000000000044"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 6,
+    "name": "ARIANA DWI FEBRIANTI",
+    "nip": "0000000000045"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 7,
+    "name": "Dini Arta Putri",
+    "nip": "0000000000046"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 8,
+    "name": "Musni",
+    "nip": "0000000000047"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 9,
+    "name": "Reilita Dwi Arsitha",
+    "nip": "0000000000048"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 10,
+    "name": "Sri Nurhalimah",
+    "nip": "0000000000049"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 11,
+    "name": "Gede Wisnu Archana",
+    "nip": "0000000000050"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 12,
+    "name": "Nada Karina Sarinastiti",
+    "nip": "0000000000051"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 13,
+    "name": "Yuniar Pratiwi",
+    "nip": "0000000000052"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 14,
+    "name": "Arfa jalo eka prakasa utama",
+    "nip": "0000000000053"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 15,
+    "name": "Ilman Alia Yahya",
+    "nip": "0000000000054"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 16,
+    "name": "Indra Jita Wirakelana",
+    "nip": "0000000000055"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 17,
+    "name": "Zulya Wildaen",
+    "nip": "0000000000056"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 18,
+    "name": "Agus Fujianto",
+    "nip": "0000000000057"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 19,
+    "name": "Suluhuddin puji jagad",
+    "nip": "0000000000058"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 20,
+    "name": "Putu prana adhi saputra",
+    "nip": "0000000000059"
+  },
+  {
+    "source": "Book5.csv",
+    "row": 21,
+    "name": "M. Fadli",
+    "nip": "0000000000060"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 2,
+    "name": "Lalu Herry Pratama",
+    "nip": "0000000000061"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 3,
+    "name": "komang bagus putra laksana",
+    "nip": "0000000000062"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 4,
+    "name": "lalu ziyat galih akbar",
+    "nip": "0000000000063"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 5,
+    "name": "putu arya sentosa",
+    "nip": "0000000000064"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 6,
+    "name": "I Putu Adi Putra Semadi",
+    "nip": "0000000000065"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 7,
+    "name": "Rahmatullah",
+    "nip": "0000000000066"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 8,
+    "name": "Hambali",
+    "nip": "0000000000067"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 9,
+    "name": "djoko muljanto",
+    "nip": "0000000000068"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 10,
+    "name": "Agil Septian Hariadi",
+    "nip": "0000000000069"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 11,
+    "name": "sahrul romi",
+    "nip": "0000000000070"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 12,
+    "name": "Olam bin Abdul Gani",
+    "nip": "0000000000071"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 13,
+    "name": "Iqbal Firdaus",
+    "nip": "0000000000072"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 14,
+    "name": "Muhamad Taufik Irsad Irham",
+    "nip": "0000000000073"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 15,
+    "name": "I Gede Siwantara",
+    "nip": "0000000000074"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 16,
+    "name": "I Gede Ghana Yasa",
+    "nip": "0000000000075"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 17,
+    "name": "Gede Pande Yuditya Permana",
+    "nip": "0000000000076"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 18,
+    "name": "Rian Samudra Aldy",
+    "nip": "0000000000077"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 19,
+    "name": "Galuh rahma aulia",
+    "nip": "0000000000078"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 20,
+    "name": "Nabil ari barry",
+    "nip": "0000000000079"
+  },
+  {
+    "source": "Book6.csv",
+    "row": 21,
+    "name": "Gede Jorghi Saputra",
+    "nip": "0000000000080"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 2,
+    "name": "Krisnadhi Winangun",
+    "nip": "0000000000081"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 3,
+    "name": "I Gede Wiarta",
+    "nip": "0000000000082"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 4,
+    "name": "I Komang Aditya Yudistira",
+    "nip": "0000000000083"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 5,
+    "name": "M. HARI SUJUD KADARISWAN",
+    "nip": "0000000000084"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 6,
+    "name": "Muhammad Denny Arianto",
+    "nip": "0000000000085"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 7,
+    "name": "Ujang Wahyudi Hamid",
+    "nip": "0000000000086"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 8,
+    "name": "LALU AHMAD JANNATUL ADNAN",
+    "nip": "0000000000087"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 9,
+    "name": "Baiq Ria Safarini",
+    "nip": "0000000000088"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 10,
+    "name": "A'anggina Pebrianti Putri",
+    "nip": "0000000000089"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 11,
+    "name": "Ahmad Muballigin",
+    "nip": "0000000000090"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 12,
+    "name": "Lalu Muhammad Muzakkir",
+    "nip": "0000000000091"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 13,
+    "name": "MOH FARIS FARHAN",
+    "nip": "0000000000092"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 14,
+    "name": "I Putu Arya Pratama",
+    "nip": "0000000000093"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 15,
+    "name": "Haenah",
+    "nip": "0000000000094"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 16,
+    "name": "Pityan Mupid",
+    "nip": "0000000000095"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 17,
+    "name": "Prayogi Anugrah Arta eka saputra",
+    "nip": "0000000000096"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 18,
+    "name": "Muhamad Rizki Nul Asry",
+    "nip": "0000000000097"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 19,
+    "name": "Lalu Wahyu Dharma Trasna",
+    "nip": "0000000000098"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 20,
+    "name": "Dhoni Tegar Kurniawan",
+    "nip": "0000000000099"
+  },
+  {
+    "source": "Book7.csv",
+    "row": 21,
+    "name": "Muhlis",
+    "nip": "0000000000100"
+  },
+  {
+    "source": "Book8.csv",
+    "row": 2,
+    "name": "Heru Teguh",
+    "nip": "000000123"
+  },
+  {
+    "source": "Book8.csv",
+    "row": 3,
+    "name": "Bayu Dwiyanto",
+    "nip": "000000123"
+  },
+  {
+    "source": "Book8.csv",
+    "row": 4,
+    "name": "Wiwik Setyowati",
+    "nip": "000000123"
+  },
+  {
+    "source": "Book8.csv",
+    "row": 5,
+    "name": "Sigit Teguh",
+    "nip": "000000123"
+  },
+  {
+    "source": "Book8.csv",
+    "row": 6,
+    "name": "Rini Supriyati",
+    "nip": "000000123"
+  },
+  {
+    "source": "Book9.csv",
+    "row": 12,
+    "name": "elfani rasita",
+    "nip": "5201035311050001"
+  },
+  {
+    "source": "Book9.csv",
+    "row": 19,
+    "name": "Nurâaini",
+    "nip": "3202154707970005"
+  },
+  {
+    "source": "Book9.csv",
+    "row": 21,
+    "name": "Inggit Hariati",
+    "nip": "Nusa Tenggara Barat"
+  },
+  {
+    "source": "Book9.csv",
+    "row": 22,
+    "name": "Rupawan",
+    "nip": "Nusa Tenggara Barat"
+  },
+  {
+    "source": "Book9.csv",
+    "row": 23,
+    "name": "HAMID FAHMI ARDIYANTO S.E. M.Ec.Dev.",
+    "nip": "Nusa Tenggara Barat"
+  },
+  {
+    "source": "offline_purchase_import_sample.csv",
+    "row": 2,
+    "name": "ILHAM ERWIN",
+    "nip": "199305012023211013"
+  },
+  {
+    "source": "offline_purchase_import_sample.csv",
+    "row": 3,
+    "name": "ANDI HAKIM",
+    "nip": "198607082010121001"
+  }
+]

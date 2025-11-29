@@ -308,6 +308,53 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
         ]);
     });
 
+    // Find duplicated participants by name + nik
+    Route::get('participants/duplicates', function () {
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+
+        // Group by normalized name + nik to detect duplicates
+        $base = \App\Models\Participant::query()
+            ->selectRaw('LOWER(TRIM(name)) as name_key, nik, COUNT(*) as duplicates_count')
+            ->whereNotNull('name')
+            ->whereNotNull('nik')
+            ->where('name', '<>', '')
+            ->where('nik', '<>', '')
+            ->whereNotIn('email', $excluded_emails)
+            ->groupBy('name_key', 'nik')
+            ->having('duplicates_count', '>', 1);
+
+        $groups = $base->get();
+
+        if ($groups->isEmpty()) {
+            return response()->json([
+                'data' => [],
+                'total_groups' => 0,
+            ]);
+        }
+
+        $result = [];
+        foreach ($groups as $g) {
+            $members = \App\Models\Participant::query()
+                ->whereRaw('LOWER(TRIM(name)) = ?', [$g->name_key])
+                ->where('nik', $g->nik)
+                ->whereNotIn('email', $excluded_emails)
+                ->orderBy('id')
+                ->get();
+
+            $result[] = [
+                'name' => $members->first()->name ?? null,
+                'nik' => $g->nik,
+                'count' => $members->count(),
+                'participants' => $members,
+            ];
+        }
+
+        return response()->json([
+            'data' => $result,
+            'total_groups' => count($result),
+        ]);
+    });
+
     // TODO: email to ifailamir@kardusinfo.com and kardusinfo@failamir.com
 
 

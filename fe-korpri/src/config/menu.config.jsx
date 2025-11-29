@@ -5,6 +5,7 @@ export const MENU_SIDEBAR = [
   // { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
   { title: 'Participant', path: '/racepacks', icon: 'gift' },
   { title: 'Missing Participants', path: '/participants/missing', icon: 'information' },
+  { title: 'Duplicate Participants', path: '/participants/duplicates', icon: 'warning-2' },
   { title: 'WA Blast', path: '/participants/wa-blast', icon: 'whatsapp' },
   { title: 'Withdrawal', path: '/withdrawal', icon: 'wallet' },
   { title: 'Users', path: '/users', icon: 'users' },

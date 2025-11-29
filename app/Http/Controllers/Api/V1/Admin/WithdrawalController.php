@@ -172,8 +172,9 @@ class WithdrawalController extends Controller
             ]);
         });
 
-        $subject = 'New Withdrawal Requested';
-        $body = "ID: {$withdrawal->id}\n" .
+        if (false) {
+            $subject = 'New Withdrawal Requested';
+            $body = "ID: {$withdrawal->id}\n" .
                 "Amount: {$withdrawal->amount}\n" .
                 "Bank: {$withdrawal->bank}\n" .
                 "Account Name: {$withdrawal->account_name}\n" .
@@ -182,9 +183,10 @@ class WithdrawalController extends Controller
                 "Note: " . ($withdrawal->note ?? '-') . "\n" .
                 "Requested By User ID: " . ($userId ?? '-') . "\n" .
                 "Created At: {$withdrawal->created_at}";
-        Mail::raw($body, function ($message) use ($subject) {
-            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        });
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        }
 
         return response()->json([
             'message' => 'Withdrawal berhasil diajukan',
@@ -240,8 +242,9 @@ class WithdrawalController extends Controller
             ]);
         });
 
-        $subject = 'Withdrawal Status Updated';
-        $body = "ID: {$withdrawal->id}\n" .
+        if (false) {
+            $subject = 'Withdrawal Status Updated';
+            $body = "ID: {$withdrawal->id}\n" .
                 "New Status: {$data['action']}\n" .
                 "Amount: {$withdrawal->amount}\n" .
                 "Bank: {$withdrawal->bank}\n" .
@@ -250,9 +253,10 @@ class WithdrawalController extends Controller
                 "Note: " . (($data['note'] ?? $withdrawal->note) ?? '-') . "\n" .
                 "Updated By User ID: " . ($userId ?? '-') . "\n" .
                 "Updated At: " . now();
-        Mail::raw($body, function ($message) use ($subject) {
-            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        });
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        }
 
         return response()->json([
             'message' => 'Status withdrawal diperbarui',

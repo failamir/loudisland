@@ -1,0 +1,82 @@
+[
+  {
+    "row": 7,
+    "name": "hugo satria darmajaya",
+    "nip": "5203030212080001",
+    "email": "satriahust@gmail.com",
+    "phone": "+62 823-4024-4823",
+    "shirt_size": "M"
+  },
+  {
+    "row": 8,
+    "name": "MOH IMAM FAOZI",
+    "nip": "520303310307003",
+    "email": "imohimamfauzi@gmail.com",
+    "phone": "+62 823-4024-4823",
+    "shirt_size": "M"
+  },
+  {
+    "row": 9,
+    "name": "RENALDI BAGASKARA",
+    "nip": "5203031208040001",
+    "email": "renaldibagaskara678@gmail.com",
+    "phone": "+62 823-4024-4823",
+    "shirt_size": "M"
+  },
+  {
+    "row": 11,
+    "name": "J A H R I",
+    "nip": "5202051508840009",
+    "email": "jahrijahri662@gmail.com",
+    "phone": "+62 878-6466-0157",
+    "shirt_size": "M"
+  },
+  {
+    "row": 12,
+    "name": "Lalu Arya Arisandi",
+    "nip": "5202011002910001",
+    "email": "luluaryaarisandi4@gmail.com",
+    "phone": "+62 878-6466-0157",
+    "shirt_size": "M"
+  },
+  {
+    "row": 23,
+    "name": "Nur’aini",
+    "nip": "199707072022032007 -",
+    "email": "nuraini9715@gmail.com",
+    "phone": "+62 822-3182-0203",
+    "shirt_size": "M"
+  },
+  {
+    "row": 41,
+    "name": "Nala Wirajaya",
+    "nip": "197906222006041006",
+    "email": "info@mandalikakorprirun.com",
+    "phone": "+62 811-6604-580",
+    "shirt_size": "S"
+  },
+  {
+    "row": 42,
+    "name": "Risa Tiar",
+    "nip": "198908102014032002",
+    "email": "info@mandalikakorprirun.com",
+    "phone": "+62 811-6604-580",
+    "shirt_size": "S"
+  },
+  {
+    "row": 43,
+    "name": "baiq aryani difayati",
+    "nip": "5271044206960000",
+    "email": "info@mandalikakorprirun.com",
+    "phone": "82339781278",
+    "shirt_size": "M"
+  },
+  {
+    "row": 44,
+    "name": "Andaninta",
+    "nip": "5271021706000000",
+    "email": "info@mandalikakorprirun.com",
+    "phone": "8984033302",
+    "shirt_size": "L"
+  }
+]

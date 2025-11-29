@@ -21,6 +21,7 @@ import NomorPunggungPairPage from '@/pages/nomor-punggung/NomorPunggungPairPage'
 import WithdrawalPage from '@/pages/withdrawal/WithdrawalPage';
 import MissingParticipantsPage from '@/pages/participants/MissingParticipantsPage';
 import WhatsAppBlastPage from '@/pages/participants/WhatsAppBlastPage';
+import DuplicateParticipantsPage from '@/pages/participants/DuplicateParticipantsPage';
 import PermissionsListPage from '@/pages/permissions/PermissionsListPage';
 import RolesListPage from '@/pages/roles/RolesListPage';
 import RacepackListPage from '@/pages/racepacks/RacepackListPage';
@@ -114,6 +115,7 @@ const AppRoutingSetup = () => {
           <Route path="/transactions/:id" element={<TransactionDetailPage />} />
           <Route path="/participants/missing" element={<MissingParticipantsPage />} />
           <Route path="/participants/wa-blast" element={<WhatsAppBlastPage />} />
+          <Route path="/participants/duplicates" element={<DuplicateParticipantsPage />} />
           <Route path="/nomor-punggung" element={<NomorPunggungListPage />} />
           <Route path="/nomor-punggung/pair" element={<NomorPunggungPairPage />} />
           <Route path="/referral-codes" element={<ReferralCodesPage />} />

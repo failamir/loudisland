@@ -63,8 +63,9 @@ class ReferralWithdrawalController extends Controller
             'status' => 'queued',
         ]);
 
-        $subject = 'New Referral Withdrawal Requested';
-        $body = "ID: {$withdrawal->id}\n" .
+        if (false) {
+            $subject = 'New Referral Withdrawal Requested';
+            $body = "ID: {$withdrawal->id}\n" .
                 "User ID: {$user->id}\n" .
                 "Amount: {$withdrawal->amount}\n" .
                 "Bank: {$withdrawal->bank}\n" .
@@ -73,9 +74,10 @@ class ReferralWithdrawalController extends Controller
                 "Status: {$withdrawal->status}\n" .
                 "Note: " . ($withdrawal->note ?? '-') . "\n" .
                 "Created At: {$withdrawal->created_at}";
-        Mail::raw($body, function ($message) use ($subject) {
-            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        });
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        }
 
         return response()->json([
             'message' => 'Withdrawal referral berhasil diajukan',
@@ -162,8 +164,9 @@ class ReferralWithdrawalController extends Controller
             'note' => $data['note'] ?? $withdrawal->note,
         ]);
 
-        $subject = 'Referral Withdrawal Status Updated';
-        $body = "ID: {$withdrawal->id}\n" .
+        if (false) {
+            $subject = 'Referral Withdrawal Status Updated';
+            $body = "ID: {$withdrawal->id}\n" .
                 "User ID: {$withdrawal->user_id}\n" .
                 "New Status: {$data['action']}\n" .
                 "Amount: {$withdrawal->amount}\n" .
@@ -172,9 +175,10 @@ class ReferralWithdrawalController extends Controller
                 "Account Number: {$withdrawal->account_number}\n" .
                 "Note: " . (($data['note'] ?? $withdrawal->note) ?? '-') . "\n" .
                 "Updated At: " . now();
-        Mail::raw($body, function ($message) use ($subject) {
-            $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
-        });
+            Mail::raw($body, function ($message) use ($subject) {
+                $message->to(['ifailamir@gmail.com', 'kardusinfo.com@gmail.com'])->subject($subject);
+            });
+        }
 
         return response()->json([
             'message' => 'Status withdrawal referral diperbarui',
