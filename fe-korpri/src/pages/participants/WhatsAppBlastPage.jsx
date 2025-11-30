@@ -235,8 +235,12 @@ const WhatsAppBlastPage = () => {
         cell: info => {
           const event = info.row.original?.event;
           let eventName = event?.nama_event || '-';
-          if (event?.id == 1 || event?.id == 2) {
+          if (event?.id == 1) {
             eventName = 'TIKET UNTUK ASN';
+          } else if (event?.id == 2) {
+            eventName = 'TIKET UNTUK UMUM';
+          } else {
+            eventName = event?.nama_event || '-';
           }
           return <div className="text-gray-800">{eventName}</div>;
         },
