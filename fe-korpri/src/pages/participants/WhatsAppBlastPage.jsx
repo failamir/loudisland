@@ -26,6 +26,7 @@ const WhatsAppBlastPage = () => {
   const [testPurchaserEmail, setTestPurchaserEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [filterBlastStatus, setFilterBlastStatus] = useState('all'); // all | 0 | 1
 
   useEffect(() => {
     loadParticipants();
@@ -116,10 +117,20 @@ const WhatsAppBlastPage = () => {
   };
 
   const filteredParticipants = useMemo(() => {
-    if (!search) return participants;
+    let data = participants;
+
+    if (filterBlastStatus !== 'all') {
+      const isBlastedTarget = filterBlastStatus === '1';
+      data = data.filter(p => {
+        const val = p.blast == 1;
+        return isBlastedTarget ? val : !val;
+      });
+    }
+
+    if (!search) return data;
     const s = search.toLowerCase();
     if (source === 'participants') {
-      return participants.filter(p =>
+      return data.filter(p =>
         (p.name || '').toLowerCase().includes(s) ||
         (p.email || '').toLowerCase().includes(s) ||
         (p.participant_id || '').toLowerCase().includes(s) ||
@@ -127,7 +138,7 @@ const WhatsAppBlastPage = () => {
       );
     }
     // transactions simple shape
-    return participants.filter(t =>
+    return data.filter(t =>
       (t.invoice || '').toLowerCase().includes(s) ||
       ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
       (t.event?.id == 1 && 'tiket untuk asn'.includes(s)) ||
@@ -137,7 +148,7 @@ const WhatsAppBlastPage = () => {
       (t.participant_name || '').toLowerCase().includes(s) ||
       (t.participant_phones || '').toLowerCase().includes(s)
     );
-  }, [participants, search, source]);
+  }, [participants, search, source, filterBlastStatus]);
 
   const columns = useMemo(() => {
     if (source === 'participants') {
@@ -179,6 +190,19 @@ const WhatsAppBlastPage = () => {
           header: ({ column }) => <DataGridColumnHeader title="Ukuran Jersey" column={column} />,
           cell: info => <div className="text-gray-700">{info.row.original.shirt_size || info.row.original.shirtSize || '-'}</div>,
           meta: { headerClassName: 'min-w-[120px]' }
+        },
+        {
+          accessorKey: 'blast',
+          header: ({ column }) => <DataGridColumnHeader title="Blast" column={column} />,
+          cell: info => {
+            const val = info.row.original.blast;
+            return (
+              <span className={`badge badge-sm ${val == 1 ? 'badge-success' : 'badge-light'}`}>
+                {val == 1 ? 'Sudah' : 'Belum'}
+              </span>
+            );
+          },
+          meta: { headerClassName: 'min-w-[100px]' }
         }
       ];
     }
@@ -263,6 +287,19 @@ const WhatsAppBlastPage = () => {
         header: ({ column }) => <DataGridColumnHeader title="Waktu" column={column} />,
         cell: info => <div className="text-gray-700">{info.row.original.created_at || '-'}</div>,
         meta: { headerClassName: 'min-w-[180px]' }
+      },
+      {
+        accessorKey: 'blast',
+        header: ({ column }) => <DataGridColumnHeader title="Blast" column={column} />,
+        cell: info => {
+          const val = info.row.original.blast;
+          return (
+            <span className={`badge badge-sm ${val == 1 ? 'badge-success' : 'badge-light'}`}>
+              {val == 1 ? 'Sudah' : 'Belum'}
+            </span>
+          );
+        },
+        meta: { headerClassName: 'min-w-[100px]' }
       }
     ];
   }, [source]);
@@ -450,6 +487,17 @@ const WhatsAppBlastPage = () => {
             />
           </div>
           <button className="btn btn-sm btn-light" onClick={() => { setSearch(''); }} disabled={loading}>Clear</button>
+
+          <select
+            className="select select-sm border-gray-300"
+            value={filterBlastStatus}
+            onChange={e => setFilterBlastStatus(e.target.value)}
+            disabled={loading}
+          >
+            <option value="all">Semua Status Blast</option>
+            <option value="0">Belum Blast</option>
+            <option value="1">Sudah Blast</option>
+          </select>
           {loading && (
             <div className="flex items-center gap-2 text-gray-600 text-sm">
               <KeenIcon icon="loading" className="animate-spin" /> Memproses...

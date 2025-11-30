@@ -62,7 +62,8 @@ class PendaftarController extends Controller
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
 
         $base = Participant::with(['staff:id,name'])
-            ->select('participants.*');
+            ->select('participants.*')
+            ->where('status', '1');
         if (!$includeTesting && !empty($excluded_emails)) {
             $base->whereNotIn('email', $excluded_emails);
         }

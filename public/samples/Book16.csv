@@ -1,0 +1,41 @@
+invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
+,111223344,1,"Drs.H.Fathurrahman.,M.Si",,,196806291993031006,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,Hafiz,,,197004052007011049,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"I Putu Maha Yudha Widia Dharma,S.Ds",,,198905152015021002,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Aulia Suci Ramdani, S.STP",,,198605122004122001,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Poppy Pujawati, SE., MM.",,,198001182010012003,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Nelly Zubaidah, SH",,,198202182010012025,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Baiq Juni Hartini, S.Adm.",,,198206202009012004,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Muhari Isnaeni,SH.",,,196804011990031011,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Sena Puja, ST.M.Eng",,,197910142005011008,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Ajam Nirmaladi, S.Sos",,,197012192007011000,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Muhammad Amin, SH",,,198312312010011008,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Lalu Perdana Suganda Putra, SE",,,198710212011011011,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Lalu Henry Gunawan, S.AP",,,198112122010011007,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Yuni Hariadi, SH, MH.",,,197506062009011007,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Rudy Trisna Ramdhani, A.Md",,,198904092011011001,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Erlin Yustiana, S.Sos",,,197307051996032003,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Yuli Suryani, A.Md",,,198707022011012001,Nusa Tenggara Barat,Kota Mataram,S,175000,belum
+,111223344,1,"Fina Febrina Sarita, SE.MM",,,198902032011012003,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Uswatun Hasanah, S.Adm",,,197404202008012017,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,Adiyatma Yuda Subrata,,,199309132016091003,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"H. Edy Harya Thamrin, SE",,,197403251997031003,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Ni Luh Lyly Erawati, S.Kom",,,198203202011012008,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,Baiq Farida Anggraini,,,198411202010012008,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,Yuli Windia Rosiani,,,198107132009012001,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Hj. Hafni Zuraida, SE",,,197603092010012003,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Ni Ketut Widhiastuti, SE",,,198405312009012002,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"R Rudi Yulianto, SE.M.Sc.M.AP",,,197607051999021001,Nusa Tenggara Barat,Kota Mataram,XXL,175000,belum
+,111223344,1,"Annisa Hadiyani,SSTP.,MM",,,199303242016092001,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Baiq Reghina Septhiana,SSTP",,,199609012018082001,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Rahmawati, SE",,,197212311996032012,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,Fattaahul Hidayati,,,198509012025212018,Nusa Tenggara Barat,Kota Mataram,XXL,175000,belum
+,111223344,1,"Dedy Arisandi, S.AP",,,197312311996031003,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Bella navissa, S.Kom",,,199910312025062001,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,"Ki Agus Haris, SE",,,197710062008011012,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
+,111223344,1,"Ani Oktaviani, SE",,,198410042011012002,Nusa Tenggara Barat,Kota Mataram,XXL,175000,belum
+,111223344,1,"Feny Andayani, SH.M.Hum.",,,197902112010012001,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Baiq Ratih Rusmaningrum,SIP.M.Si",,,199011112010102001,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Miftahul Yusri, A.Md",,,198708292011011004,Nusa Tenggara Barat,Kota Mataram,M,175000,belum
+,111223344,1,Rusmaya Indriyani,,,197405132007012018,Nusa Tenggara Barat,Kota Mataram,XL,175000,belum
+,111223344,1,"Sunarya Arjiman, S.Kom",,,199404222025211000,Nusa Tenggara Barat,Kota Mataram,L,175000,belum
