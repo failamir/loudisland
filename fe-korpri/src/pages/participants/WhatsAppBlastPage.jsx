@@ -26,6 +26,7 @@ const WhatsAppBlastPage = () => {
   const [testPurchaserEmail, setTestPurchaserEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
+  const [isInviteMode, setIsInviteMode] = useState(false);
 
   useEffect(() => {
     loadParticipants();
@@ -74,7 +75,8 @@ const WhatsAppBlastPage = () => {
       const payload = {
         ...(source.startsWith('participants') ? { participant_ids: ids } : { transaction_ids: ids }),
         use_default_template: useTemplate,
-        text: useTemplate ? undefined : (message || '')
+        text: useTemplate ? undefined : (message || ''),
+        is_invite: isInviteMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -119,7 +121,11 @@ const WhatsAppBlastPage = () => {
     let data = participants;
 
     if (source.endsWith('_pending')) {
-      data = data.filter(p => p.blast == 0);
+      if (isInviteMode) {
+        data = data.filter(p => p.invite != 1); // invite can be null or 0
+      } else {
+        data = data.filter(p => p.blast == 0);
+      }
     }
 
     if (!search) return data;
@@ -143,7 +149,7 @@ const WhatsAppBlastPage = () => {
       (t.participant_name || '').toLowerCase().includes(s) ||
       (t.participant_phones || '').toLowerCase().includes(s)
     );
-  }, [participants, search, source]);
+  }, [participants, search, source, isInviteMode]);
 
   const columns = useMemo(() => {
     if (source.startsWith('participants')) {
@@ -191,6 +197,19 @@ const WhatsAppBlastPage = () => {
           header: ({ column }) => <DataGridColumnHeader title="Blast" column={column} />,
           cell: info => {
             const val = info.row.original.blast;
+            return (
+              <span className={`badge badge-sm ${val == 1 ? 'badge-success' : 'badge-light'}`}>
+                {val == 1 ? 'Sudah' : 'Belum'}
+              </span>
+            );
+          },
+          meta: { headerClassName: 'min-w-[100px]' }
+        },
+        {
+          accessorKey: 'invite',
+          header: ({ column }) => <DataGridColumnHeader title="Invite" column={column} />,
+          cell: info => {
+            const val = info.row.original.invite;
             return (
               <span className={`badge badge-sm ${val == 1 ? 'badge-success' : 'badge-light'}`}>
                 {val == 1 ? 'Sudah' : 'Belum'}
@@ -336,7 +355,8 @@ const WhatsAppBlastPage = () => {
       const payload = {
         ...(source.startsWith('participants') ? { participant_ids: ids } : { transaction_ids: ids }),
         use_default_template: useTemplate,
-        text: useTemplate ? undefined : (message || '')
+        text: useTemplate ? undefined : (message || ''),
+        is_invite: isInviteMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -360,7 +380,8 @@ const WhatsAppBlastPage = () => {
         send_all: true,
         search: search || undefined,
         use_default_template: useTemplate,
-        text: useTemplate ? undefined : (message || '')
+        text: useTemplate ? undefined : (message || ''),
+        is_invite: isInviteMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -579,7 +600,29 @@ const WhatsAppBlastPage = () => {
                 </select>
               </div>
               <label className="switch switch-sm">
-                <input name="useTemplate" type="checkbox" className="order-2" checked={useTemplate} onChange={e => setUseTemplate(e.target.checked)} />
+                <input
+                  name="isInviteMode"
+                  type="checkbox"
+                  className="order-2"
+                  checked={isInviteMode}
+                  onChange={e => {
+                    const val = e.target.checked;
+                    setIsInviteMode(val);
+                    if (val) setUseTemplate(false); // Force custom message for invite
+                  }}
+                />
+                <span className="switch-label order-1 font-semibold text-primary">Mode Undangan Grup</span>
+              </label>
+              <div className="border-l h-6 mx-2"></div>
+              <label className="switch switch-sm">
+                <input
+                  name="useTemplate"
+                  type="checkbox"
+                  className="order-2"
+                  checked={useTemplate}
+                  onChange={e => setUseTemplate(e.target.checked)}
+                  disabled={isInviteMode}
+                />
                 <span className="switch-label order-1">Gunakan template sukses pembayaran</span>
               </label>
             </div>

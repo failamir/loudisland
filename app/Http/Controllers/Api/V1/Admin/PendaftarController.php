@@ -216,6 +216,7 @@ class PendaftarController extends Controller
 
         $useTemplate = (bool) $request->boolean('use_default_template', false);
         $sendAll = (bool) $request->boolean('send_all', false);
+        $isInvite = (bool) $request->boolean('is_invite', false);
         $text = (string) $request->input('text', '');
         $search = (string) $request->input('search', '');
 
@@ -223,7 +224,7 @@ class PendaftarController extends Controller
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $includeTesting = (bool) $request->boolean('include_testing', false);
         $base = Participant::query()
-            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id', 'blast'])
+            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id', 'blast', 'invite'])
             ->where('status', '1')
             ->whereNotIn('email', $excluded_emails);
 
@@ -276,13 +277,15 @@ class PendaftarController extends Controller
         $skipped = 0;
 
         foreach ($list as $p) {
-            if ($p->blast == 1) {
+            $alreadySent = $isInvite ? ($p->invite == 1) : ($p->blast == 1);
+
+            if ($alreadySent) {
                 $skipped++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
                     'phone' => $p->phone,
                     'status' => 'skipped',
-                    'message' => 'Already blasted',
+                    'message' => $isInvite ? 'Already invited' : 'Already blasted',
                 ];
                 continue;
             }
@@ -315,11 +318,17 @@ class PendaftarController extends Controller
                 }
                 $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
 
-                // Update blast flags
-                $p->blast = 1;
-                $p->save();
-                if ($p->transaction_id) {
-                    Transaksi::where('id', $p->transaction_id)->update(['blast' => 1]);
+                // Update blast/invite flags
+                if ($isInvite) {
+                    $p->invite = 1;
+                    $p->save();
+                    // Note: Transactions don't have invite flag usually, or we don't update it for now
+                } else {
+                    $p->blast = 1;
+                    $p->save();
+                    if ($p->transaction_id) {
+                        Transaksi::where('id', $p->transaction_id)->update(['blast' => 1]);
+                    }
                 }
 
                 $success++;

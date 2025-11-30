@@ -29,6 +29,7 @@ class Participant extends Model
         'racepack_at',
         'amount',
         'blast',
+        'invite',
     ];
 
     protected $casts = [
