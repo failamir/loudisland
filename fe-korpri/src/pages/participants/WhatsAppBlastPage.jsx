@@ -26,7 +26,7 @@ const WhatsAppBlastPage = () => {
   const [testPurchaserEmail, setTestPurchaserEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [filterBlastStatus, setFilterBlastStatus] = useState('all'); // all | 0 | 1
+  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     loadParticipants();
@@ -36,7 +36,7 @@ const WhatsAppBlastPage = () => {
     try {
       setLoading(true);
       setError(null);
-      if (source === 'participants') {
+      if (source.startsWith('participants')) {
         const { data } = await axios.get(`${API_URL}/participants`);
         const items = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
         setParticipants(items);
@@ -62,7 +62,7 @@ const WhatsAppBlastPage = () => {
       setError(null);
       setBlastResult(null);
 
-      const ids = source === 'participants'
+      const ids = source.startsWith('participants')
         ? failed.map(r => r.participant_id).filter(Boolean)
         : failed.map(r => r.transaction_id || r.id).filter(Boolean);
 
@@ -73,11 +73,11 @@ const WhatsAppBlastPage = () => {
       }
 
       const payload = {
-        ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
+        ...(source.startsWith('participants') ? { participant_ids: ids } : { transaction_ids: ids }),
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || '')
       };
-      const url = source === 'participants'
+      const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
         : `${API_URL}/transactions/whatsapp-blast`;
       const res = await axios.post(url, payload);
@@ -119,17 +119,13 @@ const WhatsAppBlastPage = () => {
   const filteredParticipants = useMemo(() => {
     let data = participants;
 
-    if (filterBlastStatus !== 'all') {
-      const isBlastedTarget = filterBlastStatus === '1';
-      data = data.filter(p => {
-        const val = p.blast == 1;
-        return isBlastedTarget ? val : !val;
-      });
+    if (source.endsWith('_pending')) {
+      data = data.filter(p => p.blast == 0);
     }
 
     if (!search) return data;
     const s = search.toLowerCase();
-    if (source === 'participants') {
+    if (source.startsWith('participants')) {
       return data.filter(p =>
         (p.name || '').toLowerCase().includes(s) ||
         (p.email || '').toLowerCase().includes(s) ||
@@ -148,10 +144,10 @@ const WhatsAppBlastPage = () => {
       (t.participant_name || '').toLowerCase().includes(s) ||
       (t.participant_phones || '').toLowerCase().includes(s)
     );
-  }, [participants, search, source, filterBlastStatus]);
+  }, [participants, search, source]);
 
   const columns = useMemo(() => {
-    if (source === 'participants') {
+    if (source.startsWith('participants')) {
       return [
         {
           accessorKey: 'select',
@@ -329,7 +325,7 @@ const WhatsAppBlastPage = () => {
       setBlastResult(null);
       // Ambil peserta terpilih langsung dari tableRef
       const selectedRows = tableRef.getSelectedRowModel().rows.map(r => r.original);
-      const ids = source === 'participants'
+      const ids = source.startsWith('participants')
         ? selectedRows.map(r => r.participant_id).filter(Boolean)
         : selectedRows.map(r => r.id).filter(Boolean);
       if (ids.length === 0) {
@@ -339,11 +335,11 @@ const WhatsAppBlastPage = () => {
       }
       // Selalu serahkan ke backend (participants atau transactions)
       const payload = {
-        ...(source === 'participants' ? { participant_ids: ids } : { transaction_ids: ids }),
+        ...(source.startsWith('participants') ? { participant_ids: ids } : { transaction_ids: ids }),
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || '')
       };
-      const url = source === 'participants'
+      const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
         : `${API_URL}/transactions/whatsapp-blast`;
       const res = await axios.post(url, payload);
@@ -367,7 +363,7 @@ const WhatsAppBlastPage = () => {
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || '')
       };
-      const url = source === 'participants'
+      const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
         : `${API_URL}/transactions/whatsapp-blast`;
       const res = await axios.post(url, payload);
@@ -488,16 +484,8 @@ const WhatsAppBlastPage = () => {
           </div>
           <button className="btn btn-sm btn-light" onClick={() => { setSearch(''); }} disabled={loading}>Clear</button>
 
-          <select
-            className="select select-sm border-gray-300"
-            value={filterBlastStatus}
-            onChange={e => setFilterBlastStatus(e.target.value)}
-            disabled={loading}
-          >
-            <option value="all">Semua Status Blast</option>
-            <option value="0">Belum Blast</option>
-            <option value="1">Sudah Blast</option>
-          </select>
+          <button className="btn btn-sm btn-light" onClick={() => { setSearch(''); }} disabled={loading}>Clear</button>
+
           {loading && (
             <div className="flex items-center gap-2 text-gray-600 text-sm">
               <KeenIcon icon="loading" className="animate-spin" /> Memproses...
@@ -566,7 +554,7 @@ const WhatsAppBlastPage = () => {
                       {r.status === 'success' ? '✔' : (r.status === 'skipped' ? 'SKIP' : '✖')}
                     </span>
                     <span className="text-gray-800">
-                      {source === 'participants'
+                      {source.startsWith('participants')
                         ? `${r.participant_id || '-'} · ${r.phone || '-'}`
                         : `${r.invoice || '-'} · ${r.phone || '-'}`}
                     </span>
@@ -585,8 +573,10 @@ const WhatsAppBlastPage = () => {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-700">Sumber:</span>
                 <select className="select select-sm" value={source} onChange={(e) => setSource(e.target.value)} disabled={loading}>
-                  <option value="participants">Peserta</option>
-                  <option value="transactions">Transaksi sukses</option>
+                  <option value="participants">Peserta (Semua)</option>
+                  <option value="participants_pending">Peserta (Belum Blast)</option>
+                  <option value="transactions">Transaksi sukses (Semua)</option>
+                  <option value="transactions_pending">Transaksi sukses (Belum Blast)</option>
                 </select>
               </div>
               <label className="switch switch-sm">
@@ -670,7 +660,7 @@ const WhatsAppBlastPage = () => {
           data={filteredParticipants}
           rowSelection={true}
           onRowSelectionChange={handleRowSelectionChange}
-          getRowId={(row) => source === 'participants' ? row.participant_id : row.id}
+          getRowId={(row) => source.startsWith('participants') ? row.participant_id : row.id}
           pagination={{ size: 50 }}
           toolbar={<ToolbarContent />}
           layout={{ card: true }}
