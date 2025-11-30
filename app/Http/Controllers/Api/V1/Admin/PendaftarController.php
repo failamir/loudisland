@@ -224,9 +224,7 @@ class PendaftarController extends Controller
         $base = Participant::query()
             ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id'])
             ->where('status', '1')
-            ->where('amount', '>', 100000)
-            ->whereNotIn('email', $excluded_emails)
-            ->whereNull('shirt_size');
+            ->whereNotIn('email', $excluded_emails);
 
         if ($sendAll) {
             if ($search) {
@@ -573,9 +571,7 @@ class PendaftarController extends Controller
         $base = Participant::query()
             ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id'])
             ->where('status', '1')
-            ->where('amount', '>', 100000)
-            ->whereNotIn('email', $excluded_emails)
-            ->whereNull('shirt_size');
+            ->whereNotIn('email', $excluded_emails);
 
         if ($sendAll) {
             if ($search) {
