@@ -212,6 +212,7 @@ class PendaftarController extends Controller
             'use_default_template' => 'nullable|boolean',
             'send_all' => 'nullable|boolean',
             'search' => 'nullable|string',
+            'is_invite' => 'nullable|boolean',
         ]);
 
         $useTemplate = (bool) $request->boolean('use_default_template', false);
@@ -286,6 +287,9 @@ class PendaftarController extends Controller
                     'phone' => $p->phone,
                     'status' => 'skipped',
                     'message' => $isInvite ? 'Already invited' : 'Already blasted',
+                    'debug_is_invite' => $isInvite,
+                    'debug_invite_val' => $p->invite,
+                    'debug_blast_val' => $p->blast,
                 ];
                 continue;
             }
@@ -434,7 +438,8 @@ class PendaftarController extends Controller
             $participants = $t->participants()->get(['participant_id', 'name', 'email', 'phone', 'ticket_id', 'blast']);
             if ($participants && $participants->count() > 0) {
                 foreach ($participants as $p) {
-                    if ($p->blast == 1) {
+                    $alreadySent = $isInvite ? ($p->invite == 1) : ($p->blast == 1);
+                    if ($alreadySent) {
                         $skipped++;
                         $results[] = [
                             'transaction_id' => $t->id,
@@ -442,7 +447,7 @@ class PendaftarController extends Controller
                             'participant_id' => $p->participant_id,
                             'phone' => $p->phone,
                             'status' => 'skipped',
-                            'message' => 'Already blasted',
+                            'message' => $isInvite ? 'Already invited' : 'Already blasted',
                         ];
                         continue;
                     }
@@ -477,10 +482,15 @@ class PendaftarController extends Controller
                         }
                         $this->sendWhatsapp($destPhone, $msg, $dashboardUrl);
 
-                        // Update blast flags
-                        $p->blast = 1;
-                        $p->save();
-                        Transaksi::where('id', $t->id)->update(['blast' => 1]);
+                        // Update blast/invite flags
+                        if ($isInvite) {
+                            $p->invite = 1;
+                            $p->save();
+                        } else {
+                            $p->blast = 1;
+                            $p->save();
+                            Transaksi::where('id', $t->id)->update(['blast' => 1]);
+                        }
 
                         $success++;
                         $results[] = [

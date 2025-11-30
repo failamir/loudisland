@@ -578,6 +578,12 @@ const WhatsAppBlastPage = () => {
                         ? `${r.participant_id || '-'} · ${r.phone || '-'}`
                         : `${r.invoice || '-'} · ${r.phone || '-'}`}
                     </span>
+                    {r.message && <span className="text-gray-500 text-xs ml-2">({r.message})</span>}
+                    {r.debug_is_invite !== undefined && (
+                      <span className="text-xs text-gray-400 ml-1">
+                        [inv:{String(r.debug_is_invite)} v:{r.debug_invite_val} b:{r.debug_blast_val}]
+                      </span>
+                    )}
                     {r.error && <span className="text-gray-600">— {r.error}</span>}
                   </div>
                 ))}
