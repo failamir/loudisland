@@ -39,13 +39,13 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     // Password reset (public)
     Route::post('password/forgot', [PasswordResetApiController::class, 'sendResetLink'])->name('auth.password.forgot');
     Route::post('password/reset', [PasswordResetApiController::class, 'resetPassword'])->name('auth.password.reset');
-    
+
     // Racepack export (public, no auth required)
     Route::get('racepacks/export', [PendaftarController::class, 'exportRacepacks'])->name('racepacks.export');
     Route::get('racepacks/export-excel', [PendaftarController::class, 'exportRacepacksExcel'])->name('racepacks.exportExcel');
     Route::get('racepacks/download-csv', [PendaftarController::class, 'downloadCsv'])->name('racepacks.downloadCsv');
     Route::get('racepacks/download-excel', [PendaftarController::class, 'downloadExcel'])->name('racepacks.downloadExcel');
-    
+
     Route::middleware(['auth:api', 'token.version'])->group(function () {
         Route::get('me', [AuthController::class, 'me'])->name('auth.me');
         // Users API for FE admin
@@ -163,7 +163,7 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
 
     Route::get('participants/{participant}', [PendaftarController::class, 'showParticipant'])->name('participants.show');
     Route::get('ticket/{participant_id}', [PendaftarController::class, 'ticket'])->name('ticket.show');
-    
+
     // Update shirt size for participants
     Route::put('participants/{participant_id}/shirt-size', [PendaftarController::class, 'updateShirtSize'])->name('participants.updateShirtSize');
     Route::post('participants/bulk-update-shirt-size', [PendaftarController::class, 'bulkUpdateShirtSize'])->name('participants.bulkUpdateShirtSize');
@@ -246,9 +246,8 @@ Route::group(['prefix' => 'v1', 'as' => 'api.', 'namespace' => 'Api\\V1\\Admin']
     Route::get('participants', function () {
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $query = \App\Models\Participant::where('status', '1')
-            ->where('amount', '>', 100000)
+            ->where('amount', '>', 60000)
             ->whereNotIn('email', $excluded_emails)
-            ->whereNull('shirt_size')
             ->get();
         return response()->json([
             'data' => $query,

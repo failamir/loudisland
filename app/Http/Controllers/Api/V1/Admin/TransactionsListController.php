@@ -12,7 +12,11 @@ class TransactionsListController extends Controller
     // GET /api/v1/transactions/simple?status=success|pending|failed&per_page=20&page=1
     public function index(Request $request)
     {
-        $query = Transaksi::query()->with(['event'])->orderBy('id', 'desc');
+        $query = Transaksi::query()->with([
+            'event' => function ($q) {
+                $q->withTrashed();
+            }
+        ])->orderBy('id', 'desc');
 
         if ($status = $request->query('status')) {
             $query->where('status', $status);
@@ -38,7 +42,7 @@ class TransactionsListController extends Controller
                 $eventIds = collect(is_array($decoded) ? $decoded : [$decoded])->filter()->values();
                 $firstId = $eventIds->first();
                 if ($firstId) {
-                    $ev = Event::find($firstId);
+                    $ev = Event::withTrashed()->find($firstId);
                 }
             }
 
@@ -70,7 +74,7 @@ class TransactionsListController extends Controller
                 'created_at' => $trx->created_at,
                 'event' => $ev ? [
                     'id' => $ev->id,
-                    'nama_event' => ($ev->id == 1 || $ev->id == 2) ? 'TIKET UNTUK ASN' : $ev->nama_event,
+                    'nama_event' => ($ev->id == 1) ? 'TIKET UNTUK ASN' : (($ev->id == 2) ? 'TIKET UNTUK UMUM' : $ev->nama_event),
                     'event_code' => $ev->event_code,
                 ] : null,
             ];

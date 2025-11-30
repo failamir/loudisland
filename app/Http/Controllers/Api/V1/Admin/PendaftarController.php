@@ -260,11 +260,12 @@ class PendaftarController extends Controller
         $ticketIds = $list->pluck('ticket_id')->filter()->unique()->values();
         $eventName = collect();
         if ($ticketIds->isNotEmpty()) {
-            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
+            $tickets = Event::withTrashed()->whereIn('id', $ticketIds)->get(['id', 'nama_event']);
             $eventName = $tickets->keyBy('id')->map(function ($t) {
-                if ($t->id == 1 || $t->id == 2) {
+                if ($t->id == 1)
                     return 'TIKET UNTUK ASN';
-                }
+                if ($t->id == 2)
+                    return 'TIKET UNTUK UMUM';
                 return $t->nama_event ?? ('Event #' . $t->id);
             });
         }
@@ -289,7 +290,14 @@ class PendaftarController extends Controller
             try {
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
-                    $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
+                    $tid = $p->ticket_id;
+                    if ($tid == 1) {
+                        $jenis = 'TIKET UNTUK ASN';
+                    } elseif ($tid == 2) {
+                        $jenis = 'TIKET UNTUK UMUM';
+                    } else {
+                        $jenis = $tid ? ($eventName[$tid] ?? ('Event #' . $tid)) : 'Tiket';
+                    }
                     $order = $p->transaction_id ? Transaksi::find($p->transaction_id) : null;
                     $purchaserEmail = $order->email ?? null;
                     $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
@@ -384,11 +392,12 @@ class PendaftarController extends Controller
         $eventIds = $list->pluck('event_id')->filter()->unique()->values();
         $eventName = collect();
         if ($eventIds->isNotEmpty()) {
-            $events = Event::whereIn('id', $eventIds)->get(['id', 'nama_event']);
+            $events = Event::withTrashed()->whereIn('id', $eventIds)->get(['id', 'nama_event']);
             $eventName = $events->keyBy('id')->map(function ($t) {
-                if ($t->id == 1 || $t->id == 2) {
+                if ($t->id == 1)
                     return 'TIKET UNTUK ASN';
-                }
+                if ($t->id == 2)
+                    return 'TIKET UNTUK UMUM';
                 return $t->nama_event ?? ('Event #' . $t->id);
             });
         }
@@ -420,7 +429,14 @@ class PendaftarController extends Controller
                     try {
                         $msg = $text;
                         if ($useTemplate || $msg === '') {
-                            $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : ($t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket');
+                            $tid = $p->ticket_id ?? $t->event_id;
+                            if ($tid == 1) {
+                                $jenis = 'TIKET UNTUK ASN';
+                            } elseif ($tid == 2) {
+                                $jenis = 'TIKET UNTUK UMUM';
+                            } else {
+                                $jenis = $tid ? ($eventName[$tid] ?? ('Event #' . $tid)) : 'Tiket';
+                            }
                             $purchaserEmail = $t->email ?? null;
                             $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                         }
@@ -472,7 +488,14 @@ class PendaftarController extends Controller
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
                     $buyer = trim((string) ($t->nama ?? 'Pembeli'));
-                    $ev = $t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket';
+                    $eid = $t->event_id;
+                    if ($eid == 1) {
+                        $ev = 'TIKET UNTUK ASN';
+                    } elseif ($eid == 2) {
+                        $ev = 'TIKET UNTUK UMUM';
+                    } else {
+                        $ev = $eid ? ($eventName[$eid] ?? ('Event #' . $eid)) : 'Tiket';
+                    }
                     $lines = [];
                     $lines[] = 'Halo Bapak/Ibu ' . $buyer . ',';
                     $lines[] = 'Pembayaran Anda telah berhasil ✅';
@@ -586,11 +609,12 @@ class PendaftarController extends Controller
         $ticketIds = $list->pluck('ticket_id')->filter()->unique()->values();
         $eventName = collect();
         if ($ticketIds->isNotEmpty()) {
-            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
+            $tickets = Event::withTrashed()->whereIn('id', $ticketIds)->get(['id', 'nama_event']);
             $eventName = $tickets->keyBy('id')->map(function ($t) {
-                if ($t->id == 1 || $t->id == 2) {
+                if ($t->id == 1)
                     return 'TIKET UNTUK ASN';
-                }
+                if ($t->id == 2)
+                    return 'TIKET UNTUK UMUM';
                 return $t->nama_event ?? ('Event #' . $t->id);
             });
         }
@@ -614,7 +638,14 @@ class PendaftarController extends Controller
             try {
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
-                    $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
+                    $tid = $p->ticket_id;
+                    if ($tid == 1) {
+                        $jenis = 'TIKET UNTUK ASN';
+                    } elseif ($tid == 2) {
+                        $jenis = 'TIKET UNTUK UMUM';
+                    } else {
+                        $jenis = $tid ? ($eventName[$tid] ?? ('Event #' . $tid)) : 'Tiket';
+                    }
                     $msg = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis);
                 }
 

@@ -131,7 +131,7 @@ const WhatsAppBlastPage = () => {
       (t.invoice || '').toLowerCase().includes(s) ||
       ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
       (t.event?.id == 1 && 'tiket untuk asn'.includes(s)) ||
-      (t.event?.id == 2 && 'tiket untuk asn'.includes(s)) ||
+      (t.event?.id == 2 && 'tiket untuk umum'.includes(s)) ||
       (String(t.amount || '').toLowerCase().includes(s)) ||
       (String(t.payment_type || '').toLowerCase().includes(s)) ||
       (t.participant_name || '').toLowerCase().includes(s) ||

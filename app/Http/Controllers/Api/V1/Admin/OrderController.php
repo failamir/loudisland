@@ -90,7 +90,7 @@ class OrderController extends Controller
                     'id' => (string) $event->id,
                     'price' => (int) round($trx->amount),
                     'quantity' => 1,
-                    'name' => ($event->id == 1 || $event->id == 2) ? 'TIKET UNTUK ASN' : ($event->nama_event ?? ('Event #' . $event->id)),
+                    'name' => ($event->id == 1) ? 'TIKET UNTUK ASN' : (($event->id == 2) ? 'TIKET UNTUK UMUM' : ($event->nama_event ?? ('Event #' . $event->id))),
                 ]
             ],
         ];
