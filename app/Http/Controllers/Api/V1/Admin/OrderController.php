@@ -39,25 +39,25 @@ class OrderController extends Controller
         $result = DB::transaction(function () use ($user, $event, $amount, $request) {
             // 1) Buat tiket
             $tiket = Tiket::query()->create([
-                'no_tiket'   => strtoupper('TK-' . date('ymd') . '-' . Str::random(6)),
+                'no_tiket' => strtoupper('TK-' . date('ymd') . '-' . Str::random(6)),
                 'peserta_id' => $user->id,
-                'checkin'    => 'belum',
-                'notes'      => null,
-                'event_id'   => $event->id,
+                'checkin' => 'belum',
+                'notes' => null,
+                'event_id' => $event->id,
             ]);
 
             // 2) Buat transaksi untuk tiket tsb
             $invoice = strtoupper('INV-' . date('ymdHis') . '-' . Str::random(5));
             $trx = Transaksi::query()->create([
-                'invoice'    => $invoice,
-                'event_id'   => $event->id,
-                'tiket_id'   => $tiket->id,
+                'invoice' => $invoice,
+                'event_id' => $event->id,
+                'tiket_id' => $tiket->id,
                 'peserta_id' => $user->id,
-                'amount'     => $amount,
+                'amount' => $amount,
                 // Simpan referral_code (jika ada) di kolom note untuk diproses saat sukses
-                'note'       => $request->input('referral_code') ? (string) $request->input('referral_code') : null,
+                'note' => $request->input('referral_code') ? (string) $request->input('referral_code') : null,
                 'snap_token' => null,
-                'status'     => 'pending',
+                'status' => 'pending',
             ]);
 
             return [$tiket, $trx];
@@ -82,15 +82,17 @@ class OrderController extends Controller
             ],
             'customer_details' => [
                 'first_name' => $user->name,
-                'email'      => $user->email,
-                'phone'      => $user->no_hp,
+                'email' => $user->email,
+                'phone' => $user->no_hp,
             ],
-            'item_details' => [[
-                'id' => (string) $event->id,
-                'price' => (int) round($trx->amount),
-                'quantity' => 1,
-                'name' => $event->nama_event ?? ('Event #' . $event->id),
-            ]],
+            'item_details' => [
+                [
+                    'id' => (string) $event->id,
+                    'price' => (int) round($trx->amount),
+                    'quantity' => 1,
+                    'name' => ($event->id == 1 || $event->id == 2) ? 'TIKET UNTUK ASN' : ($event->nama_event ?? ('Event #' . $event->id)),
+                ]
+            ],
         ];
 
         try {

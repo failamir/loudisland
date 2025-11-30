@@ -26,7 +26,7 @@ class TransactionsListController extends Controller
 
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-        $data = $paginator->getCollection()->map(function ($trx) {
+        $data = collect($paginator->items())->map(function ($trx) {
             // Resolve event: prefer relation; if null, infer from `events` payload
             $ev = $trx->event;
             if (!$ev && !empty($trx->events)) {
@@ -70,7 +70,7 @@ class TransactionsListController extends Controller
                 'created_at' => $trx->created_at,
                 'event' => $ev ? [
                     'id' => $ev->id,
-                    'nama_event' => $ev->nama_event,
+                    'nama_event' => ($ev->id == 1 || $ev->id == 2) ? 'TIKET UNTUK ASN' : $ev->nama_event,
                     'event_code' => $ev->event_code,
                 ] : null,
             ];

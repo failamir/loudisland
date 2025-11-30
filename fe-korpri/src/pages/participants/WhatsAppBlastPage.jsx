@@ -130,6 +130,8 @@ const WhatsAppBlastPage = () => {
     return participants.filter(t =>
       (t.invoice || '').toLowerCase().includes(s) ||
       ((t.event?.nama_event || '').toLowerCase().includes(s)) ||
+      (t.event?.id == 1 && 'tiket untuk asn'.includes(s)) ||
+      (t.event?.id == 2 && 'tiket untuk asn'.includes(s)) ||
       (String(t.amount || '').toLowerCase().includes(s)) ||
       (String(t.payment_type || '').toLowerCase().includes(s)) ||
       (t.participant_name || '').toLowerCase().includes(s) ||
@@ -233,7 +235,7 @@ const WhatsAppBlastPage = () => {
         cell: info => {
           const event = info.row.original?.event;
           let eventName = event?.nama_event || '-';
-          if (event?.id === 1 || event?.id === 2) {
+          if (event?.id == 1 || event?.id == 2) {
             eventName = 'TIKET UNTUK ASN';
           }
           return <div className="text-gray-800">{eventName}</div>;
