@@ -509,12 +509,13 @@ const WhatsAppBlastPage = () => {
             <div>Total: {blastResult.total}</div>
             <div>Sukses: {blastResult.success}</div>
             <div>Gagal: {blastResult.failed}</div>
+            {blastResult.skipped !== undefined && <div>Dilewati: {blastResult.skipped}</div>}
             {Array.isArray(blastResult.results) && blastResult.results.length > 0 && (
               <div className="mt-3 max-h-60 overflow-auto pr-2">
                 {blastResult.results.map((r, idx) => (
                   <div key={idx} className="text-sm flex items-center gap-2 py-0.5">
-                    <span className={r.status === 'success' ? 'text-green-700' : 'text-red-700'}>
-                      {r.status === 'success' ? '✔' : '✖'}
+                    <span className={r.status === 'success' ? 'text-green-700' : (r.status === 'skipped' ? 'text-yellow-600' : 'text-red-700')}>
+                      {r.status === 'success' ? '✔' : (r.status === 'skipped' ? 'SKIP' : '✖')}
                     </span>
                     <span className="text-gray-800">
                       {source === 'participants'

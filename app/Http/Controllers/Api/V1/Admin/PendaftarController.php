@@ -222,7 +222,7 @@ class PendaftarController extends Controller
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $includeTesting = (bool) $request->boolean('include_testing', false);
         $base = Participant::query()
-            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id'])
+            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id', 'blast'])
             ->where('status', '1')
             ->whereNotIn('email', $excluded_emails);
 
@@ -272,8 +272,20 @@ class PendaftarController extends Controller
         $results = [];
         $success = 0;
         $failed = 0;
+        $skipped = 0;
 
         foreach ($list as $p) {
+            if ($p->blast == 1) {
+                $skipped++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'skipped',
+                    'message' => 'Already blasted',
+                ];
+                continue;
+            }
+
             if (empty($p->phone)) {
                 $failed++;
                 $results[] = [
@@ -332,6 +344,7 @@ class PendaftarController extends Controller
             'total' => $list->count(),
             'success' => $success,
             'failed' => $failed,
+            'skipped' => $skipped,
             'results' => $results,
         ]);
     }
@@ -404,12 +417,26 @@ class PendaftarController extends Controller
         $results = [];
         $success = 0;
         $failed = 0;
+        $skipped = 0;
 
         foreach ($list as $t) {
             // If this transaction already has participants, send per-participant ticket message with direct link
-            $participants = $t->participants()->get(['participant_id', 'name', 'email', 'phone', 'ticket_id']);
+            $participants = $t->participants()->get(['participant_id', 'name', 'email', 'phone', 'ticket_id', 'blast']);
             if ($participants && $participants->count() > 0) {
                 foreach ($participants as $p) {
+                    if ($p->blast == 1) {
+                        $skipped++;
+                        $results[] = [
+                            'transaction_id' => $t->id,
+                            'invoice' => $t->invoice,
+                            'participant_id' => $p->participant_id,
+                            'phone' => $p->phone,
+                            'status' => 'skipped',
+                            'message' => 'Already blasted',
+                        ];
+                        continue;
+                    }
+
                     $destPhone = $p->phone ?: ($t->no_hp ?? null);
                     if (empty($destPhone)) {
                         $failed++;
@@ -469,6 +496,18 @@ class PendaftarController extends Controller
             }
 
             // Fallback: no participant rows yet, keep previous transaction-level message
+            if ($t->blast == 1) {
+                $skipped++;
+                $results[] = [
+                    'transaction_id' => $t->id,
+                    'invoice' => $t->invoice,
+                    'phone' => $t->no_hp,
+                    'status' => 'skipped',
+                    'message' => 'Already blasted',
+                ];
+                continue;
+            }
+
             $phone = $t->no_hp ?? null;
             if (empty($phone)) {
                 $failed++;
