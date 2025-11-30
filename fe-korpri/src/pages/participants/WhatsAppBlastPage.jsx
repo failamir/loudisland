@@ -230,7 +230,14 @@ const WhatsAppBlastPage = () => {
       {
         accessorKey: 'event',
         header: ({ column }) => <DataGridColumnHeader title="Event" column={column} />,
-        cell: info => <div className="text-gray-800">{info.row.original?.event?.nama_event || '-'}</div>,
+        cell: info => {
+          const event = info.row.original?.event;
+          let eventName = event?.nama_event || '-';
+          if (event?.id === 1 || event?.id === 2) {
+            eventName = 'TIKET UNTUK ASN';
+          }
+          return <div className="text-gray-800">{eventName}</div>;
+        },
         meta: { headerClassName: 'min-w-[200px]' }
       },
       {

@@ -42,10 +42,10 @@ class PendaftarController extends Controller
     public function __construct()
     {
         // Set midtrans configuration
-        \Midtrans\Config::$serverKey    = config('services.midtrans.serverKey');
+        \Midtrans\Config::$serverKey = config('services.midtrans.serverKey');
         \Midtrans\Config::$isProduction = config('services.midtrans.isProduction');
-        \Midtrans\Config::$isSanitized  = config('services.midtrans.isSanitized');
-        \Midtrans\Config::$is3ds        = config('services.midtrans.is3ds');
+        \Midtrans\Config::$isSanitized = config('services.midtrans.isSanitized');
+        \Midtrans\Config::$is3ds = config('services.midtrans.is3ds');
     }
 
     // Build the exact same base query used by racepackList for reuse in exports
@@ -83,11 +83,15 @@ class PendaftarController extends Controller
         if ($dateFrom || $dateTo) {
             try {
                 $from = $dateFrom ? \Carbon\Carbon::parse($dateFrom)->startOfDay() : null;
-                $to   = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
+                $to = $dateTo ? \Carbon\Carbon::parse($dateTo)->endOfDay() : null;
                 $applyRange = function ($q, $column) use ($from, $to) {
-                    if ($from && $to) { $q->whereBetween($column, [$from, $to]); }
-                    elseif ($from) { $q->where($column, '>=', $from); }
-                    elseif ($to) { $q->where($column, '<=', $to); }
+                    if ($from && $to) {
+                        $q->whereBetween($column, [$from, $to]);
+                    } elseif ($from) {
+                        $q->where($column, '>=', $from);
+                    } elseif ($to) {
+                        $q->where($column, '<=', $to);
+                    }
                 };
                 if ($status === 'sudah') {
                     $applyRange($base, 'racepack_at');
@@ -96,7 +100,8 @@ class PendaftarController extends Controller
                 }
                 // When status is empty/all, do NOT apply date filter to avoid filtering out all rows
                 // (the OR logic between sudah/belum with different date columns is too restrictive)
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
         }
 
         return $base;
@@ -217,7 +222,7 @@ class PendaftarController extends Controller
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $includeTesting = (bool) $request->boolean('include_testing', false);
         $base = Participant::query()
-            ->select(['id','transaction_id','participant_id','name','email','phone','ticket_id'])
+            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id'])
             ->where('status', '1')
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails)
@@ -227,9 +232,9 @@ class PendaftarController extends Controller
             if ($search) {
                 $base->where(function ($q) use ($search) {
                     $q->where('participant_id', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             }
         } else {
@@ -255,8 +260,13 @@ class PendaftarController extends Controller
         $ticketIds = $list->pluck('ticket_id')->filter()->unique()->values();
         $eventName = collect();
         if ($ticketIds->isNotEmpty()) {
-            $tickets = Event::whereIn('id', $ticketIds)->get(['id','nama_event']);
-            $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
+            $eventName = $tickets->keyBy('id')->map(function ($t) {
+                if ($t->id == 1 || $t->id == 2) {
+                    return 'TIKET UNTUK ASN';
+                }
+                return $t->nama_event ?? ('Event #' . $t->id);
+            });
         }
 
         $dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
@@ -282,7 +292,7 @@ class PendaftarController extends Controller
                     $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
                     $order = $p->transaction_id ? Transaksi::find($p->transaction_id) : null;
                     $purchaserEmail = $order->email ?? null;
-                    $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
+                    $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                 }
                 $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
 
@@ -347,9 +357,9 @@ class PendaftarController extends Controller
                 $kw = "%{$search}%";
                 $base->where(function ($q) use ($kw) {
                     $q->where('invoice', 'like', $kw)
-                      ->orWhere('nama', 'like', $kw)
-                      ->orWhere('email', 'like', $kw)
-                      ->orWhere('no_hp', 'like', $kw);
+                        ->orWhere('nama', 'like', $kw)
+                        ->orWhere('email', 'like', $kw)
+                        ->orWhere('no_hp', 'like', $kw);
                 });
             }
         } else {
@@ -374,8 +384,13 @@ class PendaftarController extends Controller
         $eventIds = $list->pluck('event_id')->filter()->unique()->values();
         $eventName = collect();
         if ($eventIds->isNotEmpty()) {
-            $events = Event::whereIn('id', $eventIds)->get(['id','nama_event']);
-            $eventName = $events->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+            $events = Event::whereIn('id', $eventIds)->get(['id', 'nama_event']);
+            $eventName = $events->keyBy('id')->map(function ($t) {
+                if ($t->id == 1 || $t->id == 2) {
+                    return 'TIKET UNTUK ASN';
+                }
+                return $t->nama_event ?? ('Event #' . $t->id);
+            });
         }
 
         $dashboardUrl = 'https://daftar.mandalikakorprirun.com/dashboard/';
@@ -385,7 +400,7 @@ class PendaftarController extends Controller
 
         foreach ($list as $t) {
             // If this transaction already has participants, send per-participant ticket message with direct link
-            $participants = $t->participants()->get(['participant_id','name','email','phone','ticket_id']);
+            $participants = $t->participants()->get(['participant_id', 'name', 'email', 'phone', 'ticket_id']);
             if ($participants && $participants->count() > 0) {
                 foreach ($participants as $p) {
                     $destPhone = $p->phone ?: ($t->no_hp ?? null);
@@ -407,7 +422,7 @@ class PendaftarController extends Controller
                         if ($useTemplate || $msg === '') {
                             $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : ($t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket');
                             $purchaserEmail = $t->email ?? null;
-                            $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
+                            $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
                         }
                         $this->sendWhatsapp($destPhone, $msg, $dashboardUrl);
 
@@ -456,13 +471,13 @@ class PendaftarController extends Controller
             try {
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
-                    $buyer = trim((string)($t->nama ?? 'Pembeli'));
+                    $buyer = trim((string) ($t->nama ?? 'Pembeli'));
                     $ev = $t->event_id ? ($eventName[$t->event_id] ?? ('Event #' . $t->event_id)) : 'Tiket';
                     $lines = [];
                     $lines[] = 'Halo Bapak/Ibu ' . $buyer . ',';
                     $lines[] = 'Pembayaran Anda telah berhasil ✅';
                     $lines[] = '';
-                    $lines[] = '🧾 Invoice: ' . (string)$t->invoice;
+                    $lines[] = '🧾 Invoice: ' . (string) $t->invoice;
                     $lines[] = '🎟️ Event: ' . $ev;
                     $lines[] = '';
                     $lines[] = 'Silakan cek email atau login ke ' . $dashboardUrl . ' untuk mengelola tiket.';
@@ -533,7 +548,7 @@ class PendaftarController extends Controller
 
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
         $base = Participant::query()
-            ->select(['id','transaction_id','participant_id','name','email','phone','ticket_id'])
+            ->select(['id', 'transaction_id', 'participant_id', 'name', 'email', 'phone', 'ticket_id'])
             ->where('status', '1')
             ->where('amount', '>', 100000)
             ->whereNotIn('email', $excluded_emails)
@@ -543,9 +558,9 @@ class PendaftarController extends Controller
             if ($search) {
                 $base->where(function ($q) use ($search) {
                     $q->where('participant_id', 'like', "%{$search}%")
-                      ->orWhere('name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('phone', 'like', "%{$search}%");
+                        ->orWhere('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
                 });
             }
         } else {
@@ -571,8 +586,13 @@ class PendaftarController extends Controller
         $ticketIds = $list->pluck('ticket_id')->filter()->unique()->values();
         $eventName = collect();
         if ($ticketIds->isNotEmpty()) {
-            $tickets = Event::whereIn('id', $ticketIds)->get(['id','nama_event']);
-            $eventName = $tickets->keyBy('id')->map(fn($t) => $t->nama_event ?? ('Event #' . $t->id));
+            $tickets = Event::whereIn('id', $ticketIds)->get(['id', 'nama_event']);
+            $eventName = $tickets->keyBy('id')->map(function ($t) {
+                if ($t->id == 1 || $t->id == 2) {
+                    return 'TIKET UNTUK ASN';
+                }
+                return $t->nama_event ?? ('Event #' . $t->id);
+            });
         }
 
         $results = [];
@@ -595,13 +615,13 @@ class PendaftarController extends Controller
                 $msg = $text;
                 if ($useTemplate || $msg === '') {
                     $jenis = $p->ticket_id ? ($eventName[$p->ticket_id] ?? ('Event #' . $p->ticket_id)) : 'Tiket';
-                    $msg = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis);
+                    $msg = $this->buildPaymentSuccessText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis);
                 }
 
                 // Send as a simple raw email to avoid creating a new Mailable
                 Mail::raw($msg, function ($message) use ($p) {
                     $message->to($p->email)
-                            ->subject('Informasi E-Ticket Mandalika Korpri Run');
+                        ->subject('Informasi E-Ticket Mandalika Korpri Run');
                 });
 
                 $success++;
@@ -639,7 +659,7 @@ class PendaftarController extends Controller
     public function generateParticipants(Request $request)
     {
         $invoice = $request->input('invoice');
-        $trxId   = $request->input('transaction_id');
+        $trxId = $request->input('transaction_id');
 
         if (!$invoice && !$trxId) {
             return response()->json(['message' => 'invoice or transaction_id is required'], 422);
@@ -695,7 +715,7 @@ class PendaftarController extends Controller
         if (!$p) {
             return response()->json(['message' => 'Participant not found'], 404);
         }
-        $event = $p->ticket_id ? Event::select(['id','nama_event','harga','tanggal_mulai'])->find($p->ticket_id) : null;
+        $event = $p->ticket_id ? Event::select(['id', 'nama_event', 'harga', 'tanggal_mulai'])->find($p->ticket_id) : null;
         $participant = [
             'name' => $p->name,
             'phone' => $p->phone,
@@ -810,10 +830,10 @@ class PendaftarController extends Controller
      */
     public function missingParticipants(Request $request)
     {
-        $search   = $request->query('search');
+        $search = $request->query('search');
         $dateFrom = $request->query('date_from');
-        $dateTo   = $request->query('date_to');
-        $perPage  = max(1, (int) $request->query('per_page', 50));
+        $dateTo = $request->query('date_to');
+        $perPage = max(1, (int) $request->query('per_page', 50));
 
         $q = Transaksi::query()
             ->with(['event:id,nama_event', 'peserta:id,name,email'])
@@ -825,33 +845,39 @@ class PendaftarController extends Controller
             $kw = "%$search%";
             $q->where(function ($w) use ($kw) {
                 $w->where('invoice', 'like', $kw)
-                  ->orWhereHas('peserta', function ($p) use ($kw) {
-                      $p->where('name', 'like', $kw)->orWhere('email', 'like', $kw);
-                  });
+                    ->orWhereHas('peserta', function ($p) use ($kw) {
+                        $p->where('name', 'like', $kw)->orWhere('email', 'like', $kw);
+                    });
             });
         }
         if ($dateFrom) {
-            try { $q->whereDate('created_at', '>=', \Carbon\Carbon::parse($dateFrom)->startOfDay()); } catch (\Throwable $e) {}
+            try {
+                $q->whereDate('created_at', '>=', \Carbon\Carbon::parse($dateFrom)->startOfDay());
+            } catch (\Throwable $e) {
+            }
         }
         if ($dateTo) {
-            try { $q->whereDate('created_at', '<=', \Carbon\Carbon::parse($dateTo)->endOfDay()); } catch (\Throwable $e) {}
+            try {
+                $q->whereDate('created_at', '<=', \Carbon\Carbon::parse($dateTo)->endOfDay());
+            } catch (\Throwable $e) {
+            }
         }
 
         $paginator = $q->paginate($perPage);
         $rows = $paginator->getCollection()->map(function ($t) {
             return [
-                'id'         => $t->id,
-                'invoice'    => $t->invoice,
-                'status'     => $t->status,
-                'amount'     => (int) $t->amount,
+                'id' => $t->id,
+                'invoice' => $t->invoice,
+                'status' => $t->status,
+                'amount' => (int) $t->amount,
                 'created_at' => optional($t->created_at)->toDateTimeString(),
-                'event'      => $t->event ? [
-                    'id'         => $t->event->id,
+                'event' => $t->event ? [
+                    'id' => $t->event->id,
                     'nama_event' => $t->event->nama_event,
                 ] : null,
-                'user'       => $t->peserta ? [
-                    'id'    => $t->peserta->id,
-                    'name'  => $t->peserta->name,
+                'user' => $t->peserta ? [
+                    'id' => $t->peserta->id,
+                    'name' => $t->peserta->name,
                     'email' => $t->peserta->email,
                 ] : null,
             ];
@@ -1046,28 +1072,28 @@ class PendaftarController extends Controller
                 $eid = $p->ticket_id ? (int) $p->ticket_id : null;
                 $ev = $eid ? ($eventMap[$eid] ?? null) : null;
                 $tickets[] = [
-                    'invoice'       => $t->invoice,
+                    'invoice' => $t->invoice,
                     'transaction_id' => $t->id,
-                    'status'        => $t->status,
-                    'created_at'    => $t->created_at,
-                    'participant'   => [
-                        'name'   => $p->name,
-                        'nik'    => $p->nik,
-                        'email'  => $p->email,
-                        'phone'  => $p->phone,
+                    'status' => $t->status,
+                    'created_at' => $t->created_at,
+                    'participant' => [
+                        'name' => $p->name,
+                        'nik' => $p->nik,
+                        'email' => $p->email,
+                        'phone' => $p->phone,
                         'province' => $p->province ?? '',
-                        'city'   => $p->city ?? '',
+                        'city' => $p->city ?? '',
                         'shirt_size' => $p->shirt_size ?? null,
                         'participant_id' => $p->participant_id,
                         'status_racepack' => $p->status_racepack,
                         'status' => $p->status,
                         'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
                     ],
-                    'event'         => $ev ? [
-                        'id'         => $ev->id,
+                    'event' => $ev ? [
+                        'id' => $ev->id,
                         'nama_event' => $ev->nama_event,
-                        'harga'      => (float)$ev->harga,
-                        'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
+                        'harga' => (float) $ev->harga,
+                        'tanggal_mulai' => $ev->tanggal_mulai ?? null,
                     ] : null,
                 ];
             }
@@ -1077,16 +1103,16 @@ class PendaftarController extends Controller
                 foreach ($eventIds as $eid) {
                     $ev = $eventMap[$eid] ?? null;
                     $tickets[] = [
-                        'invoice'       => $t->invoice,
+                        'invoice' => $t->invoice,
                         'transaction_id' => $t->id,
-                        'status'        => $t->status,
-                        'created_at'    => $t->created_at,
-                        'participant'   => null,
-                        'event'         => $ev ? [
-                            'id'         => $ev->id,
+                        'status' => $t->status,
+                        'created_at' => $t->created_at,
+                        'participant' => null,
+                        'event' => $ev ? [
+                            'id' => $ev->id,
                             'nama_event' => $ev->nama_event,
-                            'harga'      => (int) $ev->harga,
-                            'tanggal_mulai'    => $ev->tanggal_mulai ?? null,
+                            'harga' => (int) $ev->harga,
+                            'tanggal_mulai' => $ev->tanggal_mulai ?? null,
                         ] : null,
                     ];
                 }
@@ -1149,9 +1175,9 @@ class PendaftarController extends Controller
         $events = Event::pluck('nama_event', 'id')->prepend(trans('global.pleaseSelect'), '');
         $no_t = User::orderBy('no_tiket', 'DESC')->first();
         $data = $request->all();
-        $data['price_1']  = $data['day_1'] * 210000;
-        $data['price_2']  = $data['day_2'] * 210000;
-        $data['price_3']  = $data['day_3'] * 280000;
+        $data['price_1'] = $data['day_1'] * 210000;
+        $data['price_2'] = $data['day_2'] * 210000;
+        $data['price_3'] = $data['day_3'] * 280000;
 
         if ($data['day_1'] == 0 && $data['day_2'] == 0 && $data['day_3'] == 0) {
             return view('welcome');
@@ -1320,9 +1346,9 @@ class PendaftarController extends Controller
             return response()->json($data);
         } else {
             $user = User::create([
-                'uid'     => $request->input('userId'),
-                'email'    => $request->input('email'),
-                'name'    => $request->input('name'),
+                'uid' => $request->input('userId'),
+                'email' => $request->input('email'),
+                'name' => $request->input('name'),
                 'password' => $request->input('userId'),
                 // 'password' => $request->input( 'no_hp' ),
             ]);
@@ -1387,9 +1413,9 @@ class PendaftarController extends Controller
 
         // Cache nilai untuk response
         $invoiceVal = $trx->invoice;
-        $statusVal  = $trx->status;
-        $amountVal  = $trx->amount;
-        $eventsVal  = $trx->events;
+        $statusVal = $trx->status;
+        $amountVal = $trx->amount;
+        $eventsVal = $trx->events;
 
         // Events bisa serialized/plain
         $noTiket = @unserialize($eventsVal);
@@ -1402,41 +1428,41 @@ class PendaftarController extends Controller
 
         // QR legacy untuk no_tiket (tidak generate di sini)
         $qrPathLegacy = $noTiket ? public_path("qrcodes/{$noTiket}.png") : null;
-        $qrUrlLegacy  = ($qrPathLegacy && file_exists($qrPathLegacy)) ? url("/qrcodes/{$noTiket}.png") : null;
+        $qrUrlLegacy = ($qrPathLegacy && file_exists($qrPathLegacy)) ? url("/qrcodes/{$noTiket}.png") : null;
 
         // Ambil participants dari tabel relasi
         $participants = $trx->participants()->get();
 
         return response()->json([
-            'invoice'     => $invoiceVal,
-            'status'      => $statusVal,
-            'amount'      => $amountVal,
-            'no_tiket'    => $noTiket,
-            'qr_url'      => $qrUrlLegacy, // hanya untuk skenario legacy no_tiket
+            'invoice' => $invoiceVal,
+            'status' => $statusVal,
+            'amount' => $amountVal,
+            'no_tiket' => $noTiket,
+            'qr_url' => $qrUrlLegacy, // hanya untuk skenario legacy no_tiket
             'expired_snap_time' => $trx->expired_snap_time,
-            'user'        => $userDetail ? [
-                'id'              => $userDetail->id,
-                'nama'            => $userDetail->name,
-                'email'           => $userDetail->email,
-                'no_hp'           => $userDetail->no_hp,
-                'status_payment'  => $userDetail->status_payment,
-                'event_id'        => $userDetail->event_id,
-                'nomor_punggung'  => $userDetail->nomor_punggung,
-                'start_at'        => $userDetail->start_at,
-                'finish_at'       => $userDetail->finish_at,
+            'user' => $userDetail ? [
+                'id' => $userDetail->id,
+                'nama' => $userDetail->name,
+                'email' => $userDetail->email,
+                'no_hp' => $userDetail->no_hp,
+                'status_payment' => $userDetail->status_payment,
+                'event_id' => $userDetail->event_id,
+                'nomor_punggung' => $userDetail->nomor_punggung,
+                'start_at' => $userDetail->start_at,
+                'finish_at' => $userDetail->finish_at,
             ] : null,
             // Untuk peserta per-orang: QR disajikan via storage/participants (dibuat saat webhook/register)
             'participants' => $participants->map(fn($p) => [
-                'participant_id'   => $p->participant_id,
-                'name'             => $p->name,
-                'nik'              => $p->nik,
-                'email'            => $p->email,
-                'phone'            => $p->phone,
-                'province'         => $p->province,
-                'city'             => $p->city,
-                'ticket_id'        => $p->ticket_id,
-                'status_racepack'  => $p->status_racepack,
-                'qr_url'           => url("/storage/participants/{$p->participant_id}.png"),
+                'participant_id' => $p->participant_id,
+                'name' => $p->name,
+                'nik' => $p->nik,
+                'email' => $p->email,
+                'phone' => $p->phone,
+                'province' => $p->province,
+                'city' => $p->city,
+                'ticket_id' => $p->ticket_id,
+                'status_racepack' => $p->status_racepack,
+                'qr_url' => url("/storage/participants/{$p->participant_id}.png"),
             ]),
         ]);
     }
@@ -1459,8 +1485,8 @@ class PendaftarController extends Controller
 
         // determine next no_tiket
         $last = User::orderBy('no_tiket', 'DESC')->first();
-        $next = $last && is_numeric($last->no_tiket) ? ((int)$last->no_tiket + 1) : 1;
-        $no_tiket = (string)$next;
+        $next = $last && is_numeric($last->no_tiket) ? ((int) $last->no_tiket + 1) : 1;
+        $no_tiket = (string) $next;
 
         $event = Event::findOrFail($request->input('event_id'));
 
@@ -1628,8 +1654,8 @@ class PendaftarController extends Controller
         if (!empty($e_user)) {
             $e_user->update([
                 // 'uid'     => $request->input( 'uid' ),
-                'email'    => $request->input('email'),
-                'name'    => $request->input('name'),
+                'email' => $request->input('email'),
+                'name' => $request->input('name'),
                 'nik' => $request->input('nik'),
                 'no_hp' => $request->input('no_hp'),
             ]);
@@ -1891,23 +1917,23 @@ class PendaftarController extends Controller
 
             // Create transaction with multiple tickets stored as JSON array and participants payload
             $transaksi = Transaksi::create([
-                'invoice'       => $no_invoice,
-                'events'        => json_encode(array_values(collect($ticketIds)->unique()->values()->all())),
-                'peserta_id'    => $user->id,
-                'amount'        => $amount,
-                'note'          => $buyerName,
-                'status'        => 'pending',
-                'uid'           => $user->uid,
-                'province'      => $buyerProvince,
-                'city'          => $buyerCity,
+                'invoice' => $no_invoice,
+                'events' => json_encode(array_values(collect($ticketIds)->unique()->values()->all())),
+                'peserta_id' => $user->id,
+                'amount' => $amount,
+                'note' => $buyerName,
+                'status' => 'pending',
+                'uid' => $user->uid,
+                'province' => $buyerProvince,
+                'city' => $buyerCity,
                 // 'address'       => $buyerAddress,
-                'no_hp'         => $buyerPhone,
-                'nik'           => $buyerNik,
-                'email'         => $buyerEmail,
-                'nama'          => $buyerName,
+                'no_hp' => $buyerPhone,
+                'nik' => $buyerNik,
+                'email' => $buyerEmail,
+                'nama' => $buyerName,
                 'expired_snap_time' => Carbon::now()->addMinutes(15),
                 // new column to be added by migration
-                'participants'  => json_encode($participantsAug),
+                'participants' => json_encode($participantsAug),
             ]);
             Log::info('beliApi transaction created', [
                 'invoice' => $transaksi->invoice,
@@ -1992,7 +2018,7 @@ class PendaftarController extends Controller
                     }
                     // Additional strict rule for referral: must buy exactly 1 ticket and it must be id=2
                     if ($type === 'referral') {
-                        if (count($participantTicketIds) !== 1 || (int)($participantTicketIds[0] ?? 0) !== 2) {
+                        if (count($participantTicketIds) !== 1 || (int) ($participantTicketIds[0] ?? 0) !== 2) {
                             return response()->json([
                                 'message' => 'Kode referal hanya berlaku untuk pembelian 1 tiket UMUM (id=2).',
                             ], 422);
@@ -2021,10 +2047,13 @@ class PendaftarController extends Controller
                     if ($refModel && is_array($refModel->metadata) && isset($refModel->metadata['referral_discount'])) {
                         $refDiscount = (int) $refModel->metadata['referral_discount'];
                     }
-                } catch (\Throwable $e) { /* ignore */ }
+                } catch (\Throwable $e) { /* ignore */
+                }
                 $qualifying = 0;
                 foreach ($data['participants'] as $p) {
-                    if ((int)($p['ticketId'] ?? 0) === 2) { $qualifying++; }
+                    if ((int) ($p['ticketId'] ?? 0) === 2) {
+                        $qualifying++;
+                    }
                 }
                 $discount = max(0, $refDiscount * $qualifying);
             }
@@ -2111,27 +2140,27 @@ class PendaftarController extends Controller
 
             $payload = [
                 'transaction_details' => [
-                    'order_id'      => $transaksi->invoice,
-                    'gross_amount'  => (int) $gross_amount,
+                    'order_id' => $transaksi->invoice,
+                    'gross_amount' => (int) $gross_amount,
                 ],
                 'customer_details' => [
-                    'first_name'       => $user->name,
-                    'email'            => $user->email,
-                    'phone'            => $user->no_hp,
-                    'address'          => $user->city . ',' . $user->province,
+                    'first_name' => $user->name,
+                    'email' => $user->email,
+                    'phone' => $user->no_hp,
+                    'address' => $user->city . ',' . $user->province,
                 ],
                 'item_details' => $itemDetails,
             ];
 
             $paymentUrl = Snap::createTransaction($payload)->redirect_url;
             $updateTrx = Transaksi::where('invoice', $no_invoice)->update([
-                'payment_url'   => $paymentUrl,
-                'type'          => $type,
+                'payment_url' => $paymentUrl,
+                'type' => $type,
                 'promo_code_id' => $promo_code_id,
-                'discount'      => $discount,
-                'service_fee'   => $fee_service,
-                'ppn'           => $ppn,
-                'final_price'   => $final_price,
+                'discount' => $discount,
+                'service_fee' => $fee_service,
+                'ppn' => $ppn,
+                'final_price' => $final_price,
             ]);
             Log::info('beliApi payment URL generated', [
                 'invoice' => $no_invoice,
@@ -2187,7 +2216,7 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Invalid content type'], 400);
         }
 
-        $payload      = $request->getContent();
+        $payload = $request->getContent();
         $notification = json_decode($payload);
         Log::info('notificationHandler received', [
             'order_id' => $notification->order_id ?? null,
@@ -2202,9 +2231,9 @@ class PendaftarController extends Controller
         $validSignatureKey = hash(
             'sha512',
             $notification->order_id .
-                $notification->status_code .
-                $notification->gross_amount .
-                config('services.midtrans.serverKey')
+            $notification->status_code .
+            $notification->gross_amount .
+            config('services.midtrans.serverKey')
         );
 
         if (!hash_equals($validSignatureKey, $notification->signature_key)) {
@@ -2212,10 +2241,10 @@ class PendaftarController extends Controller
             return response()->json(['message' => 'Invalid signature'], 403);
         }
 
-        $transaction  = $notification->transaction_status;
-        $type         = $notification->payment_type;
-        $orderId      = $notification->order_id;
-        $fraud        = $notification->fraud_status;
+        $transaction = $notification->transaction_status;
+        $type = $notification->payment_type;
+        $orderId = $notification->order_id;
+        $fraud = $notification->fraud_status;
 
         // Cari transaksi berdasarkan invoice
         $trx = Transaksi::where('invoice', $orderId)->first();
@@ -2226,12 +2255,12 @@ class PendaftarController extends Controller
 
         // Mapping status midtrans → status DB
         $statusMap = [
-            'capture'    => 'success',
+            'capture' => 'success',
             'settlement' => 'success',
-            'pending'    => 'pending',
-            'deny'       => 'failed',
-            'expire'     => 'expired',
-            'cancel'     => 'failed',
+            'pending' => 'pending',
+            'deny' => 'failed',
+            'expire' => 'expired',
+            'cancel' => 'failed',
         ];
 
         // Update status sesuai map
@@ -2250,10 +2279,10 @@ class PendaftarController extends Controller
         if ($trx->status == 'success') {
             $notif = $this->postPaymentSuccessActions($trx);
             Log::info('notificationHandler postPaymentSuccessActions executed', ['invoice' => $trx->invoice, 'handled' => (bool) $notif]);
-            if($notif){
+            if ($notif) {
                 return response()->json(['message' => 'OK']);
             }
-            
+
         }
     }
 
@@ -2282,7 +2311,7 @@ class PendaftarController extends Controller
             try {
                 $promo = \App\Models\PromoCode::find($trx->promo_code_id);
                 if ($promo) {
-                    $promo->used_count = (int)($promo->used_count ?? 0) + 1;
+                    $promo->used_count = (int) ($promo->used_count ?? 0) + 1;
                     $promo->save();
                 }
             } catch (\Throwable $e) {
@@ -2302,13 +2331,14 @@ class PendaftarController extends Controller
                     $code = strtoupper(trim((string) ($owner->code ?? '')));
                     $now = now();
                     $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
-                    $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
+                    $underLimit = (is_null($owner->usage_limit) || (int) $owner->used_count < (int) $owner->usage_limit);
                     if ($owner->active && $inWindow && $underLimit) {
                         $referralOwner = $owner;
                         $referralCodeResolved = $code;
                     }
                 }
-            } catch (\Throwable $e) { /* silent */ }
+            } catch (\Throwable $e) { /* silent */
+            }
         } else {
             try {
                 $code = strtoupper(trim((string) ($trx->note ?? '')));
@@ -2317,7 +2347,7 @@ class PendaftarController extends Controller
                     if ($owner) {
                         $now = now();
                         $inWindow = (!$owner->valid_from || $now->gte($owner->valid_from)) && (!$owner->valid_to || $now->lte($owner->valid_to));
-                        $underLimit = (is_null($owner->usage_limit) || (int)$owner->used_count < (int)$owner->usage_limit);
+                        $underLimit = (is_null($owner->usage_limit) || (int) $owner->used_count < (int) $owner->usage_limit);
                         if ($owner->active && $inWindow && $underLimit) {
                             $referralOwner = $owner;
                             $referralCodeResolved = $code;
@@ -2327,7 +2357,8 @@ class PendaftarController extends Controller
                         $referralCodeResolved = $code;
                     }
                 }
-            } catch (\Throwable $e) { /* silent */ }
+            } catch (\Throwable $e) { /* silent */
+            }
         }
 
         $participants = $trx->participants();
@@ -2407,7 +2438,7 @@ class PendaftarController extends Controller
 
                 // Build message using unified template
                 $url = 'https://daftar.mandalikakorprirun.com/dashboard/';
-                $text = $this->buildPaymentSuccessText(($user->name ?? 'Peserta'), (string)($noTiket ?? '-'), $jenis);
+                $text = $this->buildPaymentSuccessText(($user->name ?? 'Peserta'), (string) ($noTiket ?? '-'), $jenis);
 
                 // Send WA if phone exists
                 if (!empty($user->no_hp)) {
@@ -2469,7 +2500,10 @@ class PendaftarController extends Controller
             if ($ticketCount === 0) {
                 // Fallback: try participants JSON and count only ticketId==2
                 $decoded = null;
-                try { $decoded = json_decode($trx->getAttributes()['participants'] ?? 'null', true); } catch (\Throwable $e) {}
+                try {
+                    $decoded = json_decode($trx->getAttributes()['participants'] ?? 'null', true);
+                } catch (\Throwable $e) {
+                }
                 if (is_array($decoded) && count($decoded) > 0) {
                     $ticketCount = 0;
                     foreach ($decoded as $p) {
@@ -2516,7 +2550,7 @@ class PendaftarController extends Controller
 
             $url = 'https://daftar.mandalikakorprirun.com/dashboard/';
             $purchaserEmail = $trx->email ?? null;
-            $text = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string)$p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
+            $text = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
 
             // \Illuminate\Support\Facades\Log::info('Sending WA for participant', [
             //     'participant_id' => $p->participant_id,
@@ -2560,7 +2594,7 @@ class PendaftarController extends Controller
                 // ignore email send failure per participant
             }
         }
-        
+
         return true;
     }
 
@@ -2577,7 +2611,7 @@ class PendaftarController extends Controller
             if ($statusVal0 === '1') {
                 $p0 = (float) ($pp0->amount ?? 0);
                 if ($p0 <= 0 && $pp0->ticket_id) {
-                    $ev0 = Event::select(['id','harga'])->find($pp0->ticket_id);
+                    $ev0 = Event::select(['id', 'harga'])->find($pp0->ticket_id);
                     if ($ev0 && $ev0->harga) {
                         $p0 = (float) $ev0->harga;
                     }
@@ -2595,7 +2629,8 @@ class PendaftarController extends Controller
                 if ($refModel && is_array($refModel->metadata) && isset($refModel->metadata['referral_discount'])) {
                     $referralPerTicket = (int) $refModel->metadata['referral_discount'];
                 }
-            } catch (\Throwable $e) { /* ignore */ }
+            } catch (\Throwable $e) { /* ignore */
+            }
         }
 
         $sumFinal = 0;
@@ -2609,7 +2644,7 @@ class PendaftarController extends Controller
             if ($statusVal === '1') {
                 $price = (float) ($pp->amount ?? 0);
                 if ($price <= 0 && $pp->ticket_id) {
-                    $ev = Event::select(['id','harga'])->find($pp->ticket_id);
+                    $ev = Event::select(['id', 'harga'])->find($pp->ticket_id);
                     if ($ev && $ev->harga) {
                         $price = (float) $ev->harga;
                     }
@@ -2617,9 +2652,9 @@ class PendaftarController extends Controller
                 if ($price > 0) {
                     // Apply discount per participant to get net price
                     $net = $price;
-                    if ($trx->type === 'referral' && (int)($pp->ticket_id ?? 0) === 2) {
+                    if ($trx->type === 'referral' && (int) ($pp->ticket_id ?? 0) === 2) {
                         $net = max(0, $net - $referralPerTicket);
-                    } elseif ($trx->type === 'promo' && (float)($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
+                    } elseif ($trx->type === 'promo' && (float) ($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
                         $share = ($price / $totalActivePrice) * (float) $trx->discount;
                         $net = max(0, $net - $share);
                     }
@@ -2646,7 +2681,7 @@ class PendaftarController extends Controller
                     $newFinal = (int) round(max(0, $price));
                 }
             }
-            if ((int)($pp->final_price ?? 0) !== (int)$newFinal) {
+            if ((int) ($pp->final_price ?? 0) !== (int) $newFinal) {
                 $pp->final_price = $newFinal;
                 $pp->save();
             }
@@ -2659,17 +2694,23 @@ class PendaftarController extends Controller
             $sumFinal = 0;
             foreach ($participants as $ppx) {
                 $statusValX = (string) ($ppx->status ?? '0');
-                if ($statusValX !== '1') { continue; }
+                if ($statusValX !== '1') {
+                    continue;
+                }
                 $px = (float) ($ppx->amount ?? 0);
                 if ($px <= 0 && $ppx->ticket_id) {
-                    $evx = Event::select(['id','harga'])->find($ppx->ticket_id);
-                    if ($evx && $evx->harga) { $px = (float) $evx->harga; }
+                    $evx = Event::select(['id', 'harga'])->find($ppx->ticket_id);
+                    if ($evx && $evx->harga) {
+                        $px = (float) $evx->harga;
+                    }
                 }
-                if ($px <= 0) { continue; }
+                if ($px <= 0) {
+                    continue;
+                }
                 $netx = $px;
-                if ($trx->type === 'referral' && (int)($ppx->ticket_id ?? 0) === 2) {
+                if ($trx->type === 'referral' && (int) ($ppx->ticket_id ?? 0) === 2) {
                     $netx = max(0, $netx - $referralPerTicket);
-                } elseif ($trx->type === 'promo' && (float)($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
+                } elseif ($trx->type === 'promo' && (float) ($trx->discount ?? 0) > 0 && $totalActivePrice > 0) {
                     $sharex = ($px / $totalActivePrice) * (float) $trx->discount;
                     $netx = max(0, $netx - $sharex);
                 }
@@ -2706,10 +2747,10 @@ class PendaftarController extends Controller
             Http::withHeaders([
                 'x-api-key' => $apiKey,
             ])->post($base . '/api/sendText', [
-                'chatId' => $chatId,
-                'session' => $session,
-                'text' => $text,
-            ]);
+                        'chatId' => $chatId,
+                        'session' => $session,
+                        'text' => $text,
+                    ]);
             // }
         } catch (\Throwable $e) {
             // Log the error
@@ -2720,8 +2761,10 @@ class PendaftarController extends Controller
     protected function normalizePhone(string $phone): string
     {
         $p = preg_replace('/\D+/', '', $phone);
-        if (strpos($p, '62') === 0) return $p; // already in 62 format
-        if (strpos($p, '0') === 0) return '62' . substr($p, 1);
+        if (strpos($p, '62') === 0)
+            return $p; // already in 62 format
+        if (strpos($p, '0') === 0)
+            return '62' . substr($p, 1);
         return $p; // fallback
     }
 
@@ -3015,7 +3058,9 @@ class PendaftarController extends Controller
     {
         $base = $this->buildRacepackBase($request);
         $status = $request->input('status');
-        if (in_array($status, ['sudah', 'belum'], true)) { $base->where('status_racepack', $status); }
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
+        }
 
         // Mirror list ordering for export
         $base->orderByDesc('racepack_at')->orderByDesc('id');
@@ -3023,7 +3068,7 @@ class PendaftarController extends Controller
         // Debug mode: return count and sample rows instead of streaming
         if ($request->boolean('debug', false)) {
             $count = (clone $base)->count();
-            $sample = (clone $base)->limit(5)->get(['id','participant_id','email','status_racepack']);
+            $sample = (clone $base)->limit(5)->get(['id', 'participant_id', 'email', 'status_racepack']);
             $sql = $base->toSql();
             $bindings = $base->getBindings();
             return response()->json([
@@ -3037,10 +3082,10 @@ class PendaftarController extends Controller
 
         // Fetch all data (542 rows is safe for memory)
         $participants = $base->get();
-        
+
         // Preload event names map to avoid N+1
         $eventIds = $participants->pluck('ticket_id')->filter()->unique();
-        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event'])->keyBy('id') : collect();
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
         $headers = [
@@ -3054,15 +3099,29 @@ class PendaftarController extends Controller
             fwrite($out, "\xEF\xBB\xBF");
             // Header row
             fputcsv($out, [
-                'Participant ID', 'Name', 'Email', 'Phone', 'Province', 'City', 'Jenis Tiket', 'Ukuran Jersey', 'Status', 'Staff', 'Racepack At'
+                'Participant ID',
+                'Name',
+                'Email',
+                'Phone',
+                'Province',
+                'City',
+                'Jenis Tiket',
+                'Ukuran Jersey',
+                'Status',
+                'Staff',
+                'Racepack At'
             ]);
 
             foreach ($participants as $p) {
                 $ticketName = null;
                 if ($p->ticket_id) {
-                    if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
-                    elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
-                    else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+                    if ((int) $p->ticket_id === 1) {
+                        $ticketName = 'ASN';
+                    } elseif ((int) $p->ticket_id === 2) {
+                        $ticketName = 'UMUM';
+                    } else {
+                        $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string) $p->ticket_id;
+                    }
                 }
                 $row = [
                     $p->participant_id,
@@ -3095,13 +3154,15 @@ class PendaftarController extends Controller
     {
         $base = $this->buildRacepackBase($request);
         $status = $request->input('status');
-        if (in_array($status, ['sudah', 'belum'], true)) { $base->where('status_racepack', $status); }
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
+        }
 
         $base->orderByDesc('racepack_at')->orderByDesc('id');
 
         if ($request->boolean('debug', false)) {
             $count = (clone $base)->count();
-            $sample = (clone $base)->limit(5)->get(['id','participant_id','email','status_racepack']);
+            $sample = (clone $base)->limit(5)->get(['id', 'participant_id', 'email', 'status_racepack']);
             return response()->json([
                 'debug' => true,
                 'count' => $count,
@@ -3111,10 +3172,10 @@ class PendaftarController extends Controller
 
         // Fetch all data (542 rows is safe for memory)
         $participants = $base->get();
-        
+
         // Preload event names map to avoid N+1
         $eventIds = $participants->pluck('ticket_id')->filter()->unique();
-        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event'])->keyBy('id') : collect();
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.xls';
         $headers = [
@@ -3130,16 +3191,22 @@ class PendaftarController extends Controller
 
             echo "<table border='1'>";
             echo "<thead><tr>";
-            $tableHeaders = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
-            foreach ($tableHeaders as $h) { echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
+            $tableHeaders = ['Participant ID', 'Name', 'Email', 'Phone', 'Province', 'City', 'Jenis Tiket', 'Ukuran Jersey', 'Status', 'Staff', 'Racepack At'];
+            foreach ($tableHeaders as $h) {
+                echo '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>';
+            }
             echo "</tr></thead><tbody>";
 
             foreach ($participants as $p) {
                 $ticketName = null;
                 if ($p->ticket_id) {
-                    if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
-                    elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
-                    else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+                    if ((int) $p->ticket_id === 1) {
+                        $ticketName = 'ASN';
+                    } elseif ((int) $p->ticket_id === 2) {
+                        $ticketName = 'UMUM';
+                    } else {
+                        $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string) $p->ticket_id;
+                    }
                 }
                 $cells = [
                     $p->participant_id,
@@ -3156,7 +3223,7 @@ class PendaftarController extends Controller
                 ];
                 echo '<tr>';
                 foreach ($cells as $c) {
-                    echo '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+                    echo '<td>' . htmlspecialchars((string) ($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
                 }
                 echo '</tr>';
             }
@@ -3175,30 +3242,34 @@ class PendaftarController extends Controller
     {
         $base = $this->buildRacepackBase($request);
         $status = $request->input('status');
-        if (in_array($status, ['sudah', 'belum'], true)) { 
-            $base->where('status_racepack', $status); 
+        if (in_array($status, ['sudah', 'belum'], true)) {
+            $base->where('status_racepack', $status);
         }
         $base->orderByDesc('racepack_at')->orderByDesc('id');
 
         // Get all data
         $participants = $base->get();
-        
+
         // Preload events
         $eventIds = $participants->pluck('ticket_id')->filter()->unique();
-        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event'])->keyBy('id') : collect();
 
         // Build CSV content
         $csv = "\xEF\xBB\xBF"; // UTF-8 BOM
         $csv .= "Participant ID,Name,Email,Phone,Province,City,Jenis Tiket,Ukuran Jersey,Status,Staff,Racepack At\n";
-        
+
         foreach ($participants as $p) {
             $ticketName = '';
             if ($p->ticket_id) {
-                if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
-                elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
-                else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+                if ((int) $p->ticket_id === 1) {
+                    $ticketName = 'ASN';
+                } elseif ((int) $p->ticket_id === 2) {
+                    $ticketName = 'UMUM';
+                } else {
+                    $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string) $p->ticket_id;
+                }
             }
-            
+
             $row = [
                 $p->participant_id ?? '',
                 $p->name ?? '',
@@ -3212,18 +3283,18 @@ class PendaftarController extends Controller
                 $p->racepack_by ?: optional($p->staff)->name ?? '',
                 $p->racepack_at ? \Carbon\Carbon::parse($p->racepack_at)->timezone('Asia/Jakarta')->format('Y-m-d H:i:s') : '',
             ];
-            
+
             // Escape and quote fields
-            $escaped = array_map(function($field) {
+            $escaped = array_map(function ($field) {
                 $field = str_replace('"', '""', $field);
                 return '"' . $field . '"';
             }, $row);
-            
+
             $csv .= implode(',', $escaped) . "\n";
         }
 
         $filename = 'participants-' . now()->format('Ymd-His') . '.csv';
-        
+
         return response($csv, 200)
             ->header('Content-Type', 'text/csv; charset=UTF-8')
             ->header('Content-Disposition', 'attachment; filename="' . $filename . '"');
@@ -3247,22 +3318,28 @@ class PendaftarController extends Controller
 
         // Preload events
         $eventIds = $participants->pluck('ticket_id')->filter()->unique();
-        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id','nama_event'])->keyBy('id') : collect();
+        $eventMap = $eventIds->isNotEmpty() ? Event::whereIn('id', $eventIds)->get(['id', 'nama_event'])->keyBy('id') : collect();
 
         // Build HTML table compatible with Excel
         $html = "\xEF\xBB\xBF"; // UTF-8 BOM
         $html .= "<table border='1'>";
         $html .= "<thead><tr>";
-        $headers = ['Participant ID','Name','Email','Phone','Province','City','Jenis Tiket','Ukuran Jersey','Status','Staff','Racepack At'];
-        foreach ($headers as $h) { $html .= '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>'; }
+        $headers = ['Participant ID', 'Name', 'Email', 'Phone', 'Province', 'City', 'Jenis Tiket', 'Ukuran Jersey', 'Status', 'Staff', 'Racepack At'];
+        foreach ($headers as $h) {
+            $html .= '<th>' . htmlspecialchars($h, ENT_QUOTES, 'UTF-8') . '</th>';
+        }
         $html .= "</tr></thead><tbody>";
 
         foreach ($participants as $p) {
             $ticketName = '';
             if ($p->ticket_id) {
-                if ((int)$p->ticket_id === 1) { $ticketName = 'ASN'; }
-                elseif ((int)$p->ticket_id === 2) { $ticketName = 'UMUM'; }
-                else { $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string)$p->ticket_id; }
+                if ((int) $p->ticket_id === 1) {
+                    $ticketName = 'ASN';
+                } elseif ((int) $p->ticket_id === 2) {
+                    $ticketName = 'UMUM';
+                } else {
+                    $ticketName = optional($eventMap->get($p->ticket_id))->nama_event ?? (string) $p->ticket_id;
+                }
             }
 
             $cells = [
@@ -3280,7 +3357,9 @@ class PendaftarController extends Controller
             ];
 
             $html .= '<tr>';
-            foreach ($cells as $c) { $html .= '<td>' . htmlspecialchars((string)($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>'; }
+            foreach ($cells as $c) {
+                $html .= '<td>' . htmlspecialchars((string) ($c ?? ''), ENT_QUOTES, 'UTF-8') . '</td>';
+            }
             $html .= '</tr>';
         }
 
