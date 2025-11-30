@@ -26,7 +26,6 @@ const WhatsAppBlastPage = () => {
   const [testPurchaserEmail, setTestPurchaserEmail] = useState('');
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
-  const [testResult, setTestResult] = useState(null);
 
   useEffect(() => {
     loadParticipants();
