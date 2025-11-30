@@ -217,7 +217,7 @@ class PendaftarController extends Controller
 
         $useTemplate = (bool) $request->boolean('use_default_template', false);
         $sendAll = (bool) $request->boolean('send_all', false);
-        $isInvite = (bool) $request->boolean('is_invite', false);
+        $isInvite = filter_var($request->input('is_invite'), FILTER_VALIDATE_BOOLEAN);
         $text = (string) $request->input('text', '');
         $search = (string) $request->input('search', '');
 
@@ -360,6 +360,10 @@ class PendaftarController extends Controller
             'failed' => $failed,
             'skipped' => $skipped,
             'results' => $results,
+            'debug_meta' => [
+                'is_invite_received' => $isInvite,
+                'is_invite_raw' => $request->input('is_invite'),
+            ]
         ]);
     }
 

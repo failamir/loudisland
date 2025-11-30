@@ -565,6 +565,11 @@ const WhatsAppBlastPage = () => {
             <div>Total: {blastResult.total}</div>
             <div>Sukses: {blastResult.success}</div>
             <div>Gagal: {blastResult.failed}</div>
+            {blastResult.debug_meta && (
+              <div className="text-xs text-gray-500 mt-1">
+                Debug Mode: {blastResult.debug_meta.is_invite_received ? 'INVITE' : 'BLAST'} (Raw: {String(blastResult.debug_meta.is_invite_raw)})
+              </div>
+            )}
             {blastResult.skipped !== undefined && <div>Dilewati: {blastResult.skipped}</div>}
             {Array.isArray(blastResult.results) && blastResult.results.length > 0 && (
               <div className="mt-3 max-h-60 overflow-auto pr-2">
