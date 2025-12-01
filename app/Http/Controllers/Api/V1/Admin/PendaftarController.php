@@ -249,7 +249,8 @@ class PendaftarController extends Controller
             $base->whereIn('participant_id', array_values($ids));
         }
 
-        $list = $base->orderBy('id')->get();
+        // Limit to 500 to prevent timeout
+        $list = $base->orderBy('id')->limit(100)->get();
         if ($list->isEmpty()) {
             return response()->json([
                 'status' => 'error',
