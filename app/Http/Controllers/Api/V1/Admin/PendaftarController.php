@@ -284,11 +284,18 @@ class PendaftarController extends Controller
         if ($isInvite) {
             $phonesToCheck = $list->pluck('phone')->filter()->unique()->toArray();
             if (!empty($phonesToCheck)) {
-                $alreadyInvitedPhones = Participant::whereIn('phone', $phonesToCheck)
-                    ->where('invite', 1)
-                    ->pluck('phone')
-                    ->unique()
-                    ->toArray();
+                // Use chunking to avoid huge whereIn queries if list is very large
+                $alreadyInvitedPhones = [];
+                $chunks = array_chunk($phonesToCheck, 1000);
+                foreach ($chunks as $chunk) {
+                    $found = Participant::whereIn('phone', $chunk)
+                        ->where('invite', 1)
+                        ->pluck('phone')
+                        ->toArray();
+                    foreach ($found as $ph) {
+                        $alreadyInvitedPhones[$ph] = true;
+                    }
+                }
             }
         }
 
@@ -321,7 +328,7 @@ class PendaftarController extends Controller
             }
 
             // Check if this phone number has already been invited (globally check)
-            if ($isInvite && in_array($p->phone, $alreadyInvitedPhones)) {
+            if ($isInvite && isset($alreadyInvitedPhones[$p->phone])) {
                 $skipped++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
@@ -334,7 +341,7 @@ class PendaftarController extends Controller
             }
 
             // Check for duplicate phone in this batch (only for invites)
-            if ($isInvite && in_array($p->phone, $processedPhones)) {
+            if ($isInvite && isset($processedPhones[$p->phone])) {
                 $skipped++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
@@ -376,7 +383,7 @@ class PendaftarController extends Controller
                 }
 
                 $success++;
-                $processedPhones[] = $p->phone; // Add to processed list
+                $processedPhones[$p->phone] = true; // Add to processed list (hash map)
                 $results[] = [
                     'participant_id' => $p->participant_id,
                     'phone' => $p->phone,
