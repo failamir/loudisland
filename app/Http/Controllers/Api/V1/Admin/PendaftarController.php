@@ -277,6 +277,21 @@ class PendaftarController extends Controller
         $failed = 0;
         $skipped = 0;
 
+        $processedPhones = []; // Track phones processed in this batch
+
+        // Pre-fetch phones that have already been invited globally
+        $alreadyInvitedPhones = [];
+        if ($isInvite) {
+            $phonesToCheck = $list->pluck('phone')->filter()->unique()->toArray();
+            if (!empty($phonesToCheck)) {
+                $alreadyInvitedPhones = Participant::whereIn('phone', $phonesToCheck)
+                    ->where('invite', 1)
+                    ->pluck('phone')
+                    ->unique()
+                    ->toArray();
+            }
+        }
+
         foreach ($list as $p) {
             $alreadySent = $isInvite ? ($p->invite == 1) : ($p->blast == 1);
 
@@ -301,6 +316,31 @@ class PendaftarController extends Controller
                     'phone' => $p->phone,
                     'status' => 'error',
                     'error' => 'No phone number',
+                ];
+                continue;
+            }
+
+            // Check if this phone number has already been invited (globally check)
+            if ($isInvite && in_array($p->phone, $alreadyInvitedPhones)) {
+                $skipped++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'skipped',
+                    'message' => 'Phone number already invited (global check)',
+                    'debug_is_invite' => $isInvite,
+                ];
+                continue;
+            }
+
+            // Check for duplicate phone in this batch (only for invites)
+            if ($isInvite && in_array($p->phone, $processedPhones)) {
+                $skipped++;
+                $results[] = [
+                    'participant_id' => $p->participant_id,
+                    'phone' => $p->phone,
+                    'status' => 'skipped',
+                    'message' => 'Duplicate phone number in this batch',
                 ];
                 continue;
             }
@@ -336,6 +376,7 @@ class PendaftarController extends Controller
                 }
 
                 $success++;
+                $processedPhones[] = $p->phone; // Add to processed list
                 $results[] = [
                     'participant_id' => $p->participant_id,
                     'phone' => $p->phone,
