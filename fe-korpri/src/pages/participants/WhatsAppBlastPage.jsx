@@ -27,6 +27,7 @@ const WhatsAppBlastPage = () => {
   const [testSending, setTestSending] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [isInviteMode, setIsInviteMode] = useState(false);
+  const [isForceMode, setIsForceMode] = useState(false);
 
   useEffect(() => {
     loadParticipants();
@@ -77,6 +78,7 @@ const WhatsAppBlastPage = () => {
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || ''),
         is_invite: isInviteMode,
+        force: isForceMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -619,10 +621,49 @@ const WhatsAppBlastPage = () => {
                   onChange={e => {
                     const val = e.target.checked;
                     setIsInviteMode(val);
-                    if (val) setUseTemplate(false); // Force custom message for invite
+                    if (val) {
+                      setUseTemplate(false); // Force custom message for invite
+                      setIsForceMode(false); // Disable force mode
+                    }
                   }}
+                  disabled={isForceMode}
                 />
                 <span className="switch-label order-1 font-semibold text-primary">Mode Undangan Grup</span>
+              </label>
+              <div className="border-l h-6 mx-2"></div>
+              <label className="switch switch-sm">
+                <input
+                  name="isForceMode"
+                  type="checkbox"
+                  className="order-2"
+                  checked={isForceMode}
+                  onChange={e => {
+                    const val = e.target.checked;
+                    setIsForceMode(val);
+                    if (val) {
+                      setUseTemplate(false);
+                      setIsInviteMode(false);
+                      setMessage(`Halo ka [Namanya]
+Ini link etiket nya ya
+ID Peserta: [ID Peserta]
+Ukuran Jersey : [Sizenya] 
+Link Etiket : [linknya]
+Jenis Tiket: [Jenis Tiket]
+
+Dan jangan lupa untuk join grup kita 
+Klik link komunitas di sini:
+👉https://chat.whatsapp.com/Erjby64U0aRKW0fsvP08rg
+
+oh ya, penukaran racepack juga sudah dibuka, nah untuk info terupdate bisa dilihat dan follow IG kita di sini: 
+👉https://www.instagram.com/korprirun.mandalika/
+
+Di sana kita akan share info race, tips, dan pengumuman penting lainnya.
+See you di garis start! ✨`);
+                    }
+                  }}
+                  disabled={isInviteMode}
+                />
+                <span className="switch-label order-1 font-semibold text-red-600">Force Blast (Abaikan Status)</span>
               </label>
               <div className="border-l h-6 mx-2"></div>
               <label className="switch switch-sm">
@@ -632,7 +673,7 @@ const WhatsAppBlastPage = () => {
                   className="order-2"
                   checked={useTemplate}
                   onChange={e => setUseTemplate(e.target.checked)}
-                  disabled={isInviteMode}
+                  disabled={isInviteMode || isForceMode}
                 />
                 <span className="switch-label order-1">Gunakan template sukses pembayaran</span>
               </label>

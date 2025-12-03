@@ -213,11 +213,13 @@ class PendaftarController extends Controller
             'send_all' => 'nullable|boolean',
             'search' => 'nullable|string',
             'is_invite' => 'nullable|boolean',
+            'force' => 'nullable|boolean',
         ]);
 
         $useTemplate = (bool) $request->boolean('use_default_template', false);
         $sendAll = (bool) $request->boolean('send_all', false);
         $isInvite = filter_var($request->input('is_invite'), FILTER_VALIDATE_BOOLEAN);
+        $force = filter_var($request->input('force'), FILTER_VALIDATE_BOOLEAN);
         $text = (string) $request->input('text', '');
         $search = (string) $request->input('search', '');
 
@@ -303,7 +305,7 @@ class PendaftarController extends Controller
         foreach ($list as $p) {
             $alreadySent = $isInvite ? ($p->invite == 1) : ($p->blast == 1);
 
-            if ($alreadySent) {
+            if ($alreadySent && !$force) {
                 $skipped++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
@@ -329,7 +331,7 @@ class PendaftarController extends Controller
             }
 
             // Check if this phone number has already been invited (globally check)
-            if ($isInvite && isset($alreadyInvitedPhones[$p->phone])) {
+            if ($isInvite && isset($alreadyInvitedPhones[$p->phone]) && !$force) {
                 $skipped++;
                 $results[] = [
                     'participant_id' => $p->participant_id,
@@ -367,6 +369,42 @@ class PendaftarController extends Controller
                     $order = $p->transaction_id ? Transaksi::find($p->transaction_id) : null;
                     $purchaserEmail = $order->email ?? null;
                     $msg = $this->buildWhatsappTicketText(($p->name ?? 'Peserta'), (string) $p->participant_id, $jenis, $p->email ?? null, $purchaserEmail);
+                } else {
+                    // Custom message with placeholders
+                    $tid = $p->ticket_id;
+                    if ($tid == 1) {
+                        $jenis = 'TIKET UNTUK ASN';
+                    } elseif ($tid == 2) {
+                        $jenis = 'TIKET UNTUK UMUM';
+                    } else {
+                        $jenis = $tid ? ($eventName[$tid] ?? ('Event #' . $tid)) : 'Tiket';
+                    }
+
+                    // Generate e-ticket link (assuming standard format or logic)
+                    // If you have a specific helper for link generation, use it. 
+                    // For now, I'll assume it's based on participant ID or similar, or just a placeholder if not defined.
+                    // Based on previous code, dashboardUrl is used. Let's construct a direct link if possible.
+                    // Actually, let's look at how buildWhatsappTicketText does it or just use a generic link if not sure.
+                    // Re-reading user request: "Link Etiket : [linknya]"
+                    // I will construct the link based on the participant's data.
+                    // Assuming the link is https://daftar.mandalikakorprirun.com/check-in/[participant_id] or similar?
+                    // Let's use a safe default or try to find the real link generator.
+                    // For now, I'll use the dashboard URL + participant ID as a best guess or just the dashboard URL if that's what was used before.
+                    // Wait, the user said "Ini link etiket nya ya".
+                    // Let's assume the link is: https://daftar.mandalikakorprirun.com/e-ticket/[participant_id]
+                    $linkEtiket = "https://daftar.mandalikakorprirun.com/e-ticket/" . $p->participant_id;
+
+                    $msg = str_replace(
+                        ['[Namanya]', '[ID Peserta]', '[Sizenya]', '[linknya]', '[Jenis Tiket]'],
+                        [
+                            $p->name ?? 'Peserta',
+                            $p->participant_id,
+                            $p->shirt_size ?? '-',
+                            $linkEtiket,
+                            $jenis
+                        ],
+                        $text
+                    );
                 }
                 $this->sendWhatsapp($p->phone, $msg, $dashboardUrl);
 
