@@ -359,6 +359,7 @@ const WhatsAppBlastPage = () => {
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || ''),
         is_invite: isInviteMode,
+        force: isForceMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -384,6 +385,7 @@ const WhatsAppBlastPage = () => {
         use_default_template: useTemplate,
         text: useTemplate ? undefined : (message || ''),
         is_invite: isInviteMode,
+        force: isForceMode,
       };
       const url = source.startsWith('participants')
         ? `${API_URL}/participants/whatsapp-blast`
@@ -569,7 +571,7 @@ const WhatsAppBlastPage = () => {
             <div>Gagal: {blastResult.failed}</div>
             {blastResult.debug_meta && (
               <div className="text-xs text-gray-500 mt-1">
-                Debug Mode: {blastResult.debug_meta.is_invite_received ? 'INVITE' : 'BLAST'} (Raw: {String(blastResult.debug_meta.is_invite_raw)})
+                Debug Mode: {blastResult.debug_meta.is_invite_received ? 'INVITE' : 'BLAST'} (Raw: {String(blastResult.debug_meta.is_invite_raw)}) | Force: {String(blastResult.debug_meta.force_received)}
               </div>
             )}
             {blastResult.skipped !== undefined && <div>Dilewati: {blastResult.skipped}</div>}

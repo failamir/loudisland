@@ -450,6 +450,8 @@ class PendaftarController extends Controller
             'debug_meta' => [
                 'is_invite_received' => $isInvite,
                 'is_invite_raw' => $request->input('is_invite'),
+                'force_received' => $force,
+                'force_raw' => $request->input('force'),
             ]
         ]);
     }

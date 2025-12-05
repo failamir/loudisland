@@ -1,0 +1,4 @@
+invoice,user_uid,ticket_id,participant_name,participant_email,participant_phone,participant_nik,participant_province,participant_city,shirt_size,amount,status_racepack
+,111223345,2,Muhammad Nur Haswin Rahardi,info@mandalikakorprirun.com,85250082699,,NTB,Mataram,M,200000,belum
+,111223346,2,Aji Arasid,info@mandalikakorprirun.com,81332327729,,NTB,Mataram,L,200000,belum
+,111223347,1,Reza,info@mandalikakorprirun.com,0817726812,198502232025211038,NTB,Mataram,L,175000,belum
