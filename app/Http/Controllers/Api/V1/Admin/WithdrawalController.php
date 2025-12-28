@@ -48,9 +48,9 @@ class WithdrawalController extends Controller
         $netIncome = max(0, $grossSum - $profit);
 
         return [
-            'gross_sum'  => (int) $grossSum,
-            'count'      => (int) $count,
-            'profit'     => (int) $profit,
+            'gross_sum' => (int) $grossSum,
+            'count' => (int) $count,
+            'profit' => (int) $profit,
             'net_income' => (int) $netIncome,
         ];
     }
@@ -58,7 +58,7 @@ class WithdrawalController extends Controller
     public function index(Request $request)
     {
         // if (Auth::id() == 1) {
-            $query = Withdrawal::with(['created_by'])
+        $query = Withdrawal::with(['created_by'])
             ->orderByDesc('created_at');
         // } else {
         //     $query = Withdrawal::with(['created_by'])
@@ -115,7 +115,7 @@ class WithdrawalController extends Controller
 
         // recompute balances snapshot using participants-based net income
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $participantsQuery = Participant::query()->where('status', '1')->whereNotIn('email', $excluded_emails);
+        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
@@ -210,7 +210,8 @@ class WithdrawalController extends Controller
         $userId = optional($request->user())->id;
 
         // recompute balances snapshot using participants-based net income
-        $participantsQuery = Participant::query()->where('status', '1');
+        $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
+        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
         $count = (int) (clone $participantsQuery)->count();
         $grossSum = (int) (clone $participantsQuery)->sum('amount');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);

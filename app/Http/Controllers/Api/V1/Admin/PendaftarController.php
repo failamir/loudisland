@@ -2904,36 +2904,22 @@ class PendaftarController extends Controller
 
     protected function sendWhatsapp(string $phone, string $text, string $url): void
     {
-        try {
-            $base = rtrim(config('services.waha.base_url'), '/');
-            $session = config('services.waha.session');
-            $apiKey = config('services.waha.api_key');
-            $chatId = $this->normalizePhone($phone);
-            $url = $url;
-            // Check if the text contains a URL
-            // if (isset($url)) {
-            //     // Send with link preview
-            //     Http::withHeaders([
-            //         'x-api-key' => $apiKey,
-            //     ])->post($base . '/api/sendLinkPreview', [
-            //         'chatId' => $chatId,
-            //         'session' => $session,
-            //         'url' => $url,
-            //         'text' => $text,
-            //     ]);
-            // } else {
-            // Fallback to regular text message if no URL found
-            Http::withHeaders([
-                'x-api-key' => $apiKey,
-            ])->post($base . '/api/sendText', [
-                        'chatId' => $chatId,
-                        'session' => $session,
-                        'text' => $text,
-                    ]);
-            // }
-        } catch (\Throwable $e) {
-            // Log the error
-            // \Illuminate\Support\Facades\Log::warning('WA send failed: ' . $e->getMessage());
+        $base = rtrim(config('services.waha.base_url'), '/');
+        $session = config('services.waha.session');
+        $apiKey = config('services.waha.api_key');
+        $chatId = $this->normalizePhone($phone);
+
+        // Fallback to regular text message if no URL found
+        $response = Http::withHeaders([
+            'x-api-key' => $apiKey,
+        ])->post($base . '/api/sendText', [
+                    'chatId' => $chatId,
+                    'session' => $session,
+                    'text' => $text,
+                ]);
+
+        if ($response->failed()) {
+            throw new \Exception('WA API Error: ' . $response->body());
         }
     }
 
