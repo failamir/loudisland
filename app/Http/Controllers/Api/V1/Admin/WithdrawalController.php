@@ -85,11 +85,23 @@ class WithdrawalController extends Controller
         // profit = count * 5000 + floor(gross * 0.01)
         // net_income = max(0, gross - profit)
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $count = (int) (clone $participantsQuery)->count();
+        // $grossSum = (int) (clone $participantsQuery)->sum('amount');
+
+        // Align with /total-income logic (Participant based)
+        $participantsQuery = Participant::query()
+            ->where('status', '1')
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0);
+
         $count = (int) (clone $participantsQuery)->count();
-        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $grossSum = (int) (clone $participantsQuery)->sum('final_price');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
-        $netIncome = max(0, $grossSum - $profit);
+        // $netIncome = max(0, $grossSum - $profit);
+        // User requesting to withdraw from Gross Sum (ignoring profit deduction)
+        $netIncome = $grossSum;
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
         $available = max(0, $netIncome - $totalWithdrawn);
@@ -115,11 +127,24 @@ class WithdrawalController extends Controller
 
         // recompute balances snapshot using participants-based net income
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $count = (int) (clone $participantsQuery)->count();
+        // $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        // $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
+
+        // Align with /total-income logic (Participant based)
+        $participantsQuery = Participant::query()
+            ->where('status', '1')
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0);
+
         $count = (int) (clone $participantsQuery)->count();
-        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $grossSum = (int) (clone $participantsQuery)->sum('final_price');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
-        $netIncome = max(0, $grossSum - $profit);
+        // $netIncome = max(0, $grossSum - $profit);
+        // User requesting to withdraw from Gross Sum (ignoring profit deduction)
+        $netIncome = $grossSum;
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])->sum('amount');
         $available = max(0, $netIncome - $totalWithdrawn);
@@ -211,11 +236,23 @@ class WithdrawalController extends Controller
 
         // recompute balances snapshot using participants-based net income
         $excluded_emails = explode(',', env('EMAIL_TESTING', ''));
-        $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $participantsQuery = Transaksi::query()->where('status', 'success')->where('amount', '>', 100000)->whereNotIn('email', $excluded_emails);
+        // $count = (int) (clone $participantsQuery)->count();
+        // $grossSum = (int) (clone $participantsQuery)->sum('amount');
+
+        // Align with /total-income logic (Participant based)
+        $participantsQuery = Participant::query()
+            ->where('status', '1')
+            ->whereNotIn('email', $excluded_emails)
+            ->whereNotNull('final_price')
+            ->where('final_price', '>', 0);
+
         $count = (int) (clone $participantsQuery)->count();
-        $grossSum = (int) (clone $participantsQuery)->sum('amount');
+        $grossSum = (int) (clone $participantsQuery)->sum('final_price');
         $profit = (int) ($count * 5000) + (int) floor($grossSum * 0.015);
-        $netIncome = max(0, $grossSum - $profit);
+        // $netIncome = max(0, $grossSum - $profit);
+        // User requesting to withdraw from Gross Sum (ignoring profit deduction)
+        $netIncome = $grossSum;
 
         $totalWithdrawn = (int) Withdrawal::whereIn('status', ['approved', 'paid'])
             ->where('id', '!=', $withdrawal->id)

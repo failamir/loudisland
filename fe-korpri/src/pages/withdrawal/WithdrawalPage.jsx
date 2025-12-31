@@ -57,6 +57,7 @@ const WithdrawalPage = () => {
     try {
       setSummaryLoading(true);
       // Align total income source with Dashboard: use /total-income
+      // User requested to use the "previous logic" (Gross Income)
       const auth = getAuth();
       const [incomeRes, summaryRes, referralRes] = await Promise.all([
         axios.get(`${API_URL}/total-income`),
@@ -68,11 +69,14 @@ const WithdrawalPage = () => {
       const incomeVal = incomeRes?.data?.total_income ?? 0;
       const s = summaryRes?.data?.data || {};
       const r = referralRes?.data?.data || { total_earning: 0, total_withdrawn: 0, available_balance: 0 };
+
+      // REVERT: Use incomeVal (Gross Income from /total-income) as requested
       const totalIncome = Number(incomeVal) || 0;
       const totalWithdrawn = Number(s.total_withdrawn || 0);
       const availableBase = Math.max(0, totalIncome - totalWithdrawn);
       const referralAvail = Number(r.available_balance || 0);
       const available = Math.max(0, availableBase - referralAvail);
+
       setSummary({
         total_income: totalIncome,
         total_withdrawn: totalWithdrawn,
@@ -366,52 +370,52 @@ const WithdrawalPage = () => {
             <div className="card-body">
               <div className="overflow-x-auto">
                 <table className="table">
-                <thead>
-                  <tr>
-                    <th>Tanggal</th>
-                    <th>Jumlah</th>
-                    <th>Status</th>
-                    <th>Bank</th>
-                    <th>Rekening</th>
-                    <th>Nama Pemilik</th>
-                    <th>Catatan</th>
-                    <th>Pemohon</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {list.length === 0 && (
+                  <thead>
                     <tr>
-                      <td colSpan={9} className="text-center text-gray-500">Belum ada data</td>
+                      <th>Tanggal</th>
+                      <th>Jumlah</th>
+                      <th>Status</th>
+                      <th>Bank</th>
+                      <th>Rekening</th>
+                      <th>Nama Pemilik</th>
+                      <th>Catatan</th>
+                      <th>Pemohon</th>
+                      <th>Aksi</th>
                     </tr>
-                  )}
-                  {list.map((row) => {
-                    const canApprove = row.status === 'queued';
-                    const canMarkPaid = row.status === 'approved';
-                    const canReject = row.status === 'queued' || row.status === 'approved';
-                    const canCancel = row.status === 'queued';
-                    return (
-                      <tr key={`act-${row.id}`}>
-                        <td>{row.created_at ? new Date(row.created_at).toLocaleString() : '-'}</td>
-                        <td>{new Intl.NumberFormat('id-ID').format(row.amount || 0)}</td>
-                        <td>{row.status}</td>
-                        <td>{row.bank || '-'}</td>
-                        <td>{row.account_number || '-'}</td>
-                        <td>{row.account_name || '-'}</td>
-                        <td>{row.note || '-'}</td>
-                        <td>{row.created_by?.name || '-'}</td>
-                        <td>
-                          <div className="flex flex-wrap gap-2">
-                            <button disabled={!canApprove || actionLoadingId === row.id} className="btn btn-xs btn-primary" onClick={() => updateStatus(row, 'approved')}>Approve</button>
-                            <button disabled={!canMarkPaid || actionLoadingId === row.id} className="btn btn-xs btn-success" onClick={() => updateStatus(row, 'paid')}>Mark Paid</button>
-                            <button disabled={!canReject || actionLoadingId === row.id} className="btn btn-xs btn-danger" onClick={() => updateStatus(row, 'rejected')}>Reject</button>
-                            <button disabled={!canCancel || actionLoadingId === row.id} className="btn btn-xs btn-light" onClick={() => updateStatus(row, 'canceled')}>Cancel</button>
-                          </div>
-                        </td>
+                  </thead>
+                  <tbody>
+                    {list.length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="text-center text-gray-500">Belum ada data</td>
                       </tr>
-                    );
-                  })}
-                </tbody>
+                    )}
+                    {list.map((row) => {
+                      const canApprove = row.status === 'queued';
+                      const canMarkPaid = row.status === 'approved';
+                      const canReject = row.status === 'queued' || row.status === 'approved';
+                      const canCancel = row.status === 'queued';
+                      return (
+                        <tr key={`act-${row.id}`}>
+                          <td>{row.created_at ? new Date(row.created_at).toLocaleString() : '-'}</td>
+                          <td>{new Intl.NumberFormat('id-ID').format(row.amount || 0)}</td>
+                          <td>{row.status}</td>
+                          <td>{row.bank || '-'}</td>
+                          <td>{row.account_number || '-'}</td>
+                          <td>{row.account_name || '-'}</td>
+                          <td>{row.note || '-'}</td>
+                          <td>{row.created_by?.name || '-'}</td>
+                          <td>
+                            <div className="flex flex-wrap gap-2">
+                              <button disabled={!canApprove || actionLoadingId === row.id} className="btn btn-xs btn-primary" onClick={() => updateStatus(row, 'approved')}>Approve</button>
+                              <button disabled={!canMarkPaid || actionLoadingId === row.id} className="btn btn-xs btn-success" onClick={() => updateStatus(row, 'paid')}>Mark Paid</button>
+                              <button disabled={!canReject || actionLoadingId === row.id} className="btn btn-xs btn-danger" onClick={() => updateStatus(row, 'rejected')}>Reject</button>
+                              <button disabled={!canCancel || actionLoadingId === row.id} className="btn btn-xs btn-light" onClick={() => updateStatus(row, 'canceled')}>Cancel</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
                 </table>
               </div>
             </div>
