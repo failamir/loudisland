@@ -47,10 +47,8 @@ COPY . .
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction 2>/dev/null || true
 
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+RUN chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # ─────────────────────────────────────────────
-# Run queue worker (consumes RabbitMQ / Redis)
-# ─────────────────────────────────────────────
-CMD ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--max-time=3600", "--verbose"]
+# Use redis queue as safe default; switch to rabbitmq after composer update
+CMD ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600", "--verbose"]
