@@ -15,7 +15,8 @@ return [
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    // Redis Pub/Sub — real-time messaging across all containers (CHAT CHANNEL)
+    'default' => env('BROADCAST_DRIVER', 'redis'),
 
     /*
     |--------------------------------------------------------------------------
