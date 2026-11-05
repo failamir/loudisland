@@ -124,41 +124,26 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
       <div class="dot dot-green"></div>
       <span style="color: #64748b; font-size: 12px; margin-left: 10px;">api.failamir.tech ~ bash</span>
     </div>
-    <pre id="text"></pre><span class="cursor"></span>
+    <pre id="text">  __  __                 _       _ _ _         
+ |  \/  | __ _ _ __   __| | __ _| (_) | ____ _ 
+ | |\/| |/ _` | '_ \ / _` |/ _` | | | |/ / _` |
+ | |  | | (_| | | | | (_| | (_| | | |   < (_| |
+ |_|  |_|\__,_|_| |_|\__,_|\__,_|_|_|_|\_\__,_|
+                                               
+  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
+ | |/ / _ \|  _ \|  _ \|  _ \|_ _| |  _ \| | | | \ | | |___ \ / _ \___ \ / /_  
+ | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \| |   __) | | | |__) | '_ \ 
+ | . \ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\  |  / __/| |_| / __/| (_) |
+ |_|\_\___/|_| \_\_|   |_| \_\___| |_| \_\\___/|_| \_| |_____|\___/_____|\___/ 
+                                                                               
+                     Mandalika KORPRI Run 2026</pre><span class="cursor"></span>
   </div>
   <div class="footer">
     <div>🚀 REST API Engine: <strong>Axum 0.7 (Rust)</strong></div>
     <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces • /swagger-ui</div>
   </div>
 
-  <script>
-    const fullText = `  __  __                 _       _ _ _         
- |  \\/  | __ _ _ __   __| | __ _| (_) | ____ _ 
- | |\\/| |/ _` | '_ \\ / _` |/ _` | | | |/ / _` |
- | |  | | (_| | | | | (_| | (_| | | |   < (_| |
- |_|  |_|\\__,_|_| |_|\\__,_|\\__,_|_|_|_|\\_\\__,_|
-                                               
-  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
- | |/ / _ \\|  _ \\|  _ \\|  _ \\|_ _| |  _ \\| | | | \\ | | |___ \\ / _ \\___ \\ / /_  
- | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \\| |   __) | | | |__) | '_ \\ 
- | . \\ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\\  |  / __/| |_| / __/| (_) |
- |_|\\_\\___/|_| \\_\\_|   |_| \\_\\___| |_| \\_\\\\___/|_| \\_| |_____|\\___/_____|\\___/ 
-                                                                               
-                     Mandalika KORPRI Run 2026`;
-
-    const el = document.getElementById("text");
-    let idx = 0;
-    const speed = 3; // ms per char
-
-    function type() {
-      if (idx < fullText.length) {
-        el.textContent += fullText[idx];
-        idx++;
-        setTimeout(type, speed);
-      }
-    }
-    type();
-  </script>
+  <!-- Instant Render -->
 </body>
 </html>
 "#;
