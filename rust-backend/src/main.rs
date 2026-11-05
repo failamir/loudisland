@@ -56,63 +56,89 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
-      overflow-x: auto;
+      padding: 16px;
     }
     .terminal {
       background: #030712;
       border: 1px solid #1e293b;
       border-radius: 12px;
-      padding: 24px 30px;
+      padding: 18px 20px;
       box-shadow: 0 20px 50px rgba(0, 255, 204, 0.1);
-      max-width: 95vw;
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
     }
     .header {
       display: flex;
       gap: 8px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
       border-bottom: 1px solid #1e293b;
-      padding-bottom: 12px;
+      padding-bottom: 10px;
+      align-items: center;
     }
-    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
     .dot-red { background: #ef4444; }
     .dot-yellow { background: #eab308; }
     .dot-green { background: #22c55e; }
+    .terminal-body {
+      overflow-x: auto;
+      max-width: 100%;
+      padding-bottom: 6px;
+      -webkit-overflow-scrolling: touch;
+    }
     pre {
-      font-size: 13px;
-      line-height: 1.25;
+      font-size: clamp(6px, 1.4vw, 13px);
+      line-height: 1.15;
       white-space: pre;
       font-weight: 600;
       text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+      display: inline-block;
+      min-width: fit-content;
     }
     .cursor {
       display: inline-block;
-      width: 9px;
-      height: 16px;
+      width: 8px;
+      height: 14px;
       background: #00ffcc;
       vertical-align: middle;
       animation: blink 0.8s infinite;
       box-shadow: 0 0 10px #00ffcc;
+      margin-left: 4px;
     }
     @keyframes blink {
       0%, 49% { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
     .footer {
-      margin-top: 20px;
-      font-size: 12px;
-      color: #64748b;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #94a3b8;
       text-align: center;
+      line-height: 1.6;
+    }
+    .badge-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 12px;
     }
     .badge {
       display: inline-block;
-      margin-top: 10px;
-      padding: 4px 12px;
+      padding: 5px 14px;
       border-radius: 20px;
-      background: rgba(0, 255, 204, 0.1);
-      border: 1px solid rgba(0, 255, 204, 0.3);
+      background: rgba(0, 255, 204, 0.08);
+      border: 1px solid rgba(0, 255, 204, 0.25);
       color: #38bdf8;
-      font-size: 11px;
+      font-size: 12px;
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+    .badge:hover {
+      background: rgba(0, 255, 204, 0.2);
+      border-color: #00ffcc;
+      color: #ffffff;
+      transform: translateY(-1px);
     }
   </style>
 </head>
@@ -124,7 +150,8 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
       <div class="dot dot-green"></div>
       <span style="color: #64748b; font-size: 12px; margin-left: 10px;">api.failamir.tech ~ bash</span>
     </div>
-    <pre id="text">  __  __                 _       _ _ _         
+    <div class="terminal-body">
+      <pre id="text">  __  __                 _       _ _ _         
  |  \/  | __ _ _ __   __| | __ _| (_) | ____ _ 
  | |\/| |/ _` | '_ \ / _` |/ _` | | | |/ / _` |
  | |  | | (_| | | | | (_| | (_| | | |   < (_| |
@@ -137,37 +164,19 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
  |_|\_\___/|_| \_\_|   |_| \_\___| |_| \_\\___/|_| \_| |_____|\___/_____|\___/ 
                                                                                
                      Mandalika KORPRI Run 2026</pre><span class="cursor"></span>
+    </div>
   </div>
   <div class="footer">
     <div>🚀 REST API Engine: <strong>Axum 0.7 (Rust)</strong></div>
-    <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces • /swagger-ui</div>
+    <div class="badge-container">
+      <a class="badge" href="/swagger-ui/">📖 Swagger UI Documentation</a>
+      <a class="badge" href="/api/v1/events">🎟️ /api/v1/events</a>
+      <a class="badge" href="/api/v1/wilayah/provinces">📍 /api/v1/wilayah/provinces</a>
+    </div>
   </div>
-
-  <!-- Instant Render -->
 </body>
 </html>
 "#;
-
-async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
-    let accept = headers
-        .get(header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
-    if accept.contains("text/html") {
-        (
-            StatusCode::OK,
-            [(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))],
-            HTML_PAGE,
-        )
-    } else {
-        (
-            StatusCode::OK,
-            [(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"))],
-            ASCII_TEXT,
-        )
-    }
-}
 
 #[derive(OpenApi)]
 #[openapi(
@@ -192,15 +201,14 @@ async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
             models::auth::RegisterRequest,
             models::auth::LoginRequest,
             models::auth::GetTokenRequest,
+            models::auth::GetTokenResponse,
             models::auth::AuthResponse,
             models::auth::AuthResponseData,
-            models::auth::GetTokenResponse,
             models::auth::MeResponse,
             models::auth::UserRole,
             models::ticket::Event,
-            models::ticket::EventListResponse,
             models::ticket::MultiOrderRequest,
-            models::ticket::OrderParticipantRequest,
+            models::ticket::ParticipantOrder,
             models::ticket::OrderSuccessResponse,
             models::ticket::OrderSuccessParticipant,
             models::ticket::PaymentStatusResponse,
@@ -214,24 +222,21 @@ async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
             models::ticket::MyTicketEvent,
             models::ticket::MyTicketParticipant,
             models::ticket::UpdateShirtSizeRequest,
-            models::ticket::UpdateShirtSizeResponse,
             models::ticket::SendImageRequest,
-            models::ticket::SendImageResponse,
-            models::wilayah::ProvinceItem,
-            models::wilayah::RegencyItem,
+            models::wilayah::Province,
+            models::wilayah::Regency,
         )
     ),
     modifiers(&SecurityAddon),
     tags(
-        (name = "Auth", description = "Autentikasi & Profil Akun Peserta"),
-        (name = "Tickets & Events", description = "Manajemen Event, Checkout Tiket, & Ukuran Jersey"),
-        (name = "Wilayah", description = "Proxy API Wilayah Indonesia"),
-        (name = "WhatsApp / WAHA", description = "Layanan Pesan WhatsApp WAHA")
+        (name = "auth", description = "Authentication Endpoints"),
+        (name = "events", description = "Event & Ticket Management Endpoints"),
+        (name = "wilayah", description = "Wilayah / Regional Data Endpoints")
     ),
     info(
-        title = "Korpri Run & LoudIsland Backend API",
-        version = "1.0.0",
-        description = "Backend Rust berkinerja tinggi yang melayani Frontend Web App Korpri."
+        title = "LoudIsland / Mandalika KORPRI Run API",
+        version = "0.1.0",
+        description = "High-performance Rust Axum backend powering Mandalika KORPRI Run 2026."
     )
 )]
 struct ApiDoc;
@@ -242,16 +247,36 @@ impl Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
-                "bearer_auth",
+                "bearerAuth",
                 SecurityScheme::Http(
                     HttpBuilder::new()
                         .scheme(HttpAuthScheme::Bearer)
                         .bearer_format("JWT")
-                        .description(Some("Masukkan JWT access token"))
                         .build(),
                 ),
             );
         }
+    }
+}
+
+async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
+    let accept = headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    if accept.contains("text/html") {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))],
+            HTML_PAGE,
+        )
+    } else {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"))],
+            ASCII_TEXT,
+        )
     }
 }
 
