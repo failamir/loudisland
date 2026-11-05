@@ -1,4 +1,5 @@
 use std::net::SocketAddr;
+use axum::{response::IntoResponse, routing::get};
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
@@ -14,6 +15,26 @@ mod state;
 
 use config::Config;
 use state::AppState;
+
+const ASCII_ART: &str = r#"
+  __  __                 _       _ _ _         
+ |  \/  | __ _ _ __   __| | __ _| (_) | ____ _ 
+ | |\/| |/ _` | '_ \ / _` |/ _` | | | |/ / _` |
+ | |  | | (_| | | | | (_| | (_| | | |   < (_| |
+ |_|  |_|\__,_|_| |_|\__,_|\__,_|_|_|_|\_\__,_|
+                                               
+  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
+ | |/ / _ \|  _ \|  _ \|  _ \|_ _| |  _ \| | | | \ | | |___ \ / _ \___ \ / /_  
+ | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \| |   __) | | | |__) | '_ \ 
+ | . \ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\  |  / __/| |_| / __/| (_) |
+ |_|\_\___/|_| \_\_|   |_| \_\___| |_| \_\\___/|_| \_| |_____|\___/_____|\___/ 
+                                                                               
+                     Mandalika KORPRI Run 2026
+"#;
+
+async fn root_handler() -> impl IntoResponse {
+    ASCII_ART
+}
 
 #[tokio::main]
 async fn main() {
@@ -42,6 +63,7 @@ async fn main() {
         .merge(routes::wilayah::router());
 
     let app = axum::Router::new()
+        .route("/", get(root_handler))
         .nest("/api/v1", api_v1)
         .layer(cors)
         .layer(TraceLayer::new_for_http())
