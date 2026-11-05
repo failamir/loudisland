@@ -18,3 +18,4 @@ yarn-error.log
 .user.ini
 dotnet-backend/bin/
 dotnet-backend/obj/
+/rust-backend/target/debug
