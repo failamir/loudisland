@@ -50,7 +50,18 @@ fn generate_token(user: &User, secret: &str, ttl: i64) -> Result<String, AppErro
     .map_err(|e| AppError::Internal(format!("Failed to sign JWT: {}", e)))
 }
 
-async fn register(
+#[utoipa::path(
+    post,
+    path = "/api/v1/register",
+    tag = "Auth",
+    request_body = RegisterRequest,
+    responses(
+        (status = 201, description = "Berhasil mendaftar", body = AuthResponse),
+        (status = 400, description = "Bad Request"),
+        (status = 500, description = "Internal Server Error")
+    )
+)]
+pub async fn register(
     State(state): State<AppState>,
     Json(payload): Json<RegisterRequest>,
 ) -> AppResult<impl IntoResponse> {
@@ -103,7 +114,18 @@ async fn register(
     Ok((StatusCode::CREATED, Json(response)))
 }
 
-async fn login(
+#[utoipa::path(
+    post,
+    path = "/api/v1/login",
+    tag = "Auth",
+    request_body = LoginRequest,
+    responses(
+        (status = 200, description = "Login berhasil", body = AuthResponse),
+        (status = 401, description = "Unauthorized"),
+        (status = 500, description = "Internal Server Error")
+    )
+)]
+pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginRequest>,
 ) -> AppResult<impl IntoResponse> {
@@ -166,7 +188,19 @@ async fn login(
     Ok(Json(response))
 }
 
-async fn refresh(
+#[utoipa::path(
+    post,
+    path = "/api/v1/refresh",
+    tag = "Auth",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Token refreshed", body = AuthResponse),
+        (status = 401, description = "Unauthorized")
+    )
+)]
+pub async fn refresh(
     auth_user: AuthUser,
     State(state): State<AppState>,
 ) -> AppResult<impl IntoResponse> {
@@ -195,7 +229,17 @@ async fn refresh(
     Ok(Json(response))
 }
 
-async fn get_token(
+#[utoipa::path(
+    post,
+    path = "/api/v1/get-token",
+    tag = "Auth",
+    request_body = GetTokenRequest,
+    responses(
+        (status = 200, description = "Token generated", body = GetTokenResponse),
+        (status = 404, description = "User not found")
+    )
+)]
+pub async fn get_token(
     State(state): State<AppState>,
     Json(payload): Json<GetTokenRequest>,
 ) -> AppResult<impl IntoResponse> {
@@ -210,7 +254,19 @@ async fn get_token(
     Ok(Json(GetTokenResponse { token }))
 }
 
-async fn me(
+#[utoipa::path(
+    get,
+    path = "/api/v1/me",
+    tag = "Auth",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Current authenticated user profile", body = MeResponse),
+        (status = 401, description = "Unauthorized")
+    )
+)]
+pub async fn me(
     auth_user: AuthUser,
     State(state): State<AppState>,
 ) -> AppResult<impl IntoResponse> {
@@ -236,4 +292,3 @@ async fn me(
 
     Ok(Json(response))
 }
-

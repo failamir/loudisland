@@ -18,3 +18,5 @@ reqwest = { version = "0.12", default-features = false, features = ["json", "rus
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0.15"
+utoipa = { version = "4.2", features = ["chrono", "uuid"] }
+utoipa-swagger-ui = { version = "7.1", features = ["axum"] }

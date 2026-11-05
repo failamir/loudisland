@@ -9,6 +9,11 @@ use tower_http::{
     trace::TraceLayer,
 };
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use utoipa::{
+    openapi::security::{HttpAuthScheme, HttpBuilder, SecurityScheme},
+    Modify, OpenApi,
+};
+use utoipa_swagger_ui::SwaggerUi;
 
 mod config;
 mod error;
@@ -123,7 +128,7 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
   </div>
   <div class="footer">
     <div>🚀 REST API Engine: <strong>Axum 0.7 (Rust)</strong></div>
-    <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces</div>
+    <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces • /swagger-ui</div>
   </div>
 
   <script>
@@ -179,6 +184,92 @@ async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
     }
 }
 
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        routes::auth::register,
+        routes::auth::login,
+        routes::auth::refresh,
+        routes::auth::get_token,
+        routes::auth::me,
+        routes::ticket::list_events,
+        routes::ticket::buy_tickets,
+        routes::ticket::payment_status,
+        routes::ticket::my_order,
+        routes::ticket::my_ticket,
+        routes::ticket::update_shirt_size,
+        routes::ticket::waha_send_image,
+        routes::wilayah::get_provinces,
+        routes::wilayah::get_regencies,
+    ),
+    components(
+        schemas(
+            models::auth::RegisterRequest,
+            models::auth::LoginRequest,
+            models::auth::GetTokenRequest,
+            models::auth::AuthResponse,
+            models::auth::AuthResponseData,
+            models::auth::GetTokenResponse,
+            models::auth::MeResponse,
+            models::auth::UserRole,
+            models::ticket::Event,
+            models::ticket::EventListResponse,
+            models::ticket::MultiOrderRequest,
+            models::ticket::OrderParticipantRequest,
+            models::ticket::OrderSuccessResponse,
+            models::ticket::OrderSuccessParticipant,
+            models::ticket::PaymentStatusResponse,
+            models::ticket::PaymentUserDetail,
+            models::ticket::PaymentParticipantDetail,
+            models::ticket::MyOrderListResponse,
+            models::ticket::MyOrderItem,
+            models::ticket::MyOrderParticipantDecoded,
+            models::ticket::MyTicketListResponse,
+            models::ticket::MyTicketItem,
+            models::ticket::MyTicketEvent,
+            models::ticket::MyTicketParticipant,
+            models::ticket::UpdateShirtSizeRequest,
+            models::ticket::UpdateShirtSizeResponse,
+            models::ticket::SendImageRequest,
+            models::ticket::SendImageResponse,
+            models::wilayah::ProvinceItem,
+            models::wilayah::RegencyItem,
+        )
+    ),
+    modifiers(&SecurityAddon),
+    tags(
+        (name = "Auth", description = "Autentikasi & Profil Akun Peserta"),
+        (name = "Tickets & Events", description = "Manajemen Event, Checkout Tiket, & Ukuran Jersey"),
+        (name = "Wilayah", description = "Proxy API Wilayah Indonesia"),
+        (name = "WhatsApp / WAHA", description = "Layanan Pesan WhatsApp WAHA")
+    ),
+    info(
+        title = "Korpri Run & LoudIsland Backend API",
+        version = "1.0.0",
+        description = "Backend Rust berkinerja tinggi yang melayani Frontend Web App Korpri."
+    )
+)]
+struct ApiDoc;
+
+struct SecurityAddon;
+
+impl Modify for SecurityAddon {
+    fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
+        if let Some(components) = openapi.components.as_mut() {
+            components.add_security_scheme(
+                "bearer_auth",
+                SecurityScheme::Http(
+                    HttpBuilder::new()
+                        .scheme(HttpAuthScheme::Bearer)
+                        .bearer_format("JWT")
+                        .description(Some("Masukkan JWT access token"))
+                        .build(),
+                ),
+            );
+        }
+    }
+}
+
 #[tokio::main]
 async fn main() {
     dotenvy::dotenv().ok();
@@ -207,6 +298,7 @@ async fn main() {
 
     let app = axum::Router::new()
         .route("/", get(root_handler))
+        .merge(SwaggerUi::new("/swagger-ui").url("/api-docs/openapi.json", ApiDoc::openapi()))
         .nest("/api/v1", api_v1)
         .layer(cors)
         .layer(TraceLayer::new_for_http())
@@ -214,6 +306,7 @@ async fn main() {
 
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("LoudIsland / Korpri Rust Backend listening on http://{}", addr);
+    tracing::info!("Swagger UI documentation available at http://{}/swagger-ui", addr);
 
     let listener = tokio::net::TcpListener::bind(addr)
         .await

@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
+use utoipa::ToSchema;
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct Event {
     pub id: i64,
     pub nama_event: String,
@@ -9,7 +10,7 @@ pub struct Event {
     pub tanggal_mulai: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct ParticipantRecord {
     pub participant_id: String,
     pub ticket_id: String,
@@ -24,7 +25,7 @@ pub struct ParticipantRecord {
     pub status_racepack: i32,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct TransactionRecord {
     pub id: i64,
     pub invoice: String,
@@ -44,7 +45,7 @@ pub struct TransactionRecord {
     pub participants: Vec<ParticipantRecord>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct OrderParticipantRequest {
     #[serde(rename = "ticketId")]
     pub ticket_id: Option<String>,
@@ -58,14 +59,14 @@ pub struct OrderParticipantRequest {
     pub shirt_size: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct MultiOrderRequest {
     #[serde(rename = "userId")]
     pub user_id: String,
     pub participants: Vec<OrderParticipantRequest>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct OrderSuccessParticipant {
     #[serde(rename = "ticketId")]
     pub ticket_id: Option<String>,
@@ -77,10 +78,10 @@ pub struct OrderSuccessParticipant {
     pub city: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct OrderSuccessResponse {
     pub invoice: String,
-    pub data: String, // snap redirect url
+    pub data: String,
     pub participants: Vec<OrderSuccessParticipant>,
     pub service_fee: f64,
     pub total_payment: f64,
@@ -89,7 +90,7 @@ pub struct OrderSuccessResponse {
     pub expired_snap_time: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PaymentUserDetail {
     pub id: i64,
     pub nama: String,
@@ -102,7 +103,7 @@ pub struct PaymentUserDetail {
     pub finish_at: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PaymentParticipantDetail {
     pub participant_id: String,
     pub name: String,
@@ -116,7 +117,7 @@ pub struct PaymentParticipantDetail {
     pub qr_url: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct PaymentStatusResponse {
     pub invoice: String,
     pub status: String,
@@ -128,7 +129,7 @@ pub struct PaymentStatusResponse {
     pub participants: Vec<PaymentParticipantDetail>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyOrderParticipantDecoded {
     #[serde(rename = "ticketId")]
     pub ticket_id: Option<String>,
@@ -142,7 +143,7 @@ pub struct MyOrderParticipantDecoded {
     pub shirt_size: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyOrderItem {
     pub invoice: String,
     pub amount: String,
@@ -157,14 +158,14 @@ pub struct MyOrderItem {
     pub participants_decoded: Vec<MyOrderParticipantDecoded>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyOrderListResponse {
     pub message: String,
     pub status: i32,
     pub data: Vec<MyOrderItem>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyTicketParticipant {
     pub nik: Option<String>,
     pub name: String,
@@ -177,7 +178,7 @@ pub struct MyTicketParticipant {
     pub qr_url: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyTicketEvent {
     pub id: i64,
     pub nama_event: String,
@@ -185,7 +186,7 @@ pub struct MyTicketEvent {
     pub tanggal_mulai: Option<String>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyTicketItem {
     pub invoice: String,
     pub transaction_id: i64,
@@ -195,12 +196,12 @@ pub struct MyTicketItem {
     pub participant: Option<MyTicketParticipant>,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 pub struct MyTicketListResponse {
     pub data: Vec<MyTicketItem>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct UpdateShirtSizeRequest {
     #[serde(rename = "ticketId")]
     pub ticket_id: Option<String>,
@@ -208,10 +209,29 @@ pub struct UpdateShirtSizeRequest {
     pub shirt_size: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Serialize, ToSchema)]
+pub struct UpdateShirtSizeResponse {
+    pub message: String,
+    pub participant_id: String,
+    pub shirt_size: String,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
 pub struct SendImageRequest {
     #[serde(rename = "chatId")]
     pub chat_id: String,
     pub url: String,
 }
 
+#[derive(Debug, Serialize, ToSchema)]
+pub struct SendImageResponse {
+    pub status: String,
+    pub message: String,
+    #[serde(rename = "chatId")]
+    pub chat_id: String,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct EventListResponse {
+    pub data: Vec<Event>,
+}

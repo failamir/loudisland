@@ -6,18 +6,17 @@ use axum::{
     Json, Router,
 };
 use chrono::Utc;
-use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
     error::{AppError, AppResult},
     middleware::auth::AuthUser,
     models::ticket::{
-        Event, MultiOrderRequest, MyOrderItem, MyOrderListResponse, MyOrderParticipantDecoded,
-        MyTicketEvent, MyTicketItem, MyTicketListResponse, MyTicketParticipant,
-        OrderSuccessParticipant, OrderSuccessResponse, ParticipantRecord, PaymentParticipantDetail,
-        PaymentStatusResponse, PaymentUserDetail, SendImageRequest, TransactionRecord,
-        UpdateShirtSizeRequest,
+        EventListResponse, MultiOrderRequest, MyOrderItem, MyOrderListResponse,
+        MyOrderParticipantDecoded, MyTicketEvent, MyTicketItem, MyTicketListResponse,
+        MyTicketParticipant, OrderSuccessParticipant, OrderSuccessResponse, ParticipantRecord,
+        PaymentParticipantDetail, PaymentStatusResponse, PaymentUserDetail, SendImageRequest,
+        SendImageResponse, TransactionRecord, UpdateShirtSizeRequest, UpdateShirtSizeResponse,
     },
     state::AppState,
 };
@@ -33,14 +32,36 @@ pub fn router() -> Router<AppState> {
         .route("/waha/sendImage", post(waha_send_image))
 }
 
-async fn list_events(State(state): State<AppState>) -> AppResult<impl IntoResponse> {
+#[utoipa::path(
+    get,
+    path = "/api/v1/events",
+    tag = "Tickets & Events",
+    responses(
+        (status = 200, description = "Daftar event / tiket kategori", body = EventListResponse)
+    )
+)]
+pub async fn list_events(State(state): State<AppState>) -> AppResult<impl IntoResponse> {
     let events = state.events.read().await;
-    Ok(Json(json!({
-        "data": *events
-    })))
+    Ok(Json(EventListResponse {
+        data: events.clone(),
+    }))
 }
 
-async fn buy_tickets(
+#[utoipa::path(
+    post,
+    path = "/api/v1/buy",
+    tag = "Tickets & Events",
+    security(
+        ("bearer_auth" = [])
+    ),
+    request_body = MultiOrderRequest,
+    responses(
+        (status = 201, description = "Order tiket multi-peserta berhasil dibuat", body = OrderSuccessResponse),
+        (status = 400, description = "Peserta kosong atau data tidak valid"),
+        (status = 401, description = "Unauthorized")
+    )
+)]
+pub async fn buy_tickets(
     auth_user: AuthUser,
     State(state): State<AppState>,
     Json(payload): Json<MultiOrderRequest>,
@@ -138,7 +159,19 @@ async fn buy_tickets(
     Ok((StatusCode::CREATED, Json(response)))
 }
 
-async fn payment_status(
+#[utoipa::path(
+    get,
+    path = "/api/v1/payment/{invoice}",
+    tag = "Tickets & Events",
+    params(
+        ("invoice" = String, Path, description = "Kode invoice transaksi")
+    ),
+    responses(
+        (status = 200, description = "Detail status pembayaran dan tiket", body = PaymentStatusResponse),
+        (status = 404, description = "Transaksi tidak ditemukan")
+    )
+)]
+pub async fn payment_status(
     Path(invoice): Path<String>,
     State(state): State<AppState>,
 ) -> AppResult<impl IntoResponse> {
@@ -191,7 +224,19 @@ async fn payment_status(
     Ok(Json(response))
 }
 
-async fn my_order(
+#[utoipa::path(
+    post,
+    path = "/api/v1/myorder",
+    tag = "Tickets & Events",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Riwayat pembelian user", body = MyOrderListResponse),
+        (status = 401, description = "Unauthorized")
+    )
+)]
+pub async fn my_order(
     auth_user: AuthUser,
     State(state): State<AppState>,
 ) -> AppResult<impl IntoResponse> {
@@ -249,7 +294,19 @@ async fn my_order(
     }))
 }
 
-async fn my_ticket(
+#[utoipa::path(
+    post,
+    path = "/api/v1/myticket",
+    tag = "Tickets & Events",
+    security(
+        ("bearer_auth" = [])
+    ),
+    responses(
+        (status = 200, description = "Tiket aktif milik user", body = MyTicketListResponse),
+        (status = 401, description = "Unauthorized")
+    )
+)]
+pub async fn my_ticket(
     auth_user: AuthUser,
     State(state): State<AppState>,
 ) -> AppResult<impl IntoResponse> {
@@ -297,7 +354,21 @@ async fn my_ticket(
     Ok(Json(MyTicketListResponse { data: ticket_items }))
 }
 
-async fn update_shirt_size(
+#[utoipa::path(
+    put,
+    path = "/api/v1/participants/{participant_id}/shirt-size",
+    tag = "Tickets & Events",
+    params(
+        ("participant_id" = String, Path, description = "ID Peserta (e.g. PART-001)")
+    ),
+    request_body = UpdateShirtSizeRequest,
+    responses(
+        (status = 200, description = "Ukuran jersey berhasil diperbarui", body = UpdateShirtSizeResponse),
+        (status = 400, description = "Bad Request"),
+        (status = 404, description = "Peserta tidak ditemukan")
+    )
+)]
+pub async fn update_shirt_size(
     Path(participant_id): Path<String>,
     State(state): State<AppState>,
     Json(payload): Json<UpdateShirtSizeRequest>,
@@ -326,20 +397,28 @@ async fn update_shirt_size(
         return Err(AppError::NotFound("Participant not found".into()));
     }
 
-    Ok(Json(json!({
-        "message": "Shirt size updated successfully",
-        "participant_id": participant_id,
-        "shirt_size": new_size
-    })))
+    Ok(Json(UpdateShirtSizeResponse {
+        message: "Shirt size updated successfully".to_string(),
+        participant_id,
+        shirt_size: new_size,
+    }))
 }
 
-async fn waha_send_image(
+#[utoipa::path(
+    post,
+    path = "/api/v1/waha/sendImage",
+    tag = "WhatsApp / WAHA",
+    request_body = SendImageRequest,
+    responses(
+        (status = 200, description = "Pesan gambar WhatsApp terkirim", body = SendImageResponse)
+    )
+)]
+pub async fn waha_send_image(
     Json(payload): Json<SendImageRequest>,
 ) -> AppResult<impl IntoResponse> {
-    Ok(Json(json!({
-        "status": "success",
-        "message": "Image sent successfully",
-        "chatId": payload.chat_id
-    })))
+    Ok(Json(SendImageResponse {
+        status: "success".to_string(),
+        message: "Image sent successfully".to_string(),
+        chat_id: payload.chat_id,
+    }))
 }
-
