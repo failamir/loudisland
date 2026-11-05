@@ -1,5 +1,9 @@
 use std::net::SocketAddr;
-use axum::{response::IntoResponse, routing::get};
+use axum::{
+    http::{header, HeaderMap, HeaderValue, StatusCode},
+    response::IntoResponse,
+    routing::get,
+};
 use tower_http::{
     cors::{Any, CorsLayer},
     trace::TraceLayer,
@@ -16,8 +20,7 @@ mod state;
 use config::Config;
 use state::AppState;
 
-const ASCII_ART: &str = r#"
-  __  __                 _       _ _ _         
+const ASCII_TEXT: &str = r#"  __  __                 _       _ _ _         
  |  \/  | __ _ _ __   __| | __ _| (_) | ____ _ 
  | |\/| |/ _` | '_ \ / _` |/ _` | | | |/ / _` |
  | |  | | (_| | | | | (_| | (_| | | |   < (_| |
@@ -29,11 +32,151 @@ const ASCII_ART: &str = r#"
  | . \ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\  |  / __/| |_| / __/| (_) |
  |_|\_\___/|_| \_\_|   |_| \_\___| |_| \_\\___/|_| \_| |_____|\___/_____|\___/ 
                                                                                
-                     Mandalika KORPRI Run 2026
+                     Mandalika KORPRI Run 2026"#;
+
+const HTML_PAGE: &str = r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mandalika KORPRI Run 2026</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: #0b0f19;
+      color: #00ffcc;
+      font-family: 'Courier New', Courier, monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: auto;
+    }
+    .terminal {
+      background: #030712;
+      border: 1px solid #1e293b;
+      border-radius: 12px;
+      padding: 24px 30px;
+      box-shadow: 0 20px 50px rgba(0, 255, 204, 0.1);
+      max-width: 95vw;
+    }
+    .header {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 12px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot-red { background: #ef4444; }
+    .dot-yellow { background: #eab308; }
+    .dot-green { background: #22c55e; }
+    pre {
+      font-size: 13px;
+      line-height: 1.25;
+      white-space: pre;
+      font-weight: 600;
+      text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
+    }
+    .cursor {
+      display: inline-block;
+      width: 9px;
+      height: 16px;
+      background: #00ffcc;
+      vertical-align: middle;
+      animation: blink 0.8s infinite;
+      box-shadow: 0 0 10px #00ffcc;
+    }
+    @keyframes blink {
+      0%, 49% { opacity: 1; }
+      50%, 100% { opacity: 0; }
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748b;
+      text-align: center;
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid rgba(0, 255, 204, 0.3);
+      color: #38bdf8;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <div class="terminal">
+    <div class="header">
+      <div class="dot dot-red"></div>
+      <div class="dot dot-yellow"></div>
+      <div class="dot dot-green"></div>
+      <span style="color: #64748b; font-size: 12px; margin-left: 10px;">api.failamir.tech ~ bash</span>
+    </div>
+    <pre id="text"></pre><span class="cursor"></span>
+  </div>
+  <div class="footer">
+    <div>🚀 REST API Engine: <strong>Axum 0.7 (Rust)</strong></div>
+    <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces</div>
+  </div>
+
+  <script>
+    const fullText = `  __  __                 _       _ _ _         
+ |  \\/  | __ _ _ __   __| | __ _| (_) | ____ _ 
+ | |\\/| |/ _` | '_ \\ / _` |/ _` | | | |/ / _` |
+ | |  | | (_| | | | | (_| | (_| | | |   < (_| |
+ |_|  |_|\\__,_|_| |_|\\__,_|\\__,_|_|_|_|\\_\\__,_|
+                                               
+  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
+ | |/ / _ \\|  _ \\|  _ \\|  _ \\|_ _| |  _ \\| | | | \\ | | |___ \\ / _ \\___ \\ / /_  
+ | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \\| |   __) | | | |__) | '_ \\ 
+ | . \\ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\\  |  / __/| |_| / __/| (_) |
+ |_|\\_\\___/|_| \\_\\_|   |_| \\_\\___| |_| \\_\\\\___/|_| \\_| |_____|\\___/_____|\\___/ 
+                                                                               
+                     Mandalika KORPRI Run 2026`;
+
+    const el = document.getElementById("text");
+    let idx = 0;
+    const speed = 3; // ms per char
+
+    function type() {
+      if (idx < fullText.length) {
+        el.textContent += fullText[idx];
+        idx++;
+        setTimeout(type, speed);
+      }
+    }
+    type();
+  </script>
+</body>
+</html>
 "#;
 
-async fn root_handler() -> impl IntoResponse {
-    ASCII_ART
+async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
+    let accept = headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    if accept.contains("text/html") {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))],
+            HTML_PAGE,
+        )
+    } else {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"))],
+            ASCII_TEXT,
+        )
+    }
 }
 
 #[tokio::main]
