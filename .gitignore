@@ -16,3 +16,5 @@ yarn-error.log
 /public/qrcodes
 .DS_Store
 .user.ini
+dotnet-backend/bin/
+dotnet-backend/obj/

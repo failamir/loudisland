@@ -1,0 +1,21 @@
+namespace LoudIsland.DotNetBackend.Contracts;
+
+public sealed record LoginRequest(string Email, string Password);
+public sealed record RegisterRequest(string Name, string Email, string Password, string? Phone);
+public sealed record ForgotPasswordRequest(string Email);
+public sealed record ResetPasswordRequest(string Email, string Token, string Password);
+public sealed record UserUpsertRequest(string Name, string Email, string Password, string? Phone, List<string>? Roles);
+public sealed record RoleUpsertRequest(string Title, List<int>? PermissionIds);
+public sealed record PermissionUpsertRequest(string Title);
+public sealed record EventUpsertRequest(string Name, DateTimeOffset Date, string Location, bool IsActive);
+public sealed record TicketUpsertRequest(int EventId, string Name, decimal Price, int Quota);
+public sealed record TransactionUpsertRequest(string BuyerName, string Email, decimal Amount, string Status);
+public sealed record ParticipantUpsertRequest(int TransactionId, string Name, string Email, string ShirtSize, bool RacepackCollected, string? BIBNumber);
+public sealed record ShirtSizeUpdateRequest(string ShirtSize);
+public sealed record BulkShirtSizeUpdateRequest(List<int> ParticipantIds, string ShirtSize);
+public sealed record PromoCodeUpsertRequest(string Code, decimal DiscountAmount, bool IsActive);
+public sealed record ReferralStatusUpdateRequest(string Status);
+public sealed record WithdrawalRequest(decimal Amount);
+public sealed record WithdrawalStatusUpdateRequest(string Status);
+public sealed record NomorPunggungGenerateRequest(int Count);
+public sealed record NomorPunggungPairRequest(string Nomor, int ParticipantId);
