@@ -56,89 +56,63 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 20px;
+      overflow-x: auto;
     }
     .terminal {
       background: #030712;
       border: 1px solid #1e293b;
       border-radius: 12px;
-      padding: 18px 20px;
+      padding: 24px 30px;
       box-shadow: 0 20px 50px rgba(0, 255, 204, 0.1);
-      width: 100%;
-      max-width: 900px;
-      margin: 0 auto;
+      max-width: 95vw;
     }
     .header {
       display: flex;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       border-bottom: 1px solid #1e293b;
-      padding-bottom: 10px;
-      align-items: center;
+      padding-bottom: 12px;
     }
-    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
     .dot-red { background: #ef4444; }
     .dot-yellow { background: #eab308; }
     .dot-green { background: #22c55e; }
-    .terminal-body {
-      overflow-x: auto;
-      max-width: 100%;
-      padding-bottom: 6px;
-      -webkit-overflow-scrolling: touch;
-    }
     pre {
-      font-size: clamp(6px, 1.4vw, 13px);
-      line-height: 1.15;
+      font-size: 13px;
+      line-height: 1.25;
       white-space: pre;
       font-weight: 600;
       text-shadow: 0 0 8px rgba(0, 255, 204, 0.4);
-      display: inline-block;
-      min-width: fit-content;
     }
     .cursor {
       display: inline-block;
-      width: 8px;
-      height: 14px;
+      width: 9px;
+      height: 16px;
       background: #00ffcc;
       vertical-align: middle;
       animation: blink 0.8s infinite;
       box-shadow: 0 0 10px #00ffcc;
-      margin-left: 4px;
     }
     @keyframes blink {
       0%, 49% { opacity: 1; }
       50%, 100% { opacity: 0; }
     }
     .footer {
-      margin-top: 18px;
-      font-size: 13px;
-      color: #94a3b8;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748b;
       text-align: center;
-      line-height: 1.6;
-    }
-    .badge-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      justify-content: center;
-      margin-top: 12px;
     }
     .badge {
       display: inline-block;
-      padding: 5px 14px;
+      margin-top: 10px;
+      padding: 4px 12px;
       border-radius: 20px;
-      background: rgba(0, 255, 204, 0.08);
-      border: 1px solid rgba(0, 255, 204, 0.25);
+      background: rgba(0, 255, 204, 0.1);
+      border: 1px solid rgba(0, 255, 204, 0.3);
       color: #38bdf8;
-      font-size: 12px;
-      text-decoration: none;
-      transition: all 0.2s ease;
-    }
-    .badge:hover {
-      background: rgba(0, 255, 204, 0.2);
-      border-color: #00ffcc;
-      color: #ffffff;
-      transform: translateY(-1px);
+      font-size: 11px;
     }
   </style>
 </head>
@@ -150,33 +124,65 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
       <div class="dot dot-green"></div>
       <span style="color: #64748b; font-size: 12px; margin-left: 10px;">api.failamir.tech ~ bash</span>
     </div>
-    <div class="terminal-body">
-      <pre id="text">  __  __                 _       _ _ _         
- |  \/  | __ _ _ __   __| | __ _| (_) | ____ _ 
- | |\/| |/ _` | '_ \ / _` |/ _` | | | |/ / _` |
- | |  | | (_| | | | | (_| | (_| | | |   < (_| |
- |_|  |_|\__,_|_| |_|\__,_|\__,_|_|_|_|\_\__,_|
-                                               
-  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
- | |/ / _ \|  _ \|  _ \|  _ \|_ _| |  _ \| | | | \ | | |___ \ / _ \___ \ / /_  
- | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \| |   __) | | | |__) | '_ \ 
- | . \ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\  |  / __/| |_| / __/| (_) |
- |_|\_\___/|_| \_\_|   |_| \_\___| |_| \_\\___/|_| \_| |_____|\___/_____|\___/ 
-                                                                               
-                     Mandalika KORPRI Run 2026</pre><span class="cursor"></span>
-    </div>
+    <pre id="text"></pre><span class="cursor"></span>
   </div>
   <div class="footer">
     <div>🚀 REST API Engine: <strong>Axum 0.7 (Rust)</strong></div>
-    <div class="badge-container">
-      <a class="badge" href="/swagger-ui/">📖 Swagger UI Documentation</a>
-      <a class="badge" href="/api/v1/events">🎟️ /api/v1/events</a>
-      <a class="badge" href="/api/v1/wilayah/provinces">📍 /api/v1/wilayah/provinces</a>
-    </div>
+    <div class="badge">Endpoints: /api/v1/events • /api/v1/wilayah/provinces • /swagger-ui</div>
   </div>
+
+  <script>
+    const fullText = `  __  __                 _       _ _ _         
+ |  \\/  | __ _ _ __   __| | __ _| (_) | ____ _ 
+ | |\\/| |/ _` | '_ \\ / _` |/ _` | | | |/ / _` |
+ | |  | | (_| | | | | (_| | (_| | | |   < (_| |
+ |_|  |_|\\__,_|_| |_|\\__,_|\\__,_|_|_|_|\\_\\__,_|
+                                               
+  _  _____  ____  ____  ____  ___   ____  _   _ _   _   ____   ___ ____   __   
+ | |/ / _ \\|  _ \\|  _ \\|  _ \\|_ _| |  _ \\| | | | \\ | | |___ \\ / _ \\___ \\ / /_  
+ | ' / | | | |_) | |_) | |_) || |  | |_) | | | |  \\| |   __) | | | |__) | '_ \\ 
+ | . \\ |_| |  _ <|  __/|  _ < | |  |  _ <| |_| | |\\  |  / __/| |_| / __/| (_) |
+ |_|\\_\\___/|_| \\_\\_|   |_| \\_\\___| |_| \\_\\\\___/|_| \\_| |_____|\\___/_____|\\___/ 
+                                                                               
+                     Mandalika KORPRI Run 2026`;
+
+    const el = document.getElementById("text");
+    let idx = 0;
+    const speed = 3; // ms per char
+
+    function type() {
+      if (idx < fullText.length) {
+        el.textContent += fullText[idx];
+        idx++;
+        setTimeout(type, speed);
+      }
+    }
+    type();
+  </script>
 </body>
 </html>
 "#;
+
+async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
+    let accept = headers
+        .get(header::ACCEPT)
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("");
+
+    if accept.contains("text/html") {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))],
+            HTML_PAGE,
+        )
+    } else {
+        (
+            StatusCode::OK,
+            [(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"))],
+            ASCII_TEXT,
+        )
+    }
+}
 
 #[derive(OpenApi)]
 #[openapi(
@@ -195,15 +201,32 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
         routes::ticket::waha_send_image,
         routes::wilayah::get_provinces,
         routes::wilayah::get_regencies,
+        routes::admin::list_users,
+        routes::admin::show_user,
+        routes::admin::create_user,
+        routes::admin::update_user,
+        routes::admin::delete_user,
+        routes::admin::revoke_tokens,
+        routes::admin::list_roles,
+        routes::admin::list_transactions,
+        routes::admin::list_racepacks,
+        routes::admin::list_staffs,
+        routes::admin::list_nomor_punggung,
+        routes::admin::list_promo_codes,
+        routes::admin::list_referral_codes,
+        routes::admin::list_withdrawals,
+        routes::admin::withdrawals_summary,
+        routes::admin::get_total_income,
+        routes::admin::get_total_final_income,
     ),
     components(
         schemas(
             models::auth::RegisterRequest,
             models::auth::LoginRequest,
             models::auth::GetTokenRequest,
-            models::auth::GetTokenResponse,
             models::auth::AuthResponse,
             models::auth::AuthResponseData,
+            models::auth::GetTokenResponse,
             models::auth::MeResponse,
             models::auth::UserRole,
             models::ticket::Event,
@@ -228,18 +251,43 @@ const HTML_PAGE: &str = r#"<!DOCTYPE html>
             models::ticket::SendImageResponse,
             models::wilayah::ProvinceItem,
             models::wilayah::RegencyItem,
+            models::admin::AdminUserItem,
+            models::admin::AdminUserUpsertRequest,
+            models::admin::Role,
+            models::admin::RoleUpsertRequest,
+            models::admin::Permission,
+            models::admin::PermissionUpsertRequest,
+            models::admin::NomorPunggungItem,
+            models::admin::NomorPunggungGenerateRequest,
+            models::admin::NomorPunggungPairRequest,
+            models::admin::PromoCodeItem,
+            models::admin::PromoCodeUpsertRequest,
+            models::admin::ReferralCodeItem,
+            models::admin::ReferralCodeUpsertRequest,
+            models::admin::WithdrawalItem,
+            models::admin::WithdrawalSummaryResponse,
+            models::admin::TotalIncomeResponse,
+            models::admin::TotalIncomeSummary,
+            models::admin::TotalFinalIncomeResponse,
+            models::admin::RacepackItem,
+            models::admin::BlastRequest,
         )
     ),
     modifiers(&SecurityAddon),
     tags(
-        (name = "auth", description = "Authentication Endpoints"),
-        (name = "events", description = "Event & Ticket Management Endpoints"),
-        (name = "wilayah", description = "Wilayah / Regional Data Endpoints")
+        (name = "Auth", description = "Autentikasi & Profil Akun Peserta"),
+        (name = "Tickets & Events", description = "Manajemen Event, Checkout Tiket, & Ukuran Jersey"),
+        (name = "Wilayah", description = "Proxy API Wilayah Indonesia"),
+        (name = "WhatsApp / WAHA", description = "Layanan Pesan WhatsApp WAHA"),
+        (name = "Admin: Users & Roles", description = "Pengelolaan User, Hak Akses & Roles"),
+        (name = "Admin: Commerce", description = "Transaksi & Riwayat Penjualan"),
+        (name = "Admin: Operations", description = "Racepack, Penomoran BIB, & Staf"),
+        (name = "Admin: Marketing & Finance", description = "Voucher, Referral, & Keuangan"),
     ),
     info(
-        title = "LoudIsland / Mandalika KORPRI Run API",
-        version = "0.1.0",
-        description = "High-performance Rust Axum backend powering Mandalika KORPRI Run 2026."
+        title = "Korpri Run & LoudIsland Backend API",
+        version = "1.0.0",
+        description = "Backend Rust berkinerja tinggi yang melayani Frontend Web App Korpri & Admin Dashboard."
     )
 )]
 struct ApiDoc;
@@ -250,36 +298,16 @@ impl Modify for SecurityAddon {
     fn modify(&self, openapi: &mut utoipa::openapi::OpenApi) {
         if let Some(components) = openapi.components.as_mut() {
             components.add_security_scheme(
-                "bearerAuth",
+                "bearer_auth",
                 SecurityScheme::Http(
                     HttpBuilder::new()
                         .scheme(HttpAuthScheme::Bearer)
                         .bearer_format("JWT")
+                        .description(Some("Masukkan JWT access token"))
                         .build(),
                 ),
             );
         }
-    }
-}
-
-async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
-    let accept = headers
-        .get(header::ACCEPT)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
-    if accept.contains("text/html") {
-        (
-            StatusCode::OK,
-            [(header::CONTENT_TYPE, HeaderValue::from_static("text/html; charset=utf-8"))],
-            HTML_PAGE,
-        )
-    } else {
-        (
-            StatusCode::OK,
-            [(header::CONTENT_TYPE, HeaderValue::from_static("text/plain; charset=utf-8"))],
-            ASCII_TEXT,
-        )
     }
 }
 
@@ -307,7 +335,8 @@ async fn main() {
     let api_v1 = axum::Router::new()
         .merge(routes::auth::router())
         .merge(routes::ticket::router())
-        .merge(routes::wilayah::router());
+        .merge(routes::wilayah::router())
+        .merge(routes::admin::router());
 
     let app = axum::Router::new()
         .route("/", get(root_handler))
