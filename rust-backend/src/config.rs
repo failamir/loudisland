@@ -5,6 +5,9 @@ pub struct Config {
     pub port: u16,
     pub jwt_secret: String,
     pub jwt_ttl_seconds: i64,
+    pub midtrans_is_production: bool,
+    pub midtrans_client_key: String,
+    pub midtrans_server_key: String,
 }
 
 impl Config {
@@ -20,11 +23,33 @@ impl Config {
             .and_then(|v| v.parse().ok())
             .unwrap_or(86400 * 7); // 7 days default
 
+        let midtrans_is_production = env::var("MIDTRANS_IS_PRODUCTION")
+            .map(|v| v == "true" || v == "1")
+            .unwrap_or(false);
+
+        let (midtrans_client_key, midtrans_server_key) = if midtrans_is_production {
+            (
+                env::var("MIDTRANS_PROD_CLIENT_KEY")
+                    .or_else(|_| env::var("MIDTRANS_CLIENT_KEY"))
+                    .unwrap_or_default(),
+                env::var("MIDTRANS_PROD_SERVER_KEY")
+                    .or_else(|_| env::var("MIDTRANS_SERVER_KEY"))
+                    .unwrap_or_default(),
+            )
+        } else {
+            (
+                env::var("MIDTRANS_CLIENT_KEY").unwrap_or_default(),
+                env::var("MIDTRANS_SERVER_KEY").unwrap_or_default(),
+            )
+        };
+
         Self {
             port,
             jwt_secret,
             jwt_ttl_seconds,
+            midtrans_is_production,
+            midtrans_client_key,
+            midtrans_server_key,
         }
     }
 }
-

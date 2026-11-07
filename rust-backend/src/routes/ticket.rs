@@ -117,12 +117,63 @@ pub async fn buy_tickets(
     let service_fee: f64 = 5000.0;
     let total_payment = total_amount + service_fee;
     let invoice = format!("INV-{}", Uuid::new_v4().to_string()[..8].to_uppercase());
-    let payment_url = format!("https://app.sandbox.midtrans.com/snap/v2/vtweb/demo-{}", invoice);
     let expired_snap_time = Utc::now()
         .checked_add_signed(chrono::Duration::days(1))
         .unwrap()
         .format("%Y-%m-%d %H:%M:%S")
         .to_string();
+
+    let first_participant = participant_records.first();
+    let cust_name = first_participant.map(|p| p.name.clone()).unwrap_or_else(|| auth_user.email.clone());
+    let cust_phone = first_participant.and_then(|p| p.phone.clone()).unwrap_or_default();
+
+    let mut payment_url = if state.config.midtrans_is_production {
+        format!("https://app.midtrans.com/snap/v2/vtweb/{}", invoice)
+    } else {
+        format!("https://app.sandbox.midtrans.com/snap/v2/vtweb/{}", invoice)
+    };
+
+    if !state.config.midtrans_server_key.is_empty() {
+        let snap_api_url = if state.config.midtrans_is_production {
+            "https://app.midtrans.com/snap/v1/transactions"
+        } else {
+            "https://app.sandbox.midtrans.com/snap/v1/transactions"
+        };
+
+        use base64::Engine;
+        let basic_auth = format!(
+            "Basic {}",
+            base64::engine::general_purpose::STANDARD.encode(format!("{}:", state.config.midtrans_server_key))
+        );
+
+        let snap_body = json!({
+            "transaction_details": {
+                "order_id": invoice,
+                "gross_amount": total_payment as i64
+            },
+            "customer_details": {
+                "first_name": cust_name,
+                "email": auth_user.email,
+                "phone": cust_phone
+            }
+        });
+
+        if let Ok(resp) = state.http_client
+            .post(snap_api_url)
+            .header("Authorization", basic_auth)
+            .header("Content-Type", "application/json")
+            .header("Accept", "application/json")
+            .json(&snap_body)
+            .send()
+            .await
+        {
+            if let Ok(snap_res) = resp.json::<serde_json::Value>().await {
+                if let Some(redirect_url) = snap_res.get("redirect_url").and_then(|u| u.as_str()) {
+                    payment_url = redirect_url.to_string();
+                }
+            }
+        }
+    }
 
     let new_trx = TransactionRecord {
         id: (state.transactions.read().await.len() as i64) + 1,
