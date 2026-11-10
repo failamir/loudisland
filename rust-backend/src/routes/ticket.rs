@@ -181,7 +181,7 @@ pub async fn buy_tickets(
         invoice: invoice.clone(),
         peserta_id: auth_user.id,
         uid: Some(auth_user.uid),
-        email: auth_user.email,
+        email: auth_user.email.clone(),
         nama: participant_records.first().map(|p| p.name.clone()).unwrap_or_default(),
         phone: participant_records.first().and_then(|p| p.phone.clone()),
         nik: participant_records.first().and_then(|p| p.nik.clone()),
@@ -191,11 +191,40 @@ pub async fn buy_tickets(
         created_at: Utc::now().format("%Y-%m-%d %H:%M:%S").to_string(),
         payment_url: Some(payment_url.clone()),
         expired_snap_time: Some(expired_snap_time.clone()),
-        events: event_ids,
-        participants: participant_records,
+        events: event_ids.clone(),
+        participants: participant_records.clone(),
     };
 
     state.transactions.write().await.push(new_trx);
+
+    // Persist to MySQL if available
+    if let Some(ref pool) = state.db {
+        let participants_json = serde_json::to_string(&payload.participants).unwrap_or_else(|_| "[]".to_string());
+        let first_name = participant_records.first().map(|p| p.name.clone()).unwrap_or_default();
+        let first_phone = participant_records.first().and_then(|p| p.phone.clone());
+        let first_nik = participant_records.first().and_then(|p| p.nik.clone());
+        let first_prov = participant_records.first().and_then(|p| p.province.clone());
+        let first_city = participant_records.first().and_then(|p| p.city.clone());
+
+        let _ = sqlx::query(
+            "INSERT INTO transactions (invoice, event_id, amount, note, status, payment_url, email, nama, no_hp, nik, province, city, participants, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())"
+        )
+        .bind(&invoice)
+        .bind(event_ids.first().map(|id| id.to_string()).unwrap_or_else(|| "1".to_string()))
+        .bind(total_payment)
+        .bind("Pembelian Tiket Korpri Run")
+        .bind(&payment_url)
+        .bind(&auth_user.email)
+        .bind(&first_name)
+        .bind(&first_phone)
+        .bind(&first_nik)
+        .bind(&first_prov)
+        .bind(&first_city)
+        .bind(&participants_json)
+        .execute(pool)
+        .await;
+    }
 
     let response = OrderSuccessResponse {
         invoice,

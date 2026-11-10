@@ -8,6 +8,7 @@ pub struct Config {
     pub midtrans_is_production: bool,
     pub midtrans_client_key: String,
     pub midtrans_server_key: String,
+    pub database_url: Option<String>,
 }
 
 impl Config {
@@ -43,6 +44,8 @@ impl Config {
             )
         };
 
+        let database_url = env::var("DATABASE_URL").ok();
+
         Self {
             port,
             jwt_secret,
@@ -50,6 +53,7 @@ impl Config {
             midtrans_is_production,
             midtrans_client_key,
             midtrans_server_key,
+            database_url,
         }
     }
 }

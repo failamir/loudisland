@@ -97,6 +97,22 @@ pub async fn register(
     let token = generate_token(&user, &state.config.jwt_secret, state.config.jwt_ttl_seconds)?;
     users.push(user.clone());
 
+    // Persist new registered user to MySQL if available
+    if let Some(ref pool) = state.db {
+        let _ = sqlx::query(
+            "INSERT INTO users (uid, name, email, password, nik, no_hp, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())"
+        )
+        .bind(&user.uid)
+        .bind(&user.name)
+        .bind(&user.email)
+        .bind(&user.password_hash)
+        .bind(&user.nik)
+        .bind(&user.no_hp)
+        .execute(pool)
+        .await;
+    }
+
     let response = AuthResponse {
         message: "Berhasil mendaftar".to_string(),
         token: token.clone(),
