@@ -48,9 +48,9 @@ const AuthProvider = ({
     if (auth) {
       try {
         const {
-          data: user
+          data: res
         } = await getUser();
-        setCurrentUser(user);
+        setCurrentUser(res?.data || res);
       } catch {
         saveAuth(undefined);
         setCurrentUser(undefined);
@@ -58,7 +58,9 @@ const AuthProvider = ({
     }
   };
 
-  const applyAuthFromTokenResponse = data => {
+  const applyAuthFromTokenResponse = rawData => {
+    // Handle standard Laravel ({ token }) or WebResponse ({ data: { token, access_token } })
+    const data = rawData?.data?.token ? rawData.data : rawData;
     const accessToken = data?.access_token || data?.token;
     if (!accessToken) {
       return;
@@ -83,15 +85,17 @@ const AuthProvider = ({
   };
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post(LOGIN_URL, { email, password });
-      // Laravel returns: { message, token, user }
-      applyAuthFromTokenResponse(data);
+      const { data: rawData } = await axios.post(LOGIN_URL, { email, password });
+      applyAuthFromTokenResponse(rawData);
+      const data = rawData?.data || rawData;
       // Prefer user from login response to avoid extra round-trip
       if (data?.user) {
         setCurrentUser(data.user);
+      } else if (data?.data && data.data.id) {
+        setCurrentUser(data.data);
       } else {
-        const { data: user } = await getUser();
-        setCurrentUser(user);
+        const { data: userResponse } = await getUser();
+        setCurrentUser(userResponse?.data || userResponse);
       }
     } catch (error) {
       saveAuth(undefined);
