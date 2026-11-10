@@ -62,19 +62,7 @@ impl AppState {
             },
         ];
 
-        let mut seeded_users = vec![
-            User {
-                id: 1,
-                uid: "usr-admin-001".to_string(),
-                name: "Admin Korpri".to_string(),
-                email: "admin@admin.com".to_string(),
-                password_hash: "$2a$04$e1P.G36XbSjV2X9Q4wWj8O.H8eD22a9P0aXq6R.d4g7e1e6k1x.7W".to_string(),
-                nik: Some("5201010101900001".to_string()),
-                no_hp: Some("081234567890".to_string()),
-                token_version: 0,
-                created_at: "2026-10-01T00:00:00Z".to_string(),
-            },
-        ];
+        let mut seeded_users: Vec<User> = Vec::new();
 
         let mut seeded_transactions = Vec::new();
 
