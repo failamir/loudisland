@@ -218,9 +218,35 @@ async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
         routes::admin::withdrawals_summary,
         routes::admin::get_total_income,
         routes::admin::get_total_final_income,
+        routes::omnichannel::get_metrics,
+        routes::omnichannel::get_lookups,
+        routes::omnichannel::get_assignees,
+        routes::omnichannel::list_threads,
+        routes::omnichannel::get_thread,
+        routes::omnichannel::update_thread_status,
+        routes::omnichannel::assign_thread,
+        routes::omnichannel::list_messages,
+        routes::omnichannel::send_message,
     ),
     components(
         schemas(
+            models::omnichannel::OmnichannelThread,
+            models::omnichannel::OmnichannelCustomer,
+            models::omnichannel::OmnichannelChannel,
+            models::omnichannel::OmnichannelLastMessage,
+            models::omnichannel::OmnichannelAssignment,
+            models::omnichannel::OmnichannelMessage,
+            models::omnichannel::OmnichannelTag,
+            models::omnichannel::OmnichannelQuickReply,
+            models::omnichannel::OmnichannelAssignee,
+            models::omnichannel::OmnichannelMetrics,
+            models::omnichannel::OmnichannelTabMetrics,
+            models::omnichannel::SendMessagePayload,
+            models::omnichannel::AssignThreadPayload,
+            models::omnichannel::UpdateThreadStatusPayload,
+            models::omnichannel::ThreadTagPayload,
+            models::omnichannel::BroadcastPayload,
+            models::omnichannel::BroadcastHistoryItem,
             models::auth::RegisterRequest,
             models::auth::LoginRequest,
             models::auth::GetTokenRequest,
@@ -283,6 +309,7 @@ async fn root_handler(headers: HeaderMap) -> impl IntoResponse {
         (name = "Admin: Commerce", description = "Transaksi & Riwayat Penjualan"),
         (name = "Admin: Operations", description = "Racepack, Penomoran BIB, & Staf"),
         (name = "Admin: Marketing & Finance", description = "Voucher, Referral, & Keuangan"),
+        (name = "Omnichannel", description = "Omnichannel WhatsApp Hub, CS Chat, & Broadcast Massal"),
     ),
     info(
         title = "Korpri Run & LoudIsland Backend API",
@@ -336,7 +363,8 @@ async fn main() {
         .merge(routes::auth::router())
         .merge(routes::ticket::router())
         .merge(routes::wilayah::router())
-        .merge(routes::admin::router());
+        .merge(routes::admin::router())
+        .merge(routes::omnichannel::router());
 
     let app = axum::Router::new()
         .route("/", get(root_handler))

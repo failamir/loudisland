@@ -29,6 +29,7 @@ import ReferralCodesPage from '@/pages/codes/ReferralCodesPage';
 import ReferralDashboard from '@/pages/referral/ReferralDashboard.jsx';
 import ReferralRegister from '@/pages/referral/ReferralRegister.jsx';
 import PromoCodesPage from '@/pages/codes/PromoCodesPage';
+import OmnichannelPage from '@/pages/omnichannel/OmnichannelPage';
 
 const AppRoutingSetup = () => {
   return (
@@ -122,6 +123,7 @@ const AppRoutingSetup = () => {
           <Route path="/referral" element={<ReferralDashboard />} />
           <Route path="/referral/register" element={<ReferralRegister />} />
           <Route path="/promo-codes" element={<PromoCodesPage />} />
+          <Route path="/omnichannel" element={<OmnichannelPage />} />
           <Route path="/auth/welcome-message" element={<AuthenticationWelcomeMessagePage />} />
           <Route path="/auth/account-deactivated" element={<AuthenticationAccountDeactivatedPage />} />
           <Route path="/authentication/get-started" element={<AuthenticationGetStartedPage />} />

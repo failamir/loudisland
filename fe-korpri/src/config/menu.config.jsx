@@ -1,5 +1,6 @@
 export const MENU_SIDEBAR = [
   { title: 'Dashboard', path: '/', icon: 'home' },
+  { title: 'Omnichannel', path: '/omnichannel', icon: 'messages' },
   // { title: 'Dark Sidebar', path: '/dark-sidebar' },
   { title: 'Transactions', path: '/transactions', icon: 'cheque' },
   // { title: 'Nomor Lari', path: '/nomor-punggung', icon: 'scan-barcode' },
