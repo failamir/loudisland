@@ -45,7 +45,7 @@ pub struct TransactionRecord {
     pub participants: Vec<ParticipantRecord>,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Clone, Debug, Serialize, Deserialize, ToSchema)]
 pub struct OrderParticipantRequest {
     #[serde(rename = "ticketId")]
     pub ticket_id: Option<String>,

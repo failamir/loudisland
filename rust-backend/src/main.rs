@@ -16,6 +16,7 @@ use utoipa::{
 use utoipa_swagger_ui::SwaggerUi;
 
 mod config;
+mod db;
 mod error;
 mod middleware;
 mod models;
@@ -352,7 +353,7 @@ async fn main() {
 
     let config = Config::from_env();
     let port = config.port;
-    let state = AppState::new(config);
+    let state = AppState::new(config).await;
 
     let cors = CorsLayer::new()
         .allow_origin(Any)

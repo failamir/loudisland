@@ -21,3 +21,4 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 dotenvy = "0.15"
 utoipa = { version = "4.2", features = ["chrono", "uuid"] }
 utoipa-swagger-ui = { version = "7.1", features = ["axum"] }
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio-rustls", "mysql", "chrono", "uuid"] }
